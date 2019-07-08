@@ -1,2 +1,4 @@
-# online-mot-by-detection
-A simple online multi-object tracking following the tracking-by-detection paradigm.
+# Online MOT-by-Detection
+A simple online multi-object tracking framework following the tracking-by-detection paradigm.
+
+Under construction.
