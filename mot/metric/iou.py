@@ -6,8 +6,8 @@ class IoUMetric(Metric):
         super(IoUMetric).__init__()
 
     def __call__(self, a, b):
-        b1_x1, b1_y1, b1_x2, b1_y2 = a[0:3]
-        b2_x1, b2_y1, b2_x2, b2_y2 = b[0:3]
+        b1_x1, b1_y1, b1_x2, b1_y2 = a[0:4]
+        b2_x1, b2_y1, b2_x2, b2_y2 = b[0:4]
 
         x1 = max(b1_x1, b2_x1)
         y1 = max(b1_y1, b2_y1)
