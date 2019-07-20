@@ -43,6 +43,12 @@ _colors = [(47, 47, 211),
 
 
 def draw_tracklets(image, tracklets):
+    """
+    Draw the boxes of tracklets.
+    :param image: A 3D numpy array with shape (h, w, 3). The video frame.
+    :param tracklets:
+    :return:
+    """
     for tracklet in tracklets:
         box = tracklet.feature
         image = cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), _colors[tracklet.id % _colors.__len__()],

@@ -1,15 +1,13 @@
 from .detector import Detector
 from .centernet.opts import opts
 from .centernet.detectors.ctdet import CtdetDetector
-import numpy as np
 
 
 class CenterNetDetector(Detector):
     def __init__(self, conf_threshold=0.5):
         super(CenterNetDetector).__init__()
 
-        opt = opts().init()
-        opt.task = 'ctdet'
+        opt = opts()
         self.detector = CtdetDetector(opt)
         self.conf_threshold = conf_threshold
 
