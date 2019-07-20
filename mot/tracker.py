@@ -74,6 +74,10 @@ class Tracker:
         return assignment_matrix
 
     def add_tracklet(self, tracklet):
+        """
+        Add a tracklet to the active tracklets after giving it a new ID.
+        :param tracklet: The tracklet to be added.
+        """
         tracklet.id = self.max_id
         self.max_id += 1
         self.tracklets_active.append(tracklet)

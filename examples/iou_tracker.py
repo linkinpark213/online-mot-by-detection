@@ -6,6 +6,12 @@ import mot.encode
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
 import utils.vis
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--video_path', default='', required=False,
+                    help='Path to the test video file. Leave it empty to use webcam.')
+args = parser.parse_args()
 
 
 class NoPredictionTracklet(Tracklet):
@@ -18,9 +24,9 @@ class NoPredictionTracklet(Tracklet):
 
 
 class IoUTracker(Tracker):
-    def __init__(self, detector, encoder, metric, matcher, sigma_h):
+    def __init__(self, detector, encoder, metric, matcher, sigma_conf):
         super().__init__(detector, encoder, metric, matcher)
-        self.sigma_h = sigma_h
+        self.sigma_conf = sigma_conf
 
     def update(self, row_ind, col_ind, detection_features):
         unmatched_tracklets = []
@@ -40,7 +46,7 @@ class IoUTracker(Tracker):
 
         for i in range(len(detection_features)):
             if i not in col_ind:
-                if detection_features[i][4] > self.sigma_h:
+                if detection_features[i][4] > self.sigma_conf:
                     self.add_tracklet(NoPredictionTracklet(0, detection_features[i]))
 
 
@@ -48,11 +54,15 @@ if __name__ == '__main__':
     detector = mot.detect.CenterNetDetector(conf_threshold=0.3)
     encoder = mot.encode.BoxCoordinateEncoder()
     metric = mot.metric.IoUMetric()
-    matcher = mot.associate.GreedyMatcher(sigma_iou=0.3)
+    matcher = mot.associate.GreedyMatcher(sigma=0.3)
 
-    tracker = IoUTracker(detector, encoder, metric, matcher, sigma_h=0.3)
+    tracker = IoUTracker(detector, encoder, metric, matcher, sigma_conf=0.3)
 
-    capture = cv2.VideoCapture('/home/linkinpark213/Dataset/DukeMTMC/videos/camera8/00001.MTS')
+    if args.video_path == '':
+        capture = cv2.VideoCapture(0)
+    else:
+        capture = cv2.VideoCapture(args.video_path)
+
     while True:
         ret, image = capture.read()
         if not ret:
