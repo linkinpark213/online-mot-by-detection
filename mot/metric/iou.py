@@ -1,3 +1,4 @@
+import numpy as np
 from .metric import Metric
 
 
@@ -5,10 +6,18 @@ class IoUMetric(Metric):
     """
     An affinity metric that only considers the IoU of tracklets' box and detected box.
     """
+
     def __init__(self):
         super(IoUMetric).__init__()
 
-    def __call__(self, a, b):
+    def __call__(self, tracklets, detected_boxes, img):
+        matrix = np.zeros([len(tracklets), len(detected_boxes)])
+        for i in range(len(tracklets)):
+            for j in range(len(detected_boxes)):
+                matrix[i][j] = self.iou(tracklets[i].predict(), detected_boxes[j])
+        return matrix, detected_boxes
+
+    def iou(self, a, b):
         b1_x1, b1_y1, b1_x2, b1_y2 = a[0:4]
         b2_x1, b2_y1, b2_x2, b2_y2 = b[0:4]
 

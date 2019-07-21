@@ -3,9 +3,8 @@ import numpy as np
 
 
 class Tracker:
-    def __init__(self, detector, encoder, metric, matcher):
+    def __init__(self, detector, metric, matcher):
         self.detector = detector
-        self.encoder = encoder
         self.metric = metric
         self.matcher = matcher
         self.max_id = 0
@@ -21,38 +20,23 @@ class Tracker:
         # Detection
         boxes = self.detector(img)
 
-        # Feature Extraction
-        features = self.encoder(boxes, img)
-
-        # Affinity Calculation
-        similarity_matrix = self.calculate_similarities(self.tracklets_active, features)
+        # Feature Extraction & Affinity Calculation
+        similarity_matrix, features = self.metric(self.tracklets_active, boxes, img)
 
         # Data Association
         row_ind, col_ind = self.matcher(similarity_matrix)
 
         # Tracklet Update
-        self.update(row_ind, col_ind, features)
+        self.update(row_ind, col_ind, boxes, features)
 
         self.frame_num += 1
 
-    def calculate_similarities(self, tracklets, features):
-        """
-        Calculate similarity matrix from current tracklets and features of detections.
-        :param tracklets: A list of N tracklets to match.
-        :param features: A list of M detections to match.
-        :return: A 2D numpy array with shape (N, M).
-        """
-        matrix = np.zeros([len(tracklets), len(features)])
-        for i in range(len(tracklets)):
-            for j in range(len(features)):
-                matrix[i][j] = self.metric(tracklets[i].predict(), features[j])
-        return matrix
-
-    def update(self, row_ind, col_ind, detection_features):
+    def update(self, row_ind, col_ind, detection_boxes, detection_features):
         """
         Update the tracklets.
         :param row_ind: A list of integers. Indices of the matched tracklets.
         :param col_ind: A list of integers. Indices of the matched detections.
+        :param detection_boxes: A list of numpy arrays with shape (n, 5). Detected boxes.
         :param detection_features: The features of the detections. It can be any form you want.
         """
         raise NotImplementedError('Extend the Tracker class to implement your own updating strategy.')
