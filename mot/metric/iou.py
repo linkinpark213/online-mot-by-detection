@@ -2,6 +2,9 @@ from .metric import Metric
 
 
 class IoUMetric(Metric):
+    """
+    An affinity metric that only considers the IoU of tracklets' box and detected box.
+    """
     def __init__(self):
         super(IoUMetric).__init__()
 

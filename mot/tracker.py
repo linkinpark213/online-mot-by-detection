@@ -11,6 +11,7 @@ class Tracker:
         self.max_id = 0
         self.tracklets_active = []
         self.tracklets_finished = []
+        self.frame_num = 0
 
     def tick(self, img):
         """
@@ -31,6 +32,8 @@ class Tracker:
 
         # Tracklet Update
         self.update(row_ind, col_ind, features)
+
+        self.frame_num += 1
 
     def calculate_similarities(self, tracklets, features):
         """

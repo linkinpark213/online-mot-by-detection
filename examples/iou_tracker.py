@@ -1,26 +1,15 @@
-import cv2
 import mot.associate
 import mot.detect
 import mot.metric
 import mot.encode
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
-import utils.vis
-import argparse
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--video_path', default='', required=False,
-                    help='Path to the test video file. Leave it empty to use webcam.')
-args = parser.parse_args()
+from utils.demo import run_demo
 
 
 class NoPredictionTracklet(Tracklet):
-    def __init__(self, id, feature, max_ttl=30, sigma_h=0.6):
-        super().__init__(id, feature, max_ttl)
-        self.max_score = 0
-
-    def predict(self):
-        return self.feature
+    def __init__(self, id, feature, max_ttl=30):
+        super().__init__(id, feature, max_ttl=max_ttl)
 
 
 class IoUTracker(Tracker):
@@ -31,7 +20,7 @@ class IoUTracker(Tracker):
     def update(self, row_ind, col_ind, detection_features):
         unmatched_tracklets = []
         for i in range(len(row_ind)):
-            self.tracklets_active[row_ind[i]].update(detection_features[col_ind[i]])
+            self.tracklets_active[row_ind[i]].update(self.frame_num, detection_features[col_ind[i]])
 
         tracklets_to_kill = []
         for i in range(len(self.tracklets_active)):
@@ -51,25 +40,11 @@ class IoUTracker(Tracker):
 
 
 if __name__ == '__main__':
-    detector = mot.detect.CenterNetDetector(conf_threshold=0.3)
+    detector = mot.detect.CenterNetDetector(conf_threshold=0.5)
     encoder = mot.encode.BoxCoordinateEncoder()
     metric = mot.metric.IoUMetric()
     matcher = mot.associate.GreedyMatcher(sigma=0.3)
 
     tracker = IoUTracker(detector, encoder, metric, matcher, sigma_conf=0.3)
 
-    if args.video_path == '':
-        capture = cv2.VideoCapture(0)
-    else:
-        capture = cv2.VideoCapture(args.video_path)
-
-    while True:
-        ret, image = capture.read()
-        if not ret:
-            break
-        boxes = tracker.tick(image)
-        image = utils.vis.draw_tracklets(image, tracker.tracklets_active)
-        cv2.imshow('Video', image)
-        key = cv2.waitKey(1)
-        if key == 27:
-            break
+    run_demo(tracker)

@@ -3,6 +3,9 @@ from .matcher import Matcher
 
 
 class GreedyMatcher(Matcher):
+    """
+    A greedy matching algorithm, re-implemented according to the IoU tracker paper.
+    """
     def __init__(self, sigma):
         super(Matcher).__init__()
         self.sigma = sigma
