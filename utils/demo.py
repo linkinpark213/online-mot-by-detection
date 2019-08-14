@@ -9,6 +9,8 @@ def run_demo(tracker):
     parser = argparse.ArgumentParser()
     parser.add_argument('--demo_path', default='', required=False,
                         help='Path to the test video file or directory of test images. Leave it blank to use webcam.')
+    parser.add_argument('--save_video', default='', required=False,
+                        help='Path to the output video file. Leave it blank to disable.')
     args = parser.parse_args()
 
     if args.demo_path == '':
@@ -21,12 +23,19 @@ def run_demo(tracker):
         else:
             raise AssertionError('Parameter "demo_path" is not a file or directory.')
 
+    n = 0
     while True:
         ret, image = capture.read()
         if not ret:
             break
+        n += 1
+        if args.save_video != '' and n == 1:
+            writer = cv2.VideoWriter(args.save_video, cv2.VideoWriter_fourcc(*'mp4v'), 30,
+                                     (image.shape[1], image.shape[0]))
         tracker.tick(image)
         image = utils.vis.draw_tracklets(image, tracker.tracklets_active)
+        if args.save_video != '':
+            writer.write(image)
         cv2.imshow('Demo', image)
         key = cv2.waitKey(1)
         if key == 27:

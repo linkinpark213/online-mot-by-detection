@@ -1,2 +1,2 @@
 from .detector import Detector
-from .centernet_detector import CenterNetDetector
+from .yolov3_detector import YOLOv3Detector

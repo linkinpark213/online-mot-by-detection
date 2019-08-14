@@ -51,7 +51,8 @@ def draw_tracklets(image, tracklets):
     """
     for tracklet in tracklets:
         box = tracklet.last_box
-        image = cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), _colors[tracklet.id % _colors.__len__()],
+        image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])),
+                              _colors[tracklet.id % _colors.__len__()],
                               thickness=int(5 * tracklet.ttl / tracklet.max_ttl))
         image = cv2.putText(image, '{:d}'.format(tracklet.id), (int(box[0]), int(box[1]) - 8),
                             cv2.FONT_HERSHEY_SIMPLEX, 1, _colors[tracklet.id % _colors.__len__()], thickness=2)

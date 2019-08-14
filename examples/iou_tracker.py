@@ -1,10 +1,10 @@
-import mot.associate
+import mot.encode
 import mot.detect
 import mot.metric
-import mot.encode
+import mot.associate
+from utils.demo import run_demo
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
-from utils.demo import run_demo
 
 
 class IoUTracker(Tracker):
@@ -36,7 +36,7 @@ class IoUTracker(Tracker):
 
 
 if __name__ == '__main__':
-    detector = mot.detect.CenterNetDetector(conf_threshold=0.5)
+    detector = mot.detect.YOLOv3Detector(conf_threshold=0.5)
     metric = mot.metric.IoUMetric()
     matcher = mot.associate.GreedyMatcher(sigma=0.3)
 
