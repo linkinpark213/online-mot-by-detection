@@ -12,6 +12,12 @@ class Tracker:
         self.tracklets_finished = []
         self.frame_num = 0
 
+    def clear(self):
+        self.max_id = 0
+        self.tracklets_active = []
+        self.tracklets_finished = []
+        self.frame_num = 0
+
     def tick(self, img):
         """
         The tracker works online. For each new frame, the tracker ticks once.
