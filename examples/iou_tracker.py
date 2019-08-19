@@ -1,3 +1,4 @@
+import parser
 import mot.detect
 import mot.metric
 import mot.associate
@@ -35,13 +36,19 @@ class IoUTracker(Tracker):
                     self.add_tracklet(Tracklet(0, detection_features[i], detection_features[i]))
 
 
+
 if __name__ == '__main__':
-    detector = mot.detect.YOLOv3Detector(conf_threshold=0.5)
+
+    # detector = mot.detect.YOLOv3Detector(conf_threshold=0.5)
+    detector = mot.detect.HTCDetector()
+
+
+
     metric = mot.metric.IoUMetric()
     matcher = mot.associate.GreedyMatcher(sigma=0.3)
 
     tracker = IoUTracker(detector, metric, matcher, sigma_conf=0.3)
 
-    # run_demo(tracker)
+    run_demo(tracker)
 
-    evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT17/train')
+    # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT17/train')
