@@ -1,21 +1,23 @@
+import mot.associate
 import mot.detect
 import mot.metric
-import mot.associate
-from utils.demo import run_demo
+import mot.encode
+import mot.predict
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
+from utils.demo import run_demo
 from utils.evaluate import evaluate_mot_online, evaluate_zhejiang_online
 
 
-class IoUTracker(Tracker):
-    def __init__(self, detector, matcher, sigma_conf):
+class DeepSORTTracker(Tracker):
+    def __init__(self, detector, matcher, predictor):
         super().__init__(detector, matcher)
-        self.sigma_conf = sigma_conf
+        self.predictor = predictor
 
     def update(self, row_ind, col_ind, detection_boxes, detection_features):
         unmatched_tracklets = []
         for i in range(len(row_ind)):
-            self.tracklets_active[row_ind[i]].update(self.frame_num, detection_features[col_ind[i]],
+            self.tracklets_active[row_ind[i]].update(self.frame_num, detection_boxes[col_ind[i]],
                                                      detection_features[col_ind[i]])
 
         tracklets_to_kill = []
@@ -31,17 +33,21 @@ class IoUTracker(Tracker):
 
         for i in range(len(detection_features)):
             if i not in col_ind:
-                if detection_features[i][4] > self.sigma_conf:
-                    self.add_tracklet(Tracklet(0, detection_features[i], detection_features[i]))
+                self.add_tracklet(Tracklet(0, detection_boxes[i], detection_features[i]))
 
 
 if __name__ == '__main__':
     # detector = mot.detect.HTCDetector(conf_threshold=0.5)
     detector = None
-    metric = mot.metric.IoUMetric()
-    matcher = mot.associate.GreedyMatcher(metric, sigma=0.3)
+    iou_metric = mot.metric.IoUMetric()
+    iou_matcher = mot.associate.GreedyMatcher(iou_metric, sigma=0.3)
+    reid_encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
+    reid_metric = mot.metric.EuclideanMetric(reid_encoder)
+    reid_matcher = mot.associate.GreedyMatcher(reid_metric, sigma=0.3)
+    matcher = mot.associate.CascadeMatcher((iou_matcher, reid_matcher))
+    predictor = None
 
-    tracker = IoUTracker(detector, matcher, sigma_conf=0.3)
+    tracker = DeepSORTTracker(detector, matcher, predictor)
 
     # run_demo(tracker)
 

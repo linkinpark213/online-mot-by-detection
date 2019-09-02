@@ -3,9 +3,8 @@ import numpy as np
 
 
 class Tracker:
-    def __init__(self, detector, metric, matcher):
+    def __init__(self, detector, matcher):
         self.detector = detector
-        self.metric = metric
         self.matcher = matcher
         self.max_id = 0
         self.tracklets_active = []
@@ -26,11 +25,8 @@ class Tracker:
         # Detection
         boxes = self.detector(img)
 
-        # Feature Extraction & Affinity Calculation
-        similarity_matrix, features = self.metric(self.tracklets_active, boxes, img)
-
         # Data Association
-        row_ind, col_ind = self.matcher(similarity_matrix)
+        row_ind, col_ind, features = self.matcher(self.tracklets_active, boxes, img)
 
         # Tracklet Update
         self.update(row_ind, col_ind, boxes, features)

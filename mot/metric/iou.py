@@ -9,12 +9,13 @@ class IoUMetric(Metric):
 
     def __init__(self):
         super(IoUMetric).__init__()
+        self.name = 'iou'
 
     def __call__(self, tracklets, detected_boxes, img):
         matrix = np.zeros([len(tracklets), len(detected_boxes)])
         for i in range(len(tracklets)):
             for j in range(len(detected_boxes)):
-                matrix[i][j] = self.iou(tracklets[i].predict(), detected_boxes[j])
+                matrix[i][j] = self.iou(tracklets[i].last_box, detected_boxes[j])
         return matrix, detected_boxes
 
     def iou(self, a, b):

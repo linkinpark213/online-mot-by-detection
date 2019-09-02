@@ -6,11 +6,13 @@ class GreedyMatcher(Matcher):
     """
     A greedy matching algorithm, re-implemented according to the IoU tracker paper.
     """
-    def __init__(self, sigma):
-        super(Matcher).__init__()
+
+    def __init__(self, metric, sigma):
+        super().__init__(metric)
         self.sigma = sigma
 
-    def __call__(self, similarity_matrix):
+    def __call__(self, tracklets, detection_boxes, img):
+        similarity_matrix, features = self.metric(tracklets, detection_boxes, img)
         row_ind = []
         col_ind = []
         for i in range(similarity_matrix.shape[0]):
@@ -20,4 +22,4 @@ class GreedyMatcher(Matcher):
                     if j not in col_ind:
                         row_ind.append(i)
                         col_ind.append(j)
-        return row_ind, col_ind
+        return row_ind, col_ind, features

@@ -14,6 +14,7 @@ from .PCB.model import PCB, PCB_test
 class PCBEncoder(Encoder):
     def __init__(self, model_path):
         super(PCBEncoder).__init__()
+        self.name = 'pcb'
         model_structure = PCB(751)
         model = model_structure.convert_to_rpp()
         save_path = os.path.join(model_path, 'full', 'net_last.pth')
@@ -77,24 +78,27 @@ class PCBEncoder(Encoder):
                 all_crops.append(crop)
             else:
                 all_crops.append(np.ones((10, 10, 3)).astype(np.float32) * 255)
-        img = self._preprocess(all_crops)
-        n, c, h, w = img.shape
-        if self.feature_H:
-            ff = torch.FloatTensor(n, 256, 6).zero_()  # we have six parts
+        if boxes.shape[0] != 0:
+            img = self._preprocess(all_crops)
+            n, c, h, w = img.shape
+            if self.feature_H:
+                ff = torch.FloatTensor(n, 256, 6).zero_()  # we have six parts
+            else:
+                ff = torch.FloatTensor(n, 2048, 6).zero_()  # we have six parts
+            for i in range(2):
+                if (i == 1):
+                    img = self.fliplr(img)
+                input_img = Variable(img.cuda())
+                outputs = model(input_img)
+                f = outputs.data.cpu()
+                ff = ff + f
+            # feature size (n,2048,6)
+            # 1. To treat every part equally, I calculate the norm for every 2048-dim part feature.
+            # 2. To keep the cosine score==1, sqrt(6) is added to norm the whole feature (2048*6).
+            fnorm = torch.norm(ff, p=2, dim=1, keepdim=True) * np.sqrt(6)
+            # fnorm = torch.norm(ff, p=2, dim=1, keepdim=True)
+            ff = ff.div(fnorm.expand_as(ff))
+            ff = ff.view(ff.size(0), -1)
+            return torch.cat((features, ff), 0)
         else:
-            ff = torch.FloatTensor(n, 2048, 6).zero_()  # we have six parts
-        for i in range(2):
-            if (i == 1):
-                img = self.fliplr(img)
-            input_img = Variable(img.cuda())
-            outputs = model(input_img)
-            f = outputs.data.cpu()
-            ff = ff + f
-        # feature size (n,2048,6)
-        # 1. To treat every part equally, I calculate the norm for every 2048-dim part feature.
-        # 2. To keep the cosine score==1, sqrt(6) is added to norm the whole feature (2048*6).
-        fnorm = torch.norm(ff, p=2, dim=1, keepdim=True) * np.sqrt(6)
-        # fnorm = torch.norm(ff, p=2, dim=1, keepdim=True)
-        ff = ff.div(fnorm.expand_as(ff))
-        ff = ff.view(ff.size(0), -1)
-        return torch.cat((features, ff), 0)
+            return torch.zeros(1)

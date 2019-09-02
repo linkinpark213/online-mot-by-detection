@@ -9,8 +9,8 @@ from utils.evaluate import evaluate_mot_online, evaluate_zhejiang_online
 
 
 class ReIDTracker(Tracker):
-    def __init__(self, detector, metric, matcher, sigma_conf):
-        super().__init__(detector, metric, matcher)
+    def __init__(self, detector, matcher, sigma_conf):
+        super().__init__(detector, matcher)
         self.sigma_conf = sigma_conf
 
     def update(self, row_ind, col_ind, detection_boxes, detection_features):
@@ -37,15 +37,13 @@ class ReIDTracker(Tracker):
 
 
 if __name__ == '__main__':
-    # detector = mot.detect.YOLOv3Detector(conf_threshold=0.5)
-    detector = mot.detect.HTCDetector(conf_threshold=0.5)
-    encoder = mot.encode.PCBEncoder('../mot/encode/PCB/model/')
+    # detector = mot.detect.HTCDetector(conf_threshold=0.5)
+    detector = None
+    encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
     metric = mot.metric.EuclideanMetric(encoder)
-    # iou_metric = mot.metric.IoUMetric()
-    # metric = mot.metric.ProductMetrics(reid_metric, iou_metric)
-    matcher = mot.associate.GreedyMatcher(sigma=0.3)
+    matcher = mot.associate.GreedyMatcher(metric, sigma=0.3)
 
-    tracker = ReIDTracker(detector, metric, matcher, sigma_conf=0.3)
+    tracker = ReIDTracker(detector, matcher, sigma_conf=0.3)
 
     # run_demo(tracker)
 
@@ -53,4 +51,4 @@ if __name__ == '__main__':
     # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/test')
 
     evaluate_zhejiang_online(tracker, '/home/linkinpark213/Dataset/Zhejiang',
-                      '/home/linkinpark213/Source/madamada/results/det', show_result=True)
+                             '/home/linkinpark213/Source/madamada/results/det', show_result=True)
