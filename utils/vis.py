@@ -42,7 +42,7 @@ _colors = [(47, 47, 211),
            (208, 187, 248)]
 
 
-def draw_tracklets(image, tracklets):
+def draw_tracklets(image, tracklets, confirmed_only=True):
     """
     Draw the boxes of tracklets.
     :param image: A 3D numpy array with shape (h, w, 3). The video frame.
@@ -50,11 +50,13 @@ def draw_tracklets(image, tracklets):
     :return: A 3D numpy array with shape (h, w, 3). The video frame with boxes of tracklets drawn.
     """
     for tracklet in tracklets:
-        box = tracklet.last_box
-        image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])),
-                              _colors[tracklet.id % _colors.__len__()],
-                              thickness=int(5 * tracklet.ttl / tracklet.max_ttl))
-        image = cv2.putText(image, '{:d}'.format(tracklet.id), (int(box[0]), int(box[1]) - 8),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, _colors[tracklet.id % _colors.__len__()], thickness=2)
-
+        if tracklet.is_confirmed():
+            box = tracklet.last_box
+            image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])),
+                                  _colors[tracklet.id % _colors.__len__()],
+                                  thickness=int(5 * tracklet.ttl / tracklet.max_ttl))
+            image = cv2.putText(image, '{:d}'.format(tracklet.id), (int(box[0]), int(box[1]) - 8),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1, _colors[tracklet.id % _colors.__len__()], thickness=2)
+            image = cv2.circle(image, (int((box[0] + box[2]) / 2), int((box[1] + box[3]) / 2)), radius=10,
+                               color=(0, 0, 255), thickness=-1)
     return image

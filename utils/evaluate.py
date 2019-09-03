@@ -26,6 +26,7 @@ def evaluate_zhejiang_online(tracker, videos_path, detections_path, output_path=
             image = utils.vis.draw_tracklets(image, tracker.tracklets_active)
 
             if show_result:
+                image = cv2.resize(image, (960, 540))
                 cv2.imshow(sequence, image)
                 key = cv2.waitKey(1)
                 if key == 27:
@@ -55,6 +56,7 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results', show_re
             image = utils.vis.draw_tracklets(image, tracker.tracklets_active)
 
             if show_result:
+                image = cv2.resize(image, (960, 540))
                 cv2.imshow(sequence, image)
                 key = cv2.waitKey(1)
                 if key == 27:

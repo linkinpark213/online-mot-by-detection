@@ -9,7 +9,7 @@ class IoUMetric(Metric):
 
     def __init__(self):
         super(IoUMetric).__init__()
-        self.name = 'iou'
+        self.name = 'box'
 
     def __call__(self, tracklets, detected_boxes, img):
         matrix = np.zeros([len(tracklets), len(detected_boxes)])
