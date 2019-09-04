@@ -51,4 +51,4 @@ if __name__ == '__main__':
     # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/test')
 
     evaluate_zhejiang_online(tracker, '/home/linkinpark213/Dataset/Zhejiang',
-                             '/home/linkinpark213/Source/madamada/results/det', show_result=True)
+                             'data/det/HTC', show_result=True)
