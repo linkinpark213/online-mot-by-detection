@@ -46,7 +46,7 @@ if __name__ == '__main__':
     reid_metric = mot.metric.ProductMetric((reid_metric, iou_metric))
     reid_matcher = mot.associate.GreedyMatcher(reid_metric, sigma=0.3)
     matcher = mot.associate.CascadeMatcher((reid_matcher, iou_matcher))
-    predictor = mot.predict.KalmanPredictor()
+    predictor = mot.predict.KalmanPredictor(box_type='xyxy', predict_type='xywh')
 
     tracker = DeepSORTTracker(detector, matcher, predictor)
 

@@ -22,6 +22,8 @@ class Tracker:
         The tracker works online. For each new frame, the tracker ticks once.
         :param img: A 3D numpy array with shape (H, W, 3). The new frame in the sequence.
         """
+        self.frame_num += 1
+
         # Detection
         boxes = self.detector(img)
 
@@ -30,8 +32,6 @@ class Tracker:
 
         # Tracklet Update
         self.update(row_ind, col_ind, boxes, features)
-
-        self.frame_num += 1
 
     def update(self, row_ind, col_ind, detection_boxes, detection_features):
         """
