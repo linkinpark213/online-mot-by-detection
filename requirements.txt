@@ -1,0 +1,6 @@
+scipy
+numpy
+matplotlib
+terminaltables
+mmcv
+pycocotools

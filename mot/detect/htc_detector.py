@@ -1,7 +1,7 @@
 import torch
 from .detector import Detector
 import numpy as np
-from .mmdet.apis import inference_detector, init_detector, show_result
+from mmdet.apis import inference_detector, init_detector, show_result
 
 
 class HTCDetector(Detector):
