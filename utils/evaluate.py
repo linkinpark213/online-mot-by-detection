@@ -7,12 +7,18 @@ import mot.associate
 
 
 def evaluate_zhejiang_online(tracker, videos_path, detections_path, output_path='results',
-                             output_video_path='videos', show_result=False):
+                             output_video_path='videos', level=1, show_result=False):
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
     if not os.path.isdir(output_video_path):
         os.mkdir(output_video_path)
-    for sequence in ['a1', 'a2', 'a3', 'a4', 'a5']:
+    if level == 1:
+        sequences = ['a1', 'a2', 'a3', 'a4', 'a5']
+    elif level == 2:
+        sequences = ['b1', 'b2', 'b3', 'b4', 'b5']
+    else:
+        raise AssertionError('Level should be 1 or 2')
+    for sequence in sequences:
         print('Processing sequence {}'.format(sequence))
         result_file = open(os.path.join(output_path, sequence + '.txt'), 'w+')
         capture = cv2.VideoCapture(os.path.join(videos_path, sequence + '.mp4'))

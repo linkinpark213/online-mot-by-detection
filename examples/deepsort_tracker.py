@@ -1,12 +1,10 @@
 import mot.associate
-import mot.detect
-import mot.metric
 import mot.encode
+import mot.metric
 import mot.predict
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
-from utils.demo import run_demo
-from utils.evaluate import evaluate_mot_online, evaluate_zhejiang_online
+from utils.evaluate import evaluate_zhejiang_online
 
 
 class DeepSORTTracker(Tracker):
@@ -55,5 +53,5 @@ if __name__ == '__main__':
     # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/train')
     # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/test')
 
-    evaluate_zhejiang_online(tracker, '/home/linkinpark213/Dataset/Zhejiang',
-                             'data/det/HTC', show_result=True)
+    evaluate_zhejiang_online(tracker, '/home/linkinpark213/Dataset/Zhejiang/level2',
+                             'data/det/HTC', level=2, show_result=False)
