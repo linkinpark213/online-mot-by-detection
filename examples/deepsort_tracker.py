@@ -39,7 +39,11 @@ if __name__ == '__main__':
     detector = None
     iou_metric = mot.metric.IoUMetric()
     iou_matcher = mot.associate.GreedyMatcher(iou_metric, sigma=0.3)
-    reid_encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
+    
+    # Two encoders
+    #reid_encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
+    reid_encoder = mot.encode.DGNetEncoder('mot/encode/DGNet/outputs/checkpoints/')
+    
     reid_metric = mot.metric.EuclideanMetric(reid_encoder)
     reid_metric = mot.metric.ProductMetric((reid_metric, iou_metric))
     reid_matcher = mot.associate.GreedyMatcher(reid_metric, sigma=0.3)
