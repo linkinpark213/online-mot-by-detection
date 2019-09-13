@@ -36,8 +36,8 @@ def evaluate_zhejiang_online(tracker, videos_path, detections_path, output_path=
             if not ret:
                 break
             if video_writer is None:
-                video_writer = cv2.VideoWriter(os.path.join(output_video_path, '{}.avi'.format(sequence)),
-                                               cv2.VideoWriter_fourcc(*'MJPG'),
+                video_writer = cv2.VideoWriter(os.path.join(output_video_path, '{}.mp4'.format(sequence)),
+                                               cv2.VideoWriter_fourcc(*'MP4V'),
                                                30, (image.shape[1], image.shape[0]))
             result_file.write(to_zhejiang_evaluate_data(tracker))
             tracker.tick(image)
@@ -75,7 +75,7 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
         frame_filenames.sort()
         for i in range(frame_filenames.__len__()):
             if video_writer is None:
-                video_writer = cv2.VideoWriter(os.path.join(output_video_path, '{}.avi'.format(sequence)),
+                video_writer = cv2.VideoWriter(os.path.join(output_video_path, '{}.mp4'.format(sequence)),
                                                cv2.VideoWriter_fourcc(*'FMP4'),
                                                30, (image.shape[1], image.shape[0]))
             image = cv2.imread(os.path.join(mot_subset_path, sequence, 'img1', frame_filenames[i]))
