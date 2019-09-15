@@ -24,7 +24,6 @@ class HTCDetector:
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("videos_path", type=str)
-    parser.add_argument("--result_path", type=str, default='results/')
     # MMDetection arguments
     parser.add_argument('--det_config', help='detector test config file path',
                         default='configs/htc/htc_dconv_c3-c5_mstrain_400_1400_x101_64x4d_fpn_20e.py')
@@ -46,8 +45,8 @@ if __name__ == '__main__':
     detector = HTCDetector(args)
 
     args = parse_args()
-    if not os.path.isdir(args.result_path):
-        os.mkdir(args.result_path)
+    if not os.path.isdir(args.result_save_path):
+        os.makedirs(args.result_save_path)
 
     for video_file in os.listdir(args.videos_path):
         sequence_name = video_file.split('.')[0]
