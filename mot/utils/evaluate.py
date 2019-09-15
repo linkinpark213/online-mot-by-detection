@@ -100,7 +100,7 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
 def to_zhejiang_evaluate_data(tracker, time_lived_threshold=1, ttl_threshold=3):
     data = ''
     for tracklet in tracker.tracklets_active:
-        if tracklet.time_lived >= time_lived_threshold and tracklet.ttl >= ttl_threshold:
+        if tracklet.time_lived >= time_lived_threshold and tracklet.ttl >= ttl_threshold and tracklet.detected:
             data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(tracker.frame_num,
                                                                           tracklet.id,
                                                                           tracklet.last_box[0],

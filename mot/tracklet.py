@@ -19,6 +19,8 @@ class Tracklet:
         self.time_lived = 0
         # The motion predictor, if any.
         self.predictor = predictor
+        # Whether the target was just detected or not.
+        self.detected = True
         if self.predictor is not None:
             self.predictor.initiate(self)
 
@@ -29,6 +31,7 @@ class Tracklet:
             return self.last_box
 
     def update(self, n, box, feature):
+        self.detected = True
         self.last_box = box
         self.feature = feature
         if self.predictor is not None:
@@ -42,6 +45,7 @@ class Tracklet:
         self.time_lived += 1
 
     def fade(self):
+        self.detected = False
         self.last_box = self.predict()
         self.ttl -= 1
         return self.ttl <= 0

@@ -2,7 +2,7 @@ import mot.metric
 import mot.associate
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
-from mot.utils import evaluate_zhejiang_online
+from mot.utils.evaluate import evaluate_zhejiang_online
 
 
 class IoUTracker(Tracker):
