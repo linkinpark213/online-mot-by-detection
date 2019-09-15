@@ -1,8 +1,8 @@
 import os
 import cv2
 import argparse
-import utils.vis
-from utils.capture import ImagesCapture
+import mot.utils.vis
+from mot.utils import ImagesCapture
 
 
 def run_demo(tracker):
@@ -33,7 +33,7 @@ def run_demo(tracker):
             writer = cv2.VideoWriter(args.save_video, cv2.VideoWriter_fourcc(*'mp4v'), 30,
                                      (image.shape[1], image.shape[0]))
         tracker.tick(image)
-        image = utils.vis.draw_tracklets(image, tracker.tracklets_active)
+        image = mot.utils.vis.draw_tracklets(image, tracker.tracklets_active)
         if args.save_video != '':
             writer.write(image)
         cv2.imshow('Demo', image)

@@ -4,7 +4,7 @@ import mot.metric
 import mot.predict
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
-from utils.evaluate import evaluate_zhejiang_online
+from mot.utils import evaluate_zhejiang_online
 
 
 class DeepSORTTracker(Tracker):

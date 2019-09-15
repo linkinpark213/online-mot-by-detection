@@ -1,6 +1,6 @@
 import os
 import cv2
-import utils.vis
+import mot.utils.vis
 import mot.detect
 import mot.metric
 import mot.associate
@@ -41,7 +41,7 @@ def evaluate_zhejiang_online(tracker, videos_path, detections_path, output_path=
                                                30, (image.shape[1], image.shape[0]))
             result_file.write(to_zhejiang_evaluate_data(tracker))
             tracker.tick(image)
-            image = utils.vis.draw_tracklets(image, tracker.tracklets_active)
+            image = mot.utils.vis.draw_tracklets(image, tracker.tracklets_active)
 
             video_writer.write(image)
             if show_result:
@@ -81,7 +81,7 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
             image = cv2.imread(os.path.join(mot_subset_path, sequence, 'img1', frame_filenames[i]))
             result_file.write(to_mot_evaluate_data(tracker))
             tracker.tick(image)
-            image = utils.vis.draw_tracklets(image, tracker.tracklets_active)
+            image = mot.utils.vis.draw_tracklets(image, tracker.tracklets_active)
 
             video_writer.write(image)
             if show_result:

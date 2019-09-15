@@ -1,10 +1,8 @@
-import mot.detect
 import mot.metric
 import mot.associate
-from utils.demo import run_demo
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
-from utils.evaluate import evaluate_mot_online, evaluate_zhejiang_online
+from mot.utils import evaluate_zhejiang_online
 
 
 class IoUTracker(Tracker):
