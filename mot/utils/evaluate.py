@@ -109,7 +109,8 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
 def trajectory_to_zhejiang(id, trajectory):
     data = ''
     for frame, box in trajectory:
-        data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(frame, id, box[0], box[1], box[2], box[3])
+        data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(frame, id, box[0], box[1], box[2] - box[0],
+                                                                      box[3] - box[1])
     return data
 
 
