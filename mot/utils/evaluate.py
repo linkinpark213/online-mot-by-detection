@@ -4,10 +4,11 @@ import mot.utils.vis
 import mot.detect
 import mot.metric
 import mot.associate
+import mot.utils.offline
 
 
-def evaluate_zhejiang_online(tracker, videos_path, detections_path, output_path='results',
-                             output_video_path='videos', level=1, show_result=False):
+def evaluate_zhejiang(tracker, videos_path, detections_path, output_path='results',
+                      output_video_path='videos', level=1, online=True, show_result=False):
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
     if not os.path.isdir(output_video_path):
@@ -39,7 +40,8 @@ def evaluate_zhejiang_online(tracker, videos_path, detections_path, output_path=
                 video_writer = cv2.VideoWriter(os.path.join(output_video_path, '{}.mp4'.format(sequence)),
                                                cv2.VideoWriter_fourcc(*'MP4V'),
                                                30, (image.shape[1], image.shape[0]))
-            result_file.write(to_zhejiang_evaluate_data(tracker))
+            if online:
+                result_file.write(snapshot_to_zhejiang(tracker))
             tracker.tick(image)
             image = mot.utils.vis.draw_tracklets(image, tracker.tracklets_active)
 
@@ -50,6 +52,13 @@ def evaluate_zhejiang_online(tracker, videos_path, detections_path, output_path=
                 key = cv2.waitKey(1)
                 if key == 27:
                     return
+
+        if not online:
+            for tracklet in tracker.tracklets_active:
+                tracker.tracklets_finished.append(tracklet)
+            for tracklet in tracker.tracklets_finished:
+                trajectory = mot.utils.offline.fill_gaps(tracklet)
+                result_file.write(trajectory_to_zhejiang(tracklet.id, trajectory))
 
         cv2.destroyAllWindows()
         video_writer.release()
@@ -79,7 +88,7 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
                                                cv2.VideoWriter_fourcc(*'FMP4'),
                                                30, (image.shape[1], image.shape[0]))
             image = cv2.imread(os.path.join(mot_subset_path, sequence, 'img1', frame_filenames[i]))
-            result_file.write(to_mot_evaluate_data(tracker))
+            result_file.write(snapshot_to_mot(tracker))
             tracker.tick(image)
             image = mot.utils.vis.draw_tracklets(image, tracker.tracklets_active)
 
@@ -97,7 +106,14 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
         print('Results saved to {}/{}.txt'.format(output_path, sequence))
 
 
-def to_zhejiang_evaluate_data(tracker, time_lived_threshold=1, ttl_threshold=3):
+def trajectory_to_zhejiang(id, trajectory):
+    data = ''
+    for frame, box in trajectory:
+        data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(frame, id, box[0], box[1], box[2], box[3])
+    return data
+
+
+def snapshot_to_zhejiang(tracker, time_lived_threshold=1, ttl_threshold=3):
     data = ''
     for tracklet in tracker.tracklets_active:
         if tracklet.time_lived >= time_lived_threshold and tracklet.ttl >= ttl_threshold and tracklet.detected:
@@ -110,10 +126,10 @@ def to_zhejiang_evaluate_data(tracker, time_lived_threshold=1, ttl_threshold=3):
     return data
 
 
-def to_mot_evaluate_data(tracker, time_lived_threshold=1, ttl_threshold=3):
+def snapshot_to_mot(tracker, time_lived_threshold=1, ttl_threshold=3):
     data = ''
     for tracklet in tracker.tracklets_active:
-        if tracklet.time_lived >= time_lived_threshold and tracklet.ttl >= ttl_threshold:
+        if tracklet.time_lived >= time_lived_threshold and tracklet.ttl >= ttl_threshold and tracklet.detected:
             data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, -1, -1, -1, -1\n'.format(tracker.frame_num,
                                                                                           tracklet.id,
                                                                                           tracklet.last_box[0],

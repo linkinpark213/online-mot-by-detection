@@ -7,6 +7,23 @@ def read_track_file(file_path):
     return np.loadtxt(file_path, delimiter=',')
 
 
+def fill_gaps(tracklet, max_gap=10):
+    box_history = tracklet.box_history
+    output_trajectory = []
+    current_frame = -1
+    for i in range(len(box_history)):
+        if i > 0 and box_history[i][0] - current_frame <= max_gap:
+            box_gap = box_history[i][1] - output_trajectory[-1][1]
+            frame_gap = box_history[i][0] - current_frame
+            unit = box_gap / frame_gap
+            for j in range(current_frame + 1, box_history[i][0]):
+                output_trajectory.append((j, output_trajectory[-1][1] + unit * (j - current_frame)))
+        else:
+            output_trajectory.append(box_history[i])
+        current_frame = box_history[i][0]
+    return output_trajectory
+
+
 def remove_short_tracks(track_results, min_time_lived):
     tracks = {}
     for line in track_results:

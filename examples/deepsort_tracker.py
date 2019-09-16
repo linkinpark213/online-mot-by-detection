@@ -4,7 +4,7 @@ import mot.metric
 import mot.predict
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
-from mot.utils.evaluate import evaluate_zhejiang_online
+from mot.utils.evaluate import evaluate_zhejiang
 
 
 class DeepSORTTracker(Tracker):
@@ -39,11 +39,11 @@ if __name__ == '__main__':
     detector = None
     iou_metric = mot.metric.IoUMetric()
     iou_matcher = mot.associate.GreedyMatcher(iou_metric, sigma=0.3)
-    
+
     # Two encoders
-    #reid_encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
+    # reid_encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
     reid_encoder = mot.encode.DGNetEncoder('mot/encode/DGNet/outputs/checkpoints/')
-    
+
     reid_metric = mot.metric.EuclideanMetric(reid_encoder)
     reid_metric = mot.metric.ProductMetric((reid_metric, iou_metric))
     reid_matcher = mot.associate.GreedyMatcher(reid_metric, sigma=0.3)
@@ -57,5 +57,5 @@ if __name__ == '__main__':
     # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/train')
     # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/test')
 
-    evaluate_zhejiang_online(tracker, '/home/linkinpark213/Dataset/Zhejiang/level2',
-                             'data/det/HTC', level=2, show_result=False)
+    evaluate_zhejiang(tracker, '/home/linkinpark213/Dataset/Zhejiang/level2',
+                      'data/det/HTC', level=2, online=False, show_result=False)
