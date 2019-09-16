@@ -8,6 +8,7 @@ def read_track_file(file_path):
 
 
 def fill_gaps(tracklet, max_gap=10):
+    print('Target #{}, length before filling: {}'.format(tracklet.id, len(tracklet.box_history)), end=' ')
     box_history = tracklet.box_history
     output_trajectory = []
     current_frame = -1
@@ -21,6 +22,7 @@ def fill_gaps(tracklet, max_gap=10):
         else:
             output_trajectory.append(box_history[i])
         current_frame = box_history[i][0]
+    print('after filling: {}'.format(len(output_trajectory)))
     return output_trajectory
 
 
