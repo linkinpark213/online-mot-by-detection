@@ -36,7 +36,13 @@ def parse_args():
         '--score-thr', type=float, default=0.5, help='bbox score threshold')
     # FakeDetector arguments
     parser.add_argument('--det_save_path', help='path to detection files', default='results/det/')
+    parser.add_argument('--frame_save_path', help='path to frame files', default='results/frames/')
+    parser.add_argument("--if_save_frames",help='if save frames of video',default=False)
     return parser.parse_args()
+def generate_frames(img,save_path,frame):
+    print(save_path + '/' + 'frame{:05d}.jpg'.format(frame))
+    return cv2.imwrite(save_path + '/' + 'frame{:05d}.jpg'.format(frame), img)
+
 
 
 if __name__ == '__main__':
@@ -45,8 +51,8 @@ if __name__ == '__main__':
     detector = HTCDetector(args)
 
     args = parse_args()
-    if not os.path.isdir(args.result_save_path):
-        os.makedirs(args.result_save_path)
+    if not os.path.isdir(args.det_save_path):
+        os.makedirs(args.det_save_path)
 
     for video_file in os.listdir(args.videos_path):
         sequence_name = video_file.split('.')[0]
@@ -63,8 +69,10 @@ if __name__ == '__main__':
                 break
             frame_num += 1
             bbox_xcycwh, cls_conf, cls_ids = detector(image)
-
             print("Detecting Frame #{}".format(frame_num))
+            if args.if_save_frames:
+                generate_frames(image, args.frame_save_path+sequence_name, frame_num)
+                print('frame saved')
             for i in range(len(bbox_xcycwh)):
                 detector_output_file.write(
                     '{:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, 0\n'.format(frame_num,
