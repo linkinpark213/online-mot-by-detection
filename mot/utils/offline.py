@@ -13,14 +13,13 @@ def fill_gaps(tracklet, max_gap=10):
     output_trajectory = []
     current_frame = -1
     for i in range(len(box_history)):
-        if i > 0 and box_history[i][0] - current_frame > 0 and box_history[i][0] - current_frame <= max_gap:
+        if current_frame > -1 and box_history[i][0] - current_frame > 1 and box_history[i][0] - current_frame <= max_gap:
             box_gap = box_history[i][1] - output_trajectory[-1][1]
             frame_gap = box_history[i][0] - current_frame
             unit = box_gap / frame_gap
             for j in range(current_frame + 1, box_history[i][0]):
                 output_trajectory.append((j, output_trajectory[-1][1] + unit * (j - current_frame)))
-        else:
-            output_trajectory.append(box_history[i])
+        output_trajectory.append(box_history[i])
         current_frame = box_history[i][0]
     print('after filling: {}'.format(len(output_trajectory)))
     return output_trajectory
