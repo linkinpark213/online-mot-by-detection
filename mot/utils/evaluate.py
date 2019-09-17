@@ -111,17 +111,13 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
 
 
 def trajectories_to_zhejiang(trajectories):
-    data = []
+    data = ''
+    trajectories = trajectories[np.argsort(np.array([id for id, trajectory in trajectories]))]
     for id, trajectory in trajectories:
         for frame, box in trajectory:
-            data.append([frame, id, box[0], box[1], box[2] - box[0], box[3] - box[1]])
-    data = np.array(data)
-    data = data[data[:, 1].argsort()]
-    text = ''
-    for line in data:
-        text += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(int(line[0]), int(line[1]), line[2], line[3],
-                                                                      line[4], line[5])
-    return text
+            data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(frame, id, box[0], box[1], box[2] - box[0],
+                                                                          box[3] - box[1])
+    return data
 
 
 def snapshot_to_zhejiang(tracker, time_lived_threshold=1, ttl_threshold=3):
