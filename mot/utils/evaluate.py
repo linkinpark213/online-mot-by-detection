@@ -116,7 +116,7 @@ def trajectories_to_zhejiang(trajectories):
         for frame, box in trajectory:
             data.append([frame, id, box[0], box[1], box[2] - box[0], box[3] - box[1]])
     data = np.array(data)
-    data = data[data[:, 0].argsort()]
+    data = data[data[:, 1].argsort()]
     text = ''
     for line in data:
         text += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(*line)
