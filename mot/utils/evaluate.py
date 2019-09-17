@@ -1,6 +1,7 @@
 import os
 import cv2
 import logging
+import numpy as np
 import mot.utils.vis
 import mot.detect
 import mot.metric
@@ -110,12 +111,16 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
 
 
 def trajectories_to_zhejiang(trajectories):
-    data = ''
+    data = []
     for id, trajectory in trajectories:
         for frame, box in trajectory:
-            data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(frame, id, box[0], box[1], box[2] - box[0],
-                                                                          box[3] - box[1])
-    return data
+            data.append([frame, id, box[0], box[1], box[2] - box[0], box[3] - box[1]])
+    data = np.array(data)
+    data = data[data[:, 0].argsort()]
+    text = ''
+    for line in data:
+        text += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(*line)
+    return text
 
 
 def snapshot_to_zhejiang(tracker, time_lived_threshold=1, ttl_threshold=3):
