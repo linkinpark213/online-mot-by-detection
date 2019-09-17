@@ -31,7 +31,7 @@ class ReIDTracker(Tracker):
         for i in range(len(detection_features)):
             if i not in col_ind:
                 if detection_boxes[i][4] > self.sigma_conf:
-                    self.add_tracklet(Tracklet(0, detection_boxes[i], detection_features[i]))
+                    self.add_tracklet(Tracklet(0, self.frame_num, detection_boxes[i], detection_features[i]))
 
 
 if __name__ == '__main__':

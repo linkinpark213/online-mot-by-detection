@@ -32,7 +32,7 @@ class DeepSORTTracker(Tracker):
 
         for i in range(len(detection_features)):
             if i not in col_ind:
-                self.add_tracklet(Tracklet(0, detection_boxes[i], detection_features[i], self.predictor))
+                self.add_tracklet(Tracklet(0, self.frame_num, detection_boxes[i], detection_features[i], self.predictor))
 
 
 if __name__ == '__main__':
