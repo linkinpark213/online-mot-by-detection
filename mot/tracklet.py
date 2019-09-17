@@ -1,16 +1,20 @@
 class Tracklet:
     min_time_lived = 3
 
-    def __init__(self, id, box, feature, predictor=None, max_ttl=30, max_history=30):
+    def __init__(self, id, box, feature, predictor=None, max_ttl=30, max_history=30, max_box_history=3000):
         self.id = id
         # Box coordinate of the last target position with (left, top, right, bottom).
         self.last_box = box
+        # An array storing past features. Only keeping `max_history` frames.
+        self.box_history = []
         # A feature dictionary.
         self.feature = feature
         # An array storing past features. Only keeping `max_history` frames.
         self.feature_history = []
         # Max Time-to-Live. Tracklets will get killed if TTL times out.
         self.max_ttl = max_ttl
+        # Parameter limiting the past history boxes to keep.
+        self.max_box_history = max_box_history
         # Parameter limiting the past history features to keep.
         self.max_history = max_history
         # The actual Time-to-Live of a tracklet.
@@ -39,6 +43,9 @@ class Tracklet:
             self.predictor.update(self)
         if len(self.feature_history) >= self.max_history:
             self.feature_history.pop(0)
+        if len(self.box_history) >= self.max_box_history:
+            self.box_history.pop(0)
+        self.box_history.append((n, box))
         self.feature_history.append((n, feature))
         if self.ttl < self.max_ttl:
             self.ttl += 1

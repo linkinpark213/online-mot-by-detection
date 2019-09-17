@@ -2,7 +2,7 @@ import mot.metric
 import mot.associate
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
-from mot.utils.evaluate import evaluate_zhejiang_online
+from mot.utils.evaluate import evaluate_zhejiang
 
 
 class IoUTracker(Tracker):
@@ -46,5 +46,5 @@ if __name__ == '__main__':
     # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/train')
     # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/test')
 
-    evaluate_zhejiang_online(tracker, '/home/linkinpark213/Dataset/Zhejiang',
+    evaluate_zhejiang(tracker, '/home/linkinpark213/Dataset/Zhejiang',
                              'data/det/HTC', show_result=True)
