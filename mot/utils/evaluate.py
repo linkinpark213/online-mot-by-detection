@@ -112,7 +112,7 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
 
 def trajectories_to_zhejiang(trajectories):
     data = ''
-    trajectories = trajectories[np.argsort(np.array([id for id, trajectory in trajectories]))]
+    trajectories = [trajectories[i] for i in np.argsort(np.array([id for id, trajectory in trajectories]))]
     for id, trajectory in trajectories:
         for frame, box in trajectory:
             data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(frame, id, box[0], box[1], box[2] - box[0],
