@@ -119,7 +119,8 @@ def trajectories_to_zhejiang(trajectories):
     data = data[data[:, 1].argsort()]
     text = ''
     for line in data:
-        text += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(*line)
+        text += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(int(line[0]), int(line[1]), line[2], line[3],
+                                                                      line[4], line[5])
     return text
 
 
