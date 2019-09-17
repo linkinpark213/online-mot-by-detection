@@ -83,9 +83,6 @@ class DGNetEncoder(Encoder):
         all_crops = []
         for box in boxes:
             crop = full_img[int(box[1]):int(box[3]), int(box[0]):int(box[2])]
-
-            cv2.imwrite('test.jpg', crop)
-
             if crop.shape[0] * crop.shape[1] > 0:
                 all_crops.append(crop)
             else:

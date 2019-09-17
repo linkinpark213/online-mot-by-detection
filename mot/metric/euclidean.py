@@ -18,6 +18,14 @@ class EuclideanMetric(Metric):
         for i in range(len(tracklets)):
             for j in range(len(detected_boxes)):
                 matrix[i][j] = self.euclidean(tracklets[i].feature[self.encoder.name][0], features[j][0])
+
+
+        for line in matrix:
+            for num in line:
+                print(num, end=' ')
+            print('')
+
+
         return matrix, features
 
     def euclidean(self, a, b):
