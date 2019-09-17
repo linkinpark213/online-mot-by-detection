@@ -1,3 +1,4 @@
+import logging
 import mot.associate
 import mot.encode
 import mot.metric
@@ -35,6 +36,7 @@ class DeepSORTTracker(Tracker):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
     # detector = mot.detect.HTCDetector(conf_threshold=0.5)
     detector = None
     iou_metric = mot.metric.IoUMetric()

@@ -56,9 +56,11 @@ def evaluate_zhejiang(tracker, videos_path, detections_path, output_path='result
         if not online:
             for tracklet in tracker.tracklets_active:
                 tracker.tracklets_finished.append(tracklet)
+            all_trajectories = []
             for tracklet in tracker.tracklets_finished:
-                trajectory = mot.utils.offline.fill_gaps(tracklet)
-                result_file.write(trajectory_to_zhejiang(tracklet.id, trajectory))
+                all_trajectories.append((tracker.id, mot.utils.offline.fill_gaps(tracklet, max_gap=10)))
+            all_trajectories = mot.utils.offline.remove_short_tracks(all_trajectories, min_time_lived=30)
+            result_file.write(trajectories_to_zhejiang(all_trajectories))
 
         cv2.destroyAllWindows()
         video_writer.release()
@@ -106,11 +108,12 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
         print('Results saved to {}/{}.txt'.format(output_path, sequence))
 
 
-def trajectory_to_zhejiang(id, trajectory):
+def trajectories_to_zhejiang(trajectories):
     data = ''
-    for frame, box in trajectory:
-        data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(frame, id, box[0], box[1], box[2] - box[0],
-                                                                      box[3] - box[1])
+    for id, trajectory in trajectories:
+        for frame, box in trajectory:
+            data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}\n'.format(frame, id, box[0], box[1], box[2] - box[0],
+                                                                          box[3] - box[1])
     return data
 
 
