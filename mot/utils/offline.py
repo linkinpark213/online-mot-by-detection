@@ -7,7 +7,7 @@ def read_track_file(file_path):
 
 
 def fill_gaps(tracklet, max_gap=10):
-    logging.INFO('Gap-filling: Target #{}, length before filling: {}'.format(tracklet.id, len(tracklet.box_history)))
+    logging.info('Gap-filling: Target #{}, length before filling: {}'.format(tracklet.id, len(tracklet.box_history)))
     box_history = tracklet.box_history
     output_trajectory = []
     current_frame = -1
@@ -21,7 +21,7 @@ def fill_gaps(tracklet, max_gap=10):
                 output_trajectory.append((j, output_trajectory[-1][1] + unit * (j - current_frame)))
         output_trajectory.append(box_history[i])
         current_frame = box_history[i][0]
-    logging.INFO('Gap-filling: after filling: {}'.format(len(output_trajectory)))
+    logging.info('Gap-filling: After filling: {}'.format(len(output_trajectory)))
     return output_trajectory
 
 
@@ -33,6 +33,6 @@ def remove_short_tracks(tracklets, min_time_lived=30):
             outputs.append((id, track))
         else:
             removed.append((id, track))
-    logging.INFO('Short-cleaning: {} tracks removed ({} lines in total)'.format(len(removed),
+    logging.info('Short-cleaning: {} tracks removed ({} lines in total)'.format(len(removed),
                                                                                 sum(map(lambda t: len(t[1]), removed))))
     return outputs
