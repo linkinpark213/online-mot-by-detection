@@ -1,5 +1,6 @@
 import os
 import cv2
+import logging
 import mot.utils.vis
 import mot.detect
 import mot.metric
@@ -20,7 +21,7 @@ def evaluate_zhejiang(tracker, videos_path, detections_path, output_path='result
     else:
         raise AssertionError('Level should be 1 or 2')
     for sequence in sequences:
-        print('Processing sequence {}'.format(sequence))
+        logging.info('Processing sequence {}'.format(sequence))
         result_file = open(os.path.join(output_path, sequence + '.txt'), 'w+')
         capture = cv2.VideoCapture(os.path.join(videos_path, sequence + '.mp4'))
         video_writer = None
@@ -58,14 +59,14 @@ def evaluate_zhejiang(tracker, videos_path, detections_path, output_path='result
                 tracker.tracklets_finished.append(tracklet)
             all_trajectories = []
             for tracklet in tracker.tracklets_finished:
-                all_trajectories.append((tracker.id, mot.utils.offline.fill_gaps(tracklet, max_gap=10)))
+                all_trajectories.append((tracklet.id, mot.utils.offline.fill_gaps(tracklet, max_gap=10)))
             all_trajectories = mot.utils.offline.remove_short_tracks(all_trajectories, min_time_lived=30)
             result_file.write(trajectories_to_zhejiang(all_trajectories))
 
         cv2.destroyAllWindows()
         video_writer.release()
         result_file.close()
-        print('Results saved to {}/{}.txt'.format(output_path, sequence))
+        logging.info('Results saved to {}/{}.txt'.format(output_path, sequence))
 
 
 def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
