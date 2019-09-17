@@ -12,11 +12,12 @@ import torchvision.transforms as transforms
 from .DGNet.reIDmodel import ft_net, ft_netAB, ft_net_dense, PCB, PCB_test
 import pdb
 
+
 class DGNetEncoder(Encoder):
     def __init__(self, model_path):
         super(DGNetEncoder).__init__()
         self.name = 'DG-Net'
-        
+
         self.model = ft_netAB(751, norm=False, stride=1, pool='max')
         save_path = os.path.join(model_path, 'id_00100000.pt')
         state_dict = torch.load(save_path)
@@ -24,7 +25,7 @@ class DGNetEncoder(Encoder):
         self.model.classifier1.classifier = nn.Sequential()
         self.model.classifier2.classifier = nn.Sequential()
         self.model = self.model.eval().cuda()
-        self.size = (64,128)
+        self.size = (64, 128)
         self.norm = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -63,15 +64,16 @@ class DGNetEncoder(Encoder):
         inv_idx = torch.arange(img.size(3) - 1, -1, -1).long()  # N x C x H x W
         img_flip = img.index_select(3, inv_idx)
         return img_flip
-        
+
     def _preprocess(self, im_crops):
         def _resize(im, size):
             return cv2.resize(im.astype(np.float32) / 255., size)
+
         im_batch = torch.cat([self.norm(_resize(im, self.size)).unsqueeze(0) for im in im_crops], dim=0).float()
         return im_batch
-        
+
     def normlize(self, f):
-        #f = f.squeeze()
+        # f = f.squeeze()
         fnorm = torch.norm(f, p=2, dim=1, keepdim=True)
         f = f.div(fnorm.expand_as(f))
         return f
@@ -81,6 +83,9 @@ class DGNetEncoder(Encoder):
         all_crops = []
         for box in boxes:
             crop = full_img[int(box[1]):int(box[3]), int(box[0]):int(box[2])]
+
+            cv2.imwrite('test.jpg', crop)
+
             if crop.shape[0] * crop.shape[1] > 0:
                 all_crops.append(crop)
             else:
@@ -88,22 +93,21 @@ class DGNetEncoder(Encoder):
         if boxes.shape[0] != 0:
             img = self._preprocess(all_crops)
             n, c, h, w = img.shape
-            ff = torch.FloatTensor(n,1024).zero_()
+            ff = torch.FloatTensor(n, 1024).zero_()
             for i in range(2):
-                if(i==1):
+                if (i == 1):
                     img = self.fliplr(img)
                 input_img = Variable(img.cuda())
                 f, x = self.model(input_img)
                 x[0] = self.normlize(x[0])
                 x[1] = self.normlize(x[1])
-                f = torch.cat((x[0],x[1]), dim=1) #use 512-dim feature
+                f = torch.cat((x[0], x[1]), dim=1)  # use 512-dim feature
                 f = f.data.cpu()
-                ff = ff+f
-        
+                ff = ff + f
+
             ff[:, 0:512] = self.normlize(ff[:, 0:512])
             ff[:, 512:1024] = self.normlize(ff[:, 512:1024])
             ff[:, 512:1024] = ff[:, 512:1024] * 0.7
-            return torch.cat((features,ff), 0)
+            return torch.cat((features, ff), 0)
         else:
             return torch.zeros(1)
-            
