@@ -7,8 +7,7 @@ def read_track_file(file_path):
 
 
 def fill_gaps(tracklet, max_gap=10):
-    logging.INFO('Gap-filling: Target #{}, length before filling: {}'.format(tracklet.id, len(tracklet.box_history)),
-                 end=' ')
+    logging.INFO('Gap-filling: Target #{}, length before filling: {}'.format(tracklet.id, len(tracklet.box_history)))
     box_history = tracklet.box_history
     output_trajectory = []
     current_frame = -1
