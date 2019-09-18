@@ -32,7 +32,8 @@ class DeepSORTTracker(Tracker):
 
         for i in range(len(detection_features)):
             if i not in col_ind:
-                self.add_tracklet(Tracklet(0, self.frame_num, detection_boxes[i], detection_features[i], self.predictor))
+                self.add_tracklet(
+                    Tracklet(0, self.frame_num, detection_boxes[i], detection_features[i], self.predictor))
 
 
 if __name__ == '__main__':
@@ -46,7 +47,7 @@ if __name__ == '__main__':
     # reid_encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
     reid_encoder = mot.encode.DGNetEncoder('mot/encode/DGNet/outputs/checkpoints/')
 
-    reid_metric = mot.metric.EuclideanMetric(reid_encoder)
+    reid_metric = mot.metric.EuclideanMetric(reid_encoder, history=10)
     reid_metric = mot.metric.ProductMetric((reid_metric, iou_metric))
     reid_matcher = mot.associate.GreedyMatcher(reid_metric, sigma=0.3)
     matcher = mot.associate.CascadeMatcher((reid_matcher, iou_matcher))
