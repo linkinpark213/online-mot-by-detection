@@ -19,7 +19,7 @@ def fill_gaps(tracklets, max_gap=10):
                 unit = box_gap / frame_gap
                 for j in range(current_frame + 1, track[i][0]):
                     output_trajectory.append((j, output_trajectory[-1][1] + unit * (j - current_frame)))
-                current_frame = track[i][0]
+            current_frame = track[i][0]
             output_trajectory.append(track[i])
         logging.info('Gap-filling: After filling: {}'.format(len(output_trajectory)))
         output_trajectories.append(output_trajectory)
