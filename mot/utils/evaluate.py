@@ -60,7 +60,8 @@ def evaluate_zhejiang(tracker, videos_path, detections_path, output_path='result
                 tracker.tracklets_finished.append(tracklet)
             all_trajectories = []
             for tracklet in tracker.tracklets_finished:
-                all_trajectories.append((tracklet.id, mot.utils.offline.fill_gaps(tracklet, max_gap=10)))
+                all_trajectories.append((tracklet.id, tracklet.box_history))
+            all_trajectories = mot.utils.offline.fill_gaps(all_trajectories, max_gap=10)
             all_trajectories = mot.utils.offline.remove_short_tracks(all_trajectories, min_time_lived=30)
             result_file.write(trajectories_to_zhejiang(all_trajectories))
 

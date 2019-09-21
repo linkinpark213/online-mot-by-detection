@@ -6,23 +6,24 @@ def read_track_file(file_path):
     return np.loadtxt(file_path, delimiter=',')
 
 
-def fill_gaps(tracklet, max_gap=10):
-    logging.info('Gap-filling: Target #{}, length before filling: {}'.format(tracklet.id, len(tracklet.box_history)))
-    box_history = tracklet.box_history
-    output_trajectory = []
-    current_frame = -1
-    for i in range(len(box_history)):
-        if current_frame > -1 and box_history[i][0] - current_frame > 1 and box_history[i][
-            0] - current_frame <= max_gap:
-            box_gap = box_history[i][1] - output_trajectory[-1][1]
-            frame_gap = box_history[i][0] - current_frame
-            unit = box_gap / frame_gap
-            for j in range(current_frame + 1, box_history[i][0]):
-                output_trajectory.append((j, output_trajectory[-1][1] + unit * (j - current_frame)))
-        output_trajectory.append(box_history[i])
-        current_frame = box_history[i][0]
-    logging.info('Gap-filling: After filling: {}'.format(len(output_trajectory)))
-    return output_trajectory
+def fill_gaps(tracklets, max_gap=10):
+    output_trajectories = []
+    for id, track in tracklets:
+        logging.info('Gap-filling: Target #{}, length before filling: {}'.format(id, len(track)))
+        output_trajectory = []
+        current_frame = -1
+        for i in range(len(track)):
+            if current_frame > -1 and track[i][0] - current_frame > 1 and track[i][0] - current_frame <= max_gap:
+                box_gap = track[i][1] - output_trajectory[-1][1]
+                frame_gap = track[i][0] - current_frame
+                unit = box_gap / frame_gap
+                for j in range(current_frame + 1, track[i][0]):
+                    output_trajectory.append((j, output_trajectory[-1][1] + unit * (j - current_frame)))
+                current_frame = track[i][0]
+            output_trajectory.append(track[i])
+        logging.info('Gap-filling: After filling: {}'.format(len(output_trajectory)))
+        output_trajectories.append(output_trajectory)
+    return output_trajectories
 
 
 def remove_short_tracks(tracklets, min_time_lived=30):
