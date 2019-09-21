@@ -22,7 +22,7 @@ def fill_gaps(tracklets, max_gap=10):
             current_frame = track[i][0]
             output_trajectory.append(track[i])
         logging.info('Gap-filling: After filling: {}'.format(len(output_trajectory)))
-        output_trajectories.append(output_trajectory)
+        output_trajectories.append((id, output_trajectory))
     return output_trajectories
 
 
