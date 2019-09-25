@@ -12,6 +12,7 @@ class DeepSORTTracker(Tracker):
     def __init__(self, detector, matcher, predictor):
         super().__init__(detector, matcher)
         self.predictor = predictor
+        print(predictor)
 
     def update(self, row_ind, col_ind, detection_boxes, detection_features):
         unmatched_tracklets = []
