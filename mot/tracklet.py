@@ -23,7 +23,6 @@ class Tracklet:
         self.time_lived = 0
         # The motion predictor, if any.
         self.predictor = predictor
-        print(predictor)
         # Whether the target was just detected or not.
         self.detected = True
         if self.predictor is not None:
