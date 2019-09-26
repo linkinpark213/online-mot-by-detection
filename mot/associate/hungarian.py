@@ -1,3 +1,4 @@
+import numpy as np
 import scipy.optimize
 from .matcher import Matcher
 
@@ -14,7 +15,9 @@ class HungarianMatcher(Matcher):
         for i in range(len(row_ind)):
             if similarity_matrix[row_ind[i], col_ind[i]] < self.sigma:
                 indices_to_remove.append(i)
+        row_ind = row_ind.tolist()
+        col_ind = col_ind.tolist()
         for index in indices_to_remove:
             row_ind.remove(row_ind[index])
             col_ind.remove(col_ind[index])
-        return row_ind, col_ind, features
+        return np.array(row_ind), np.array(col_ind), features
