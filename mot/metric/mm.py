@@ -26,9 +26,10 @@ class MMMetric(Metric):
                 else:
                     history = self.history
                 for k in range(history):
-                    sum += self.torch_mm(tracklets[i].feature_history[-k - 1][1][self.encoder.name].view(1, 1024), features[j].view(1024, 1))[0][0]
+                    sum += self.torch_mm(tracklets[i].feature_history[-k - 1][1][self.encoder.name].view(1, 1024),
+                                         features[j].view(1024, 1))[0][0]
                 matrix[i][j] = sum / history
         return matrix, features
-        
+
     def torch_mm(self, a, b):
         return torch.mm(a, b)

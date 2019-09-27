@@ -44,7 +44,7 @@ if __name__ == '__main__':
     iou_matcher = mot.associate.HungarianMatcher(iou_metric, sigma=0.3)
 
     box_encoder = mot.encode.BoxEncoder()
-    box_metric = mot.metric.MMMetric(box_encoder)
+    box_metric = mot.metric.EuclideanMetric(box_encoder)
 
     # Two encoders
     # reid_encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
