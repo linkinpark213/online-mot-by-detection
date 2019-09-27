@@ -6,6 +6,7 @@ class BoxEncoder(Encoder):
     def __init__(self, format='xywh'):
         super(BoxEncoder).__init__()
         self.format = format
+        self.name = 'box_' + format
 
     def __call__(self, boxes, img, tracklet=None):
         if self.format == 'xywh':
