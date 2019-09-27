@@ -15,4 +15,4 @@ class BoxEncoder(Encoder):
             xywh[:, 3] = xywh[:, 3] - xywh[:, 1]
             return xywh
         else:
-            return boxes
+            return np.array(boxes)
