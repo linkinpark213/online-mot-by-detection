@@ -26,7 +26,7 @@ class EuclideanMetric(Metric):
                     history = self.history
                 for k in range(history):
                     sum += self.euclidean(tracklets[i].feature_history[-k - 1][1][self.encoder.name][0], features[j][0])
-                matrix[i][j] = sum / history
+                matrix[i][j] = - sum / history
         return matrix, features
 
     def euclidean(self, a, b):

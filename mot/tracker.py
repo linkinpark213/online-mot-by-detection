@@ -1,4 +1,5 @@
 import cv2
+import logging
 import numpy as np
 
 
@@ -32,6 +33,8 @@ class Tracker:
 
         # Tracklet Update
         self.update(row_ind, col_ind, boxes, features)
+
+        logging.info('Frame #{}'.format(self.frame_num))
 
     def update(self, row_ind, col_ind, detection_boxes, detection_features):
         """

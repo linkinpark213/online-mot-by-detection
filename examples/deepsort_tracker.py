@@ -43,16 +43,13 @@ if __name__ == '__main__':
     iou_metric = mot.metric.IoUMetric()
     iou_matcher = mot.associate.HungarianMatcher(iou_metric, sigma=0.3)
 
-    box_encoder = mot.encode.BoxEncoder()
-    box_metric = mot.metric.EuclideanMetric(box_encoder)
-
     # Two encoders
     # reid_encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
     reid_encoder = mot.encode.DGNetEncoder('mot/encode/DGNet/outputs/checkpoints/')
 
     # reid_metric = mot.metric.EuclideanMetric(reid_encoder, history=10)
     reid_metric = mot.metric.MMMetric(reid_encoder, history=10)
-    combined_metric = mot.metric.ProductMetric((reid_metric, box_metric))
+    combined_metric = mot.metric.ProductMetric((reid_metric, iou_metric))
     combined_matcher = mot.associate.HungarianMatcher(combined_metric, sigma=0.3)
     matcher = mot.associate.CascadeMatcher((combined_matcher, iou_matcher))
     predictor = mot.predict.KalmanPredictor(box_type='xyxy', predict_type='xywh')

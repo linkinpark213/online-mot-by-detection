@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 from .metric import Metric
 
@@ -13,6 +14,17 @@ class CombinedMetric(Metric):
         all_features = []
         for i in range(len(self.metrics)):
             matrix, features = self.metrics[i](tracklets, detected_boxes, img)
+
+            ################
+            # For debugging
+            ################
+            print('Metric {}:'.format(self.metrics[i].name))
+            for line in matrix:
+                for i in line:
+                    print('{} '.format(i))
+                print()
+            ################
+
             matrices.append(matrix)
             all_features.append(features)
 
