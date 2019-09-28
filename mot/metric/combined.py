@@ -21,7 +21,7 @@ class CombinedMetric(Metric):
             print('Metric {}:'.format(self.metrics[i].name))
             for line in matrix:
                 for i in line:
-                    print('{} '.format(i))
+                    print('{}'.format(i), end=' ')
                 print()
             ################
 
