@@ -18,11 +18,10 @@ class CombinedMetric(Metric):
             ################
             # For debugging
             ################
-            print('Metric {}:'.format(self.metrics[i].name))
+            logging.info('Metric {}:'.format(self.metrics[i].name))
             for line in matrix:
-                for i in line:
-                    print('{:.3f}'.format(i), end=' ')
-                print()
+                logging.info(line)
+            logging.info('')
             ################
 
             matrices.append(matrix)
@@ -45,11 +44,10 @@ class CombinedMetric(Metric):
         ################
         # For debugging
         ################
-        print('Combined Metric:')
+        logging.info('Combined Metric:')
         for line in matrix:
-            for i in line:
-                print('{:.3f}'.format(i), end=' ')
-            print()
+            logging.info(line)
+        logging.info('')
         ################
 
         return matrix, feature_dict
