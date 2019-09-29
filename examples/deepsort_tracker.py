@@ -41,7 +41,7 @@ if __name__ == '__main__':
     # detector = mot.detect.HTCDetector(conf_threshold=0.5)
     detector = None
     iou_metric = mot.metric.IoUMetric()
-    iou_matcher = mot.associate.HungarianMatcher(iou_metric, sigma=0.5)
+    iou_matcher = mot.associate.HungarianMatcher(iou_metric, sigma=0.3)
 
     # Two encoders
     reid_encoder = mot.encode.DGNetEncoder('mot/encode/DGNet/outputs/checkpoints/')
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     combined_metric = mot.metric.ProductMetric((reid_metric, iou_metric))
     combined_matcher = mot.associate.HungarianMatcher(combined_metric, sigma=1)
 
-    reid_matcher = mot.associate.HungarianMatcher(reid_metric, sigma=1.4)
+    reid_matcher = mot.associate.HungarianMatcher(reid_metric, sigma=1.3)
 
     matcher = mot.associate.CascadeMatcher((combined_matcher, iou_matcher, reid_matcher))
     predictor = mot.predict.KalmanPredictor(box_type='xyxy', predict_type='xywh')
