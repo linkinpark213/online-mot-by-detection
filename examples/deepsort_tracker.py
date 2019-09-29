@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     reid_metric = mot.metric.MMMetric(reid_encoder, history=10)
     combined_metric = mot.metric.ProductMetric((reid_metric, iou_metric))
-    combined_matcher = mot.associate.HungarianMatcher(combined_metric, sigma=1)
+    combined_matcher = mot.associate.HungarianMatcher(combined_metric, sigma=0.8)
 
     reid_matcher = mot.associate.HungarianMatcher(reid_metric, sigma=1.3)
 
