@@ -37,7 +37,10 @@ class DeepSORTTracker(Tracker):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG, filename='tracking.log', filemode='w')
+    logger = logging.getLogger('MOT')
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(logging.FileHandler('tracking.log', mode='w'))
+    logger.addHandler(logging.StreamHandler())
     # detector = mot.detect.HTCDetector(conf_threshold=0.5)
     detector = None
     iou_metric = mot.metric.IoUMetric()

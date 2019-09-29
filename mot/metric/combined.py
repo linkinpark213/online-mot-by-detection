@@ -12,19 +12,22 @@ class CombinedMetric(Metric):
     def __call__(self, tracklets, detected_boxes, img):
         matrices = []
         all_features = []
+
+        logger = logging.getLogger('MOT')
+
         for i in range(len(self.metrics)):
             matrix, features = self.metrics[i](tracklets, detected_boxes, img)
 
             ################
             # For debugging
             ################
-            logging.info('Metric {}:'.format(self.metrics[i].name))
+            logger.info('Metric {}:'.format(self.metrics[i].name))
             for line in matrix:
                 text = ''
                 for i in line:
                     text += '{:.3f} '.format(i)
-                logging.info(text)
-            logging.info('')
+                logger.info(text)
+            logger.info('')
             ################
 
             matrices.append(matrix)
@@ -47,12 +50,13 @@ class CombinedMetric(Metric):
         ################
         # For debugging
         ################
-        logging.info('Combined Metric:')
+        logger.info('Combined Metric:')
         for line in matrix:
                 text = ''
                 for i in line:
                     text += '{:.3f} '.format(i)
-        logging.info('')
+                logger.info(text)
+        logger.info('')
         ################
 
         return matrix, feature_dict
