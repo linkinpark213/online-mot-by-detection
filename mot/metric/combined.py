@@ -21,7 +21,7 @@ class CombinedMetric(Metric):
             print('Metric {}:'.format(self.metrics[i].name))
             for line in matrix:
                 for i in line:
-                    print('{}'.format(i), end=' ')
+                    print('{:.3f}'.format(i), end=' ')
                 print()
             ################
 
@@ -41,6 +41,17 @@ class CombinedMetric(Metric):
                     feature_dict[key] = all_features[i][key]
             else:
                 feature_dict[self.metrics[i].name] = all_features[i]
+
+        ################
+        # For debugging
+        ################
+        print('Combined Metric:')
+        for line in matrix:
+            for i in line:
+                print('{:.3f}'.format(i), end=' ')
+            print()
+        ################
+
         return matrix, feature_dict
 
     def combine(self, scores):
