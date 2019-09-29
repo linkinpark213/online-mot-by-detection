@@ -20,7 +20,10 @@ class CombinedMetric(Metric):
             ################
             logging.info('Metric {}:'.format(self.metrics[i].name))
             for line in matrix:
-                logging.info(line)
+                text = ''
+                for i in line:
+                    text += '{:.3f} '.format(i)
+                logging.info(text)
             logging.info('')
             ################
 
@@ -46,7 +49,9 @@ class CombinedMetric(Metric):
         ################
         logging.info('Combined Metric:')
         for line in matrix:
-            logging.info(line)
+                text = ''
+                for i in line:
+                    text += '{:.3f} '.format(i)
         logging.info('')
         ################
 
