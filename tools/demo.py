@@ -1,8 +1,8 @@
 import os
 import cv2
 import argparse
-import importlib
 import mot.utils.vis
+import importlib.util
 from mot.utils import ImagesCapture
 
 
@@ -46,6 +46,10 @@ if __name__ == '__main__':
                         help='Path to the output video file. Leave it blank to disable.')
     args = parser.parse_args()
 
-    tracker = importlib.import_module(args.tracker_config)
+    spec = importlib.util.spec_from_file_location('CustomTracker', args.tracker_config)
+    tracker_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(tracker_module)
+
+    tracker = tracker_module.CustomTracker()
 
     run_demo(tracker, args)
