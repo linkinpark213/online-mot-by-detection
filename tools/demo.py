@@ -41,7 +41,7 @@ def run_demo(tracker, args):
 
         # Write to result file if demanded.
         if result_writer is not None:
-            result_writer.write(mot.utils.snapshot_to_mot(tracker.tracklets_active))
+            result_writer.write(mot.utils.snapshot_to_mot(tracker))
 
         # Display image if demanded.
         if args.display:
