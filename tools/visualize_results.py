@@ -2,7 +2,7 @@ import os
 import cv2
 import argparse
 import numpy as np
-import mot.utils.vis as vis
+import mot.utils.visualize as vis
 
 
 def parse_args():

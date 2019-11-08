@@ -2,9 +2,8 @@ import os
 import cv2
 import logging
 import argparse
-import mot.utils.vis
+import mot.utils
 import importlib.util
-from mot.utils import ImagesCapture
 
 
 def run_demo(tracker, args):
@@ -12,30 +11,50 @@ def run_demo(tracker, args):
         capture = cv2.VideoCapture(0)
     else:
         if os.path.isdir(args.demo_path):
-            capture = ImagesCapture(args.demo_path)
+            capture = mot.utils.ImagesCapture(args.demo_path)
         elif os.path.isfile(args.demo_path):
             capture = cv2.VideoCapture(args.demo_path)
         else:
             raise AssertionError('Parameter "demo_path" is not a file or directory.')
 
     n = 0
+    video_writer = None
+    result_writer = None
     while True:
         ret, image = capture.read()
         if not ret:
             break
         n += 1
-        if args.save_video != '' and n == 1:
-            writer = cv2.VideoWriter(args.save_video, cv2.VideoWriter_fourcc(*'mp4v'), 30,
-                                     (image.shape[1], image.shape[0]))
+        if n == 1:
+            if args.save_video != '':
+                video_writer = cv2.VideoWriter(args.save_video, cv2.VideoWriter_fourcc(*'mp4v'), 30,
+                                               (image.shape[1], image.shape[0]))
+            if args.save_result != '':
+                result_writer = open(args.save_result, 'w+')
         tracker.tick(image)
-        image = mot.utils.vis.draw_tracklets(image, tracker.tracklets_active)
-        if args.save_video != '':
-            writer.write(image)
-        else:
+        image = mot.utils.visualize.draw_tracklets(image, tracker.tracklets_active)
+        image = cv2.putText(image, '{}'.format(n), (10, 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), thickness=1)
+
+        # Write to video if demanded.
+        if video_writer is not None:
+            video_writer.write(image)
+
+        # Write to result file if demanded.
+        if result_writer is not None:
+            result_writer.write(mot.utils.snapshot_to_mot(tracker.tracklets_active))
+
+        # Display image if demanded.
+        if args.display:
             cv2.imshow('Demo', image)
             key = cv2.waitKey(1)
             if key == 27:
                 break
+
+    # Close writers after tracking
+    if video_writer is not None:
+        video_writer.release()
+    if result_writer is not None:
+        result_writer.close()
 
 
 if __name__ == '__main__':
@@ -45,9 +64,15 @@ if __name__ == '__main__':
                         help='Path to the test video file or directory of test images. Leave it blank to use webcam.')
     parser.add_argument('--save_video', default='', required=False,
                         help='Path to the output video file. Leave it blank to disable.')
+    parser.add_argument('--save_result', default='', required=False,
+                        help='Path to the output tracking result file. Leave it blank to disable.')
+    parser.add_argument('--ignore_display', action='store_false', default=False, required=False, dest='display',
+                        help='Add \'--ignore_display\' to only write to video / result file')
     args = parser.parse_args()
     logging.basicConfig(level=logging.DEBUG)
 
+    # Load tracker from tracker definition script
+    # See example trackers in the `example` folder
     spec = importlib.util.spec_from_file_location('CustomTracker', args.tracker_config)
     tracker_module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(tracker_module)

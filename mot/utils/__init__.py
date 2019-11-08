@@ -1,3 +1,4 @@
 from .capture import *
 from .offline import *
-from .vis import *
+from .evaluate import *
+from .visualize import *
