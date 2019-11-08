@@ -23,7 +23,7 @@ class Detectron(Detector):
         print(pred_boxes.shape)
         print(scores.shape)
         print(pred_classes.shape)
-        if (len(scores) == 0):
+        if (len(scores) != 0):
             result = np.vstack((pred_boxes[np.where(pred_classes == 0)],
                                np.expand_dims(scores[np.where(pred_classes == 0)], 0)))
             return result
