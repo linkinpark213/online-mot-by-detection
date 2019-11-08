@@ -17,7 +17,7 @@ class Detectron(Detector):
 
     def __call__(self, img):
         raw_results = self.predictor(img)['instances']
-        pred_boxes = raw_results.pred_boxes.detach().cpu().numpy()
+        pred_boxes = raw_results.pred_boxes.tensor.detach().cpu().numpy()
         pred_classes = raw_results.pred_classes.detach().cpu().numpy()
         scores = raw_results.scores.detach().cpu().numpy()
         result = np.vstack(pred_boxes[np.where(pred_classes == 0)],
