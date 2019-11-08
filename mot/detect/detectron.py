@@ -21,8 +21,8 @@ class Detectron(Detector):
         pred_classes = raw_results.pred_classes.detach().cpu().numpy()
         scores = raw_results.scores.detach().cpu().numpy()
         if (len(scores) != 0):
-            result = np.vstack((pred_boxes[np.where(pred_classes == 0)],
-                               np.expand_dims(scores[np.where(pred_classes == 0)], 1)))
+            result = np.concatenate((pred_boxes[np.where(pred_classes == 0)],
+                                     np.expand_dims(scores[np.where(pred_classes == 0)], 1)), axis=1)
             return result
         else:
             return np.array([])

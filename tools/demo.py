@@ -1,5 +1,6 @@
 import os
 import cv2
+import logging
 import argparse
 import mot.utils.vis
 import importlib.util
@@ -45,6 +46,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_video', default='', required=False,
                         help='Path to the output video file. Leave it blank to disable.')
     args = parser.parse_args()
+    logging.basicConfig(level=logging.DEBUG)
 
     spec = importlib.util.spec_from_file_location('CustomTracker', args.tracker_config)
     tracker_module = importlib.util.module_from_spec(spec)
