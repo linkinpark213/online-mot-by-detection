@@ -7,4 +7,3 @@ if importlib.util.find_spec('detectron2'):
 if importlib.util.find_spec('mmdet'):
     from .mmdetector import MMDetector, HTCDetector
 from .mot_public_detector import MOTPublicDetector
-from .zhejiang_fake_detector import ZhejiangFakeDetector
