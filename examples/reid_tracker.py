@@ -1,13 +1,19 @@
+import mot.detect
 import mot.encode
 import mot.metric
 import mot.associate
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
-from mot.utils.evaluate import evaluate_zhejiang
 
 
-class ReIDTracker(Tracker):
-    def __init__(self, detector, matcher, sigma_conf):
+class CustomTracker(Tracker):
+    def __init__(self, sigma_conf):
+        detector = mot.detect.Detectron(
+            '/home/linkinpark213/Source/detectron2/configs/COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml',
+            'detectron2://COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x/139686956/model_final_5ad38f.pkl')
+        encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
+        metric = mot.metric.EuclideanMetric(encoder)
+        matcher = mot.associate.GreedyMatcher(metric, sigma=0.3)
         super().__init__(detector, matcher)
         self.sigma_conf = sigma_conf
 
@@ -32,21 +38,3 @@ class ReIDTracker(Tracker):
             if i not in col_ind:
                 if detection_boxes[i][4] > self.sigma_conf:
                     self.add_tracklet(Tracklet(0, self.frame_num, detection_boxes[i], detection_features[i]))
-
-
-if __name__ == '__main__':
-    # detector = mot.detect.HTCDetector(conf_threshold=0.5)
-    detector = None
-    encoder = mot.encode.PCBEncoder('mot/encode/PCB/model/')
-    metric = mot.metric.EuclideanMetric(encoder)
-    matcher = mot.associate.GreedyMatcher(metric, sigma=0.3)
-
-    tracker = ReIDTracker(detector, matcher, sigma_conf=0.3)
-
-    # run_demo(tracker)
-
-    # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/train')
-    # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/test')
-
-    evaluate_zhejiang(tracker, '/home/linkinpark213/Dataset/Zhejiang',
-                             'data/det/HTC', show_result=True)

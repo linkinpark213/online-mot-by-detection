@@ -1,18 +1,12 @@
 import os
 import cv2
 import argparse
+import importlib
 import mot.utils.vis
 from mot.utils import ImagesCapture
 
 
-def run_demo(tracker):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--demo_path', default='', required=False,
-                        help='Path to the test video file or directory of test images. Leave it blank to use webcam.')
-    parser.add_argument('--save_video', default='', required=False,
-                        help='Path to the output video file. Leave it blank to disable.')
-    args = parser.parse_args()
-
+def run_demo(tracker, args):
     if args.demo_path == '':
         capture = cv2.VideoCapture(0)
     else:
@@ -36,7 +30,22 @@ def run_demo(tracker):
         image = mot.utils.vis.draw_tracklets(image, tracker.tracklets_active)
         if args.save_video != '':
             writer.write(image)
-        cv2.imshow('Demo', image)
-        key = cv2.waitKey(1)
-        if key == 27:
-            break
+        else:
+            cv2.imshow('Demo', image)
+            key = cv2.waitKey(1)
+            if key == 27:
+                break
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('tracker_config', default='examples/deepsort_tracker.py')
+    parser.add_argument('--demo_path', default='', required=False,
+                        help='Path to the test video file or directory of test images. Leave it blank to use webcam.')
+    parser.add_argument('--save_video', default='', required=False,
+                        help='Path to the output video file. Leave it blank to disable.')
+    args = parser.parse_args()
+
+    tracker = importlib.import_module(args.tracker_config)
+
+    run_demo(tracker, args)
