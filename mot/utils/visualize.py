@@ -65,7 +65,7 @@ def draw_frame_num(image, frame_num):
     :param frame_num: Frame number.
     :return: A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
     """
-    cv2.putText(image, '{}'.format(frame_num), (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), thickness=1)
+    cv2.putText(image, '{}'.format(frame_num), (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), thickness=2)
 
 
 def draw_object(image, box, id):
