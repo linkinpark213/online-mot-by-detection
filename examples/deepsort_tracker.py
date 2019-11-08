@@ -2,10 +2,11 @@ import logging
 import mot.associate
 import mot.encode
 import mot.metric
+import mot.detect
 import mot.predict
 from mot.tracker import Tracker
 from mot.tracklet import Tracklet
-from mot.utils.evaluate import evaluate_zhejiang
+from mot.utils.demo import run_demo
 
 
 class DeepSORTTracker(Tracker):
@@ -41,8 +42,9 @@ if __name__ == '__main__':
     logger.setLevel(logging.DEBUG)
     logger.addHandler(logging.FileHandler('tracking.log', mode='w'))
     logger.addHandler(logging.StreamHandler())
-    # detector = mot.detect.HTCDetector(conf_threshold=0.5)
-    detector = None
+    detector = mot.detect.Detectron(
+        '/home/linkinpark213/Source/detectron2/configs/COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml',
+        'detectron2://COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x/139686956/model_final_5ad38f.pkl')
     iou_metric = mot.metric.IoUMetric()
     iou_matcher = mot.associate.HungarianMatcher(iou_metric, sigma=0.3)
 
@@ -53,17 +55,15 @@ if __name__ == '__main__':
     combined_metric = mot.metric.ProductMetric((reid_metric, iou_metric))
     combined_matcher = mot.associate.HungarianMatcher(combined_metric, sigma=0.5)
 
-    reid_matcher = mot.associate.HungarianMatcher(reid_metric, sigma=1.2)
-
-    matcher = mot.associate.CascadeMatcher((combined_matcher, iou_matcher, reid_matcher))
+    matcher = mot.associate.CascadeMatcher((combined_matcher, iou_matcher))
     predictor = mot.predict.KalmanPredictor(box_type='xyxy', predict_type='xywh')
 
     tracker = DeepSORTTracker(detector, matcher, predictor)
 
-    # run_demo(tracker)
+    run_demo(tracker)
 
     # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/train')
     # evaluate_mot(tracker, '/mnt/nasbi/no-backups/datasets/object_tracking/MOT/MOT16/test')
 
-    evaluate_zhejiang(tracker, '/home/linkinpark213/Dataset/Zhejiang/level2',
-                      'data/det/HTC', level=2, online=False, show_result=False)
+    # evaluate_zhejiang(tracker, '/home/linkinpark213/Dataset/Zhejiang/level2',
+    #                   'data/det/HTC', level=2, online=False, show_result=False)
