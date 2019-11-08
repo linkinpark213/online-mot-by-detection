@@ -59,3 +59,6 @@ class Tracklet:
 
     def is_confirmed(self):
         return self.time_lived > self.min_time_lived
+
+    def is_detected(self):
+        return self.detected

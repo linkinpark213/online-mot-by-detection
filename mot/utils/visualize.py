@@ -43,15 +43,17 @@ _colors = [(47, 47, 211),
            (208, 187, 248)]
 
 
-def draw_tracklets(image, tracklets, confirmed_only=True):
+def draw_tracklets(image, tracklets, confirmed_only=True, detected_only=True):
     """
     Draw the boxes of tracklets.
     :param image: A 3D numpy array with shape (h, w, 3). The video frame.
     :param tracklets: A list of Tracklet objects. The currently active tracklets.
+    :param confirmed_only: Set to True to draw boxes only for tracklets that are confirmed.
+    :param detected_only: Set to True to draw boxes only for tracklets that are detected in the frame.
     :return: A 3D numpy array with shape (h, w, 3). The video frame with boxes of tracklets drawn.
     """
     for tracklet in tracklets:
-        if (not confirmed_only) or (confirmed_only and tracklet.is_confirmed()):
+        if (tracklet.is_confirmed() or not confirmed_only) and (tracklet.is_detected() or not detected_only):
             image = draw_object(image, tracklet.last_box, tracklet.id)
     return image
 
