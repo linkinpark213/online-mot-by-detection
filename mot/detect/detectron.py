@@ -20,9 +20,6 @@ class Detectron(Detector):
         pred_boxes = raw_results.pred_boxes.tensor.detach().cpu().numpy()
         pred_classes = raw_results.pred_classes.detach().cpu().numpy()
         scores = raw_results.scores.detach().cpu().numpy()
-        print(pred_boxes.shape)
-        print(scores.shape)
-        print(pred_classes.shape)
         if (len(scores) != 0):
             result = np.vstack((pred_boxes[np.where(pred_classes == 0)],
                                np.expand_dims(scores[np.where(pred_classes == 0)], 0)))
