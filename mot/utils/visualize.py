@@ -58,6 +58,16 @@ def draw_tracklets(image, tracklets, confirmed_only=True, detected_only=True):
     return image
 
 
+def draw_frame_num(image, frame_num):
+    """
+    Draw the frame number at the top-left corner of the frame.
+    :param image: A 3D numpy array with shape (h, w, 3). The video frame.
+    :param frame_num: Frame number.
+    :return: A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
+    """
+    cv2.putText(image, '{}'.format(frame_num), (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), thickness=1)
+
+
 def draw_object(image, box, id):
     image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])),
                           _colors[int(id) % _colors.__len__()], thickness=3)

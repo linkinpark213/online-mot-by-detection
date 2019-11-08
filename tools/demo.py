@@ -32,8 +32,8 @@ def run_demo(tracker, args):
             if args.save_result != '':
                 result_writer = open(args.save_result, 'w+')
         tracker.tick(image)
-        image = mot.utils.visualize.draw_tracklets(image, tracker.tracklets_active)
-        image = cv2.putText(image, '{}'.format(n), (10, 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), thickness=1)
+        image = mot.utils.draw_tracklets(image, tracker.tracklets_active)
+        image = mot.utils.draw_frame_num(image, n)
 
         # Write to video if demanded.
         if video_writer is not None:
