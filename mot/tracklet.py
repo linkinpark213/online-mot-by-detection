@@ -45,7 +45,7 @@ class Tracklet:
             self.feature_history.pop(0)
         if len(self.detection_history) >= self.max_detection_history:
             self.detection_history.pop(0)
-        self.detection_history.append((frame_id, box))
+        self.detection_history.append((frame_id, detection.box))
         self.feature_history.append((frame_id, feature))
         if self.ttl < self.max_ttl:
             self.ttl += 1
