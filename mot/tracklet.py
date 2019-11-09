@@ -1,7 +1,11 @@
+from .detect import Detection
+
+
 class Tracklet:
     min_time_lived = 3
 
-    def __init__(self, id, frame_id, detection, feature, predictor=None, max_ttl=30, max_feature_history=30, max_detection_history=3000):
+    def __init__(self, id, frame_id, detection, feature, predictor=None, max_ttl=30, max_feature_history=30,
+                 max_detection_history=3000):
         self.id = id
         # Box coordinate of the last target position with (left, top, right, bottom).
         self.last_detection = detection
@@ -53,7 +57,7 @@ class Tracklet:
 
     def fade(self):
         self.detected = False
-        self.last_detection = self.predict()
+        self.last_detection = Detection(self.predict(), 0)
         self.ttl -= 1
         return self.ttl <= 0
 
