@@ -88,7 +88,7 @@ class DGNetEncoder(Encoder):
                 all_crops.append(crop)
             else:
                 all_crops.append(np.ones((10, 10, 3)).astype(np.float32) * 255)
-        if detections.shape[0] != 0:
+        if len(detections) != 0:
             img = self._preprocess(all_crops)
             n, c, h, w = img.shape
             ff = torch.FloatTensor(n, 1024).zero_()
