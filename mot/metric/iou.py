@@ -15,7 +15,7 @@ class IoUMetric(Metric):
         matrix = np.zeros([len(tracklets), len(detections)])
         for i in range(len(tracklets)):
             for j in range(len(detections)):
-                matrix[i][j] = self.iou(tracklets[i].last_box, detections[j].box)
+                matrix[i][j] = self.iou(tracklets[i].last_detection.box, detections[j].box)
         return matrix, detections
 
     def iou(self, a, b):

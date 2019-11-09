@@ -56,8 +56,8 @@ def snapshot_to_mot(tracker, time_lived_threshold=1, ttl_threshold=3, detected_o
                 tracklet.is_detected() or not detected_only):
             data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, -1, -1, -1, -1\n'.format(tracker.frame_num,
                                                                                           tracklet.id,
-                                                                                          tracklet.last_box[0],
-                                                                                          tracklet.last_box[1],
-                                                                                          tracklet.last_box[2],
-                                                                                          tracklet.last_box[3])
+                                                                                          tracklet.last_detection.box[0],
+                                                                                          tracklet.last_detection.box[1],
+                                                                                          tracklet.last_detection.box[2],
+                                                                                          tracklet.last_detection.box[3])
     return data

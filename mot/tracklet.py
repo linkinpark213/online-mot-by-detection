@@ -1,7 +1,7 @@
 class Tracklet:
     min_time_lived = 3
 
-    def __init__(self, id, frame_id, detection, feature, predictor=None, max_ttl=30, max_history=30, max_box_history=3000):
+    def __init__(self, id, frame_id, detection, feature, predictor=None, max_ttl=30, max_feature_history=30, max_detection_history=3000):
         self.id = id
         # Box coordinate of the last target position with (left, top, right, bottom).
         self.last_detection = detection
@@ -14,9 +14,9 @@ class Tracklet:
         # Max Time-to-Live. Tracklets will get killed if TTL times out.
         self.max_ttl = max_ttl
         # Parameter limiting the past history boxes to keep.
-        self.max_box_history = max_box_history
+        self.max_detection_history = max_detection_history
         # Parameter limiting the past history features to keep.
-        self.max_history = max_history
+        self.max_feature_history = max_feature_history
         # The actual Time-to-Live of a tracklet.
         self.ttl = max_ttl
         # The time lived (time matched with a measurement) of the tracklet.
@@ -41,9 +41,9 @@ class Tracklet:
         if self.predictor is not None:
             self.predictor.predict(self)
             self.predictor.update(self)
-        if len(self.feature_history) >= self.max_history:
+        if len(self.feature_history) >= self.max_feature_history:
             self.feature_history.pop(0)
-        if len(self.detection_history) >= self.max_box_history:
+        if len(self.detection_history) >= self.max_detection_history:
             self.detection_history.pop(0)
         self.detection_history.append((frame_id, box))
         self.feature_history.append((frame_id, feature))

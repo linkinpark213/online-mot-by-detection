@@ -263,11 +263,11 @@ class KalmanPredictor(Predictor):
         return measurement
 
     def initiate(self, tracklet):
-        measurement = self.convert(tracklet.last_box, self.box_type, self.predict_type)
+        measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
         tracklet.mean, tracklet.covariance = KalmanFilter.initiate(measurement)
 
     def update(self, tracklet):
-        measurement = self.convert(tracklet.last_box, self.box_type, self.predict_type)
+        measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
         tracklet.mean, tracklet.covariance = KalmanFilter.update(tracklet.mean, tracklet.covariance, measurement)
 
     def predict(self, tracklet):
