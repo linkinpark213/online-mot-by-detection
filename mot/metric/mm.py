@@ -15,11 +15,11 @@ class MMMetric(Metric):
         assert history > 0, 'At least one step backward in history consideration'
         self.history = 1
 
-    def __call__(self, tracklets, detected_boxes, img):
-        matrix = np.zeros([len(tracklets), len(detected_boxes)])
-        features = self.encoder(detected_boxes, img)
+    def __call__(self, tracklets, detections, img):
+        matrix = np.zeros([len(tracklets), len(detections)])
+        features = self.encoder(detections, img)
         for i in range(len(tracklets)):
-            for j in range(len(detected_boxes)):
+            for j in range(len(detections)):
                 sum = 0
                 if len(tracklets[i].feature_history) < self.history:
                     history = len(tracklets[i].feature_history)

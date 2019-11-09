@@ -6,6 +6,12 @@ class Detector:
         """
         Detect all objects in an image.
         :param img: A numpy array of shape (H, W, 3)
-        :return: A numpy array of shape (N, 5) or an empty list. The (x1, y1, x2, y2, conf) of all detected objects.
+        :return: A list of N Detection objects.
         """
         raise NotImplementedError('Extend the Detector class to implement your own detector.')
+
+
+class Detection:
+    def __init__(self, box, conf):
+        self.box = box
+        self.conf = conf

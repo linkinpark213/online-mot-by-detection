@@ -25,10 +25,10 @@ class CustomTracker(Tracker):
         self.predictor = mot.predict.KalmanPredictor(box_type='xyxy', predict_type='xywh')
         super().__init__(detector, matcher)
 
-    def update(self, row_ind, col_ind, detection_boxes, detection_features):
+    def update(self, row_ind, col_ind, detections, detection_features):
         unmatched_tracklets = []
         for i in range(len(row_ind)):
-            self.tracklets_active[row_ind[i]].update(self.frame_num, detection_boxes[col_ind[i]],
+            self.tracklets_active[row_ind[i]].update(self.frame_num, detections[col_ind[i]],
                                                      detection_features[col_ind[i]])
 
         tracklets_to_kill = []
@@ -45,4 +45,4 @@ class CustomTracker(Tracker):
         for i in range(len(detection_features)):
             if i not in col_ind:
                 self.add_tracklet(
-                    Tracklet(0, self.frame_num, detection_boxes[i], detection_features[i], self.predictor))
+                    Tracklet(0, self.frame_num, detections[i], detection_features[i], self.predictor))

@@ -9,14 +9,14 @@ class CombinedMetric(Metric):
         self.metrics = metrics
         self.name = 'combined'
 
-    def __call__(self, tracklets, detected_boxes, img):
+    def __call__(self, tracklets, detections, img):
         matrices = []
         all_features = []
 
         logger = logging.getLogger('MOT')
 
         for i in range(len(self.metrics)):
-            matrix, features = self.metrics[i](tracklets, detected_boxes, img)
+            matrix, features = self.metrics[i](tracklets, detections, img)
 
             ################
             # For debugging

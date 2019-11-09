@@ -1,6 +1,6 @@
 import importlib
 
-from .detector import Detector
+from .detect import Detector
 
 if importlib.util.find_spec('detectron2'):
     from .detectron import Detectron

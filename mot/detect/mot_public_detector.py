@@ -1,5 +1,5 @@
 import numpy as np
-from mot.detect.detector import Detector
+from mot.detect.detect import Detector
 
 
 class MOTPublicDetector(Detector):

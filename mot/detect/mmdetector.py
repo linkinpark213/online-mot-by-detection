@@ -1,5 +1,5 @@
 import torch
-from .detector import Detector
+from .detect import Detector, Detection
 import numpy as np
 from mmdet.apis import inference_detector, init_detector, show_result
 
@@ -16,7 +16,7 @@ class MMDetector(Detector):
     def __call__(self, img):
         raw_result = inference_detector(self.model, img)[0][0]
         result = raw_result[np.where(raw_result[:, 4] > self.conf_thres)]
-        return result
+        return [Detection(line[:4], line[4]) for line in result]
 
 
 class HTCDetector(MMDetector):

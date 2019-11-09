@@ -6,13 +6,13 @@ class CascadeMatcher(Matcher):
         super().__init__(None)
         self.matchers = matchers
 
-    def __call__(self, tracklets, detection_boxes, img):
+    def __call__(self, tracklets, detections, img):
         remaining_tracklets = tracklets.copy()
         all_features = []
         all_row_ind = []
         all_col_ind = []
         for matcher in self.matchers:
-            row_ind, col_ind, features = matcher(remaining_tracklets, detection_boxes, img)
+            row_ind, col_ind, features = matcher(remaining_tracklets, detections, img)
             all_features.append(features)
             tracklets_to_remove = []
             for i in range(len(row_ind)):
@@ -27,7 +27,7 @@ class CascadeMatcher(Matcher):
 
         # Generate feature dictionaries for the detections
         feature_dicts = []
-        for i in range(len(detection_boxes)):
+        for i in range(len(detections)):
             feature_dict = {}
             for j in range(len(self.matchers)):
                 if type(all_features[j]) is dict:

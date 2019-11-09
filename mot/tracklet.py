@@ -1,12 +1,12 @@
 class Tracklet:
     min_time_lived = 3
 
-    def __init__(self, id, frame_id, box, feature, predictor=None, max_ttl=30, max_history=30, max_box_history=3000):
+    def __init__(self, id, frame_id, detection, feature, predictor=None, max_ttl=30, max_history=30, max_box_history=3000):
         self.id = id
         # Box coordinate of the last target position with (left, top, right, bottom).
-        self.last_box = box
+        self.last_detection = detection
         # An array storing past features. Only keeping `max_history` frames.
-        self.box_history = [(frame_id, box)]
+        self.detection_history = [(frame_id, detection)]
         # A feature dictionary.
         self.feature = feature
         # An array storing past features. Only keeping `max_history` frames.
@@ -32,20 +32,20 @@ class Tracklet:
         if self.predictor is not None:
             return self.predictor(self)
         else:
-            return self.last_box
+            return self.last_detection
 
-    def update(self, frame_id, box, feature):
+    def update(self, frame_id, detection, feature):
         self.detected = True
-        self.last_box = box
+        self.last_detection = detection
         self.feature = feature
         if self.predictor is not None:
             self.predictor.predict(self)
             self.predictor.update(self)
         if len(self.feature_history) >= self.max_history:
             self.feature_history.pop(0)
-        if len(self.box_history) >= self.max_box_history:
-            self.box_history.pop(0)
-        self.box_history.append((frame_id, box))
+        if len(self.detection_history) >= self.max_box_history:
+            self.detection_history.pop(0)
+        self.detection_history.append((frame_id, box))
         self.feature_history.append((frame_id, feature))
         if self.ttl < self.max_ttl:
             self.ttl += 1
@@ -53,7 +53,7 @@ class Tracklet:
 
     def fade(self):
         self.detected = False
-        self.last_box = self.predict()
+        self.last_detection = self.predict()
         self.ttl -= 1
         return self.ttl <= 0
 

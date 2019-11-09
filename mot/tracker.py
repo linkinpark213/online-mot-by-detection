@@ -26,22 +26,22 @@ class Tracker:
         self.frame_num += 1
 
         # Detection
-        boxes = self.detector(img)
+        detections = self.detector(img)
 
         # Data Association
-        row_ind, col_ind, features = self.matcher(self.tracklets_active, boxes, img)
+        row_ind, col_ind, features = self.matcher(self.tracklets_active, detections, img)
 
         # Tracklet Update
-        self.update(row_ind, col_ind, boxes, features)
+        self.update(row_ind, col_ind, detections, features)
 
         logging.info('Frame #{}'.format(self.frame_num))
 
-    def update(self, row_ind, col_ind, detection_boxes, detection_features):
+    def update(self, row_ind, col_ind, detections, detection_features):
         """
         Update the tracklets.
         :param row_ind: A list of integers. Indices of the matched tracklets.
         :param col_ind: A list of integers. Indices of the matched detections.
-        :param detection_boxes: A list of numpy arrays with shape (n, 5). Detected boxes.
+        :param detection_boxes: A list of Detection objects.
         :param detection_features: The features of the detections. It can be any form you want.
         """
         raise NotImplementedError('Extend the Tracker class to implement your own updating strategy.')

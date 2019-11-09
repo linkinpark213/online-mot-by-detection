@@ -17,10 +17,10 @@ class CustomTracker(Tracker):
         super().__init__(detector, matcher)
         self.sigma_conf = sigma_conf
 
-    def update(self, row_ind, col_ind, detection_boxes, detection_features):
+    def update(self, row_ind, col_ind, detections, detection_features):
         unmatched_tracklets = []
         for i in range(len(row_ind)):
-            self.tracklets_active[row_ind[i]].update(self.frame_num, detection_boxes[col_ind[i]],
+            self.tracklets_active[row_ind[i]].update(self.frame_num, detections[col_ind[i]],
                                                      detection_features[col_ind[i]])
 
         tracklets_to_kill = []

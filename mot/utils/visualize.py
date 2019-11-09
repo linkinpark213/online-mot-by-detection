@@ -54,7 +54,7 @@ def draw_tracklets(image, tracklets, confirmed_only=True, detected_only=True):
     """
     for tracklet in tracklets:
         if (tracklet.is_confirmed() or not confirmed_only) and (tracklet.is_detected() or not detected_only):
-            image = draw_object(image, tracklet.last_box, tracklet.id)
+            image = draw_object(image, tracklet.last_detection.box, tracklet.id)
     return image
 
 

@@ -78,16 +78,17 @@ class DGNetEncoder(Encoder):
         f = f.div(fnorm.expand_as(f))
         return f
 
-    def __call__(self, boxes, full_img):
+    def __call__(self, detections, full_img):
         features = torch.FloatTensor()
         all_crops = []
-        for box in boxes:
+        for detection in detections:
+            box = detection.box
             crop = full_img[int(box[1]):int(box[3]), int(box[0]):int(box[2])]
             if crop.shape[0] * crop.shape[1] > 0:
                 all_crops.append(crop)
             else:
                 all_crops.append(np.ones((10, 10, 3)).astype(np.float32) * 255)
-        if boxes.shape[0] != 0:
+        if detections.shape[0] != 0:
             img = self._preprocess(all_crops)
             n, c, h, w = img.shape
             ff = torch.FloatTensor(n, 1024).zero_()

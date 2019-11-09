@@ -12,11 +12,11 @@ class CosineMetric(Metric):
         self.encoder = encoder
         self.name = encoder.name
 
-    def __call__(self, tracklets, detected_boxes, img):
-        matrix = np.zeros([len(tracklets), len(detected_boxes)])
-        features = self.encoder(detected_boxes, img)
+    def __call__(self, tracklets, detections, img):
+        matrix = np.zeros([len(tracklets), len(detections)])
+        features = self.encoder(detections, img)
         for i in range(len(tracklets)):
-            for j in range(len(detected_boxes)):
+            for j in range(len(detections)):
                 matrix[i][j] = self.cos(tracklets[i][self.encoder.name].feature[0], features[j][0])
         return matrix, features
 

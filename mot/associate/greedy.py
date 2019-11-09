@@ -11,8 +11,8 @@ class GreedyMatcher(Matcher):
         super().__init__(metric)
         self.sigma = sigma
 
-    def __call__(self, tracklets, detection_boxes, img):
-        similarity_matrix, features = self.metric(tracklets, detection_boxes, img)
+    def __call__(self, tracklets, detections, img):
+        similarity_matrix, features = self.metric(tracklets, detections, img)
         row_ind = []
         col_ind = []
         for i in range(similarity_matrix.shape[0]):
