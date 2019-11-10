@@ -55,6 +55,8 @@ def draw_tracklets(image, tracklets, confirmed_only=True, detected_only=True):
     for tracklet in tracklets:
         if (tracklet.is_confirmed() or not confirmed_only) and (tracklet.is_detected() or not detected_only):
             image = draw_object(image, tracklet.last_detection.box, tracklet.id)
+            if hasattr(tracklet.last_detection, 'keypoints'):
+                image = draw_skeleton(image, tracklet.last_detection.keypoints)
     return image
 
 
@@ -76,4 +78,10 @@ def draw_object(image, box, id):
                         cv2.FONT_HERSHEY_SIMPLEX, 1, _colors[int(id) % _colors.__len__()], thickness=2)
     image = cv2.circle(image, (int((box[0] + box[2]) / 2), int((box[1] + box[3]) / 2)), radius=10,
                        color=(0, 0, 255), thickness=-1)
+    return image
+
+
+def draw_skeleton(image, keypoints):
+    print('Keypoints:')
+    print(keypoints)
     return image
