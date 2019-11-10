@@ -42,6 +42,26 @@ _colors = [(47, 47, 211),
            (33, 33, 33),
            (208, 187, 248)]
 
+_keypoint_connections = [
+    [0, 1],
+    [0, 2],
+    [1, 3],
+    [2, 4],
+    [0, 5],
+    [0, 6],
+    [5, 7],
+    [6, 8],
+    [7, 9],
+    [8, 10],
+    [5, 11],
+    [6, 12],
+    [11, 12],
+    [11, 13],
+    [12, 14],
+    [13, 15],
+    [14, 16]
+]
+
 
 def draw_tracklets(image, tracklets, confirmed_only=True, detected_only=True):
     """
@@ -81,7 +101,12 @@ def draw_object(image, box, id):
     return image
 
 
-def draw_skeleton(image, keypoints):
-    print('Keypoints:')
-    print(keypoints)
+def draw_skeleton(image, keypoints, id):
+    for connection in _keypoint_connections:
+        image = cv2.line(image,
+                         (int(keypoints[connection[0]][0]), int(keypoints[connection[0]][1])),
+                         (int(keypoints[connection[1]][0]), int(keypoints[connection[1]][1])),
+                         color=_colors[int(id) % _colors.__len__()], thickness=2)
+    for keypoint in keypoints:
+        image = cv2.circle(image, (int(keypoint[0]), int(keypoint[1])), 2, (255, 255, 255), thickness=-1)
     return image
