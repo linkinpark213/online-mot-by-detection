@@ -34,7 +34,9 @@ class Tracker:
         # Tracklet Update
         self.update(row_ind, col_ind, detections, features)
 
-        logging.info('Frame #{}'.format(self.frame_num))
+        logging.info(
+            'Frame #{}: {} targets active, {} objects detected'.format(self.frame_num, len(self.tracklets_active),
+                                                                       len(detections)))
 
     def update(self, row_ind, col_ind, detections, detection_features):
         """
