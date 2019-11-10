@@ -23,6 +23,7 @@ class CustomTracker(Tracker):
 
         matcher = mot.associate.CascadeMatcher((combined_matcher, iou_matcher))
         # self.predictor = mot.predict.KalmanPredictor(box_type='xyxy', predict_type='xywh')
+        self.predictor = None
         super().__init__(detector, matcher)
 
     def update(self, row_ind, col_ind, detections, detection_features):
