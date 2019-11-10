@@ -22,7 +22,7 @@ class CustomTracker(Tracker):
         combined_matcher = mot.associate.HungarianMatcher(combined_metric, sigma=0.5)
 
         matcher = mot.associate.CascadeMatcher((combined_matcher, iou_matcher))
-        self.predictor = mot.predict.KalmanPredictor(box_type='xyxy', predict_type='xywh')
+        # self.predictor = mot.predict.KalmanPredictor(box_type='xyxy', predict_type='xywh')
         super().__init__(detector, matcher)
 
     def update(self, row_ind, col_ind, detections, detection_features):
