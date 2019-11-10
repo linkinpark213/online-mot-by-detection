@@ -76,7 +76,7 @@ def draw_tracklets(image, tracklets, confirmed_only=True, detected_only=True):
         if (tracklet.is_confirmed() or not confirmed_only) and (tracklet.is_detected() or not detected_only):
             image = draw_object(image, tracklet.last_detection.box, tracklet.id)
             if hasattr(tracklet.last_detection, 'keypoints'):
-                image = draw_skeleton(image, tracklet.last_detection.keypoints)
+                image = draw_skeleton(image, tracklet.last_detection.keypoints, tracklet.id)
     return image
 
 
