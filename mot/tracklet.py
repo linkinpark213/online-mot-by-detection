@@ -36,7 +36,7 @@ class Tracklet:
         if self.predictor is not None:
             return self.predictor(self)
         else:
-            return self.last_detection
+            return self.last_detection.box
 
     def update(self, frame_id, detection, feature):
         self.detected = True
