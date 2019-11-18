@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
         boxes = results[np.where(results[:, 0] == frame_no)]
         for box in boxes:
-            frame = vis.draw_object(frame, box[2:6], box[1])
+            frame = vis.draw_target_box(frame, box[2:6], box[1])
 
         writer.write(frame)
         if args.display:

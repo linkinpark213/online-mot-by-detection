@@ -7,18 +7,17 @@ class CosineMetric(Metric):
     An affinity metric that considers the cosine of angles between tracklets' features and detections' features.
     """
 
-    def __init__(self, encoder):
+    def __init__(self, encoding):
         super(CosineMetric).__init__()
-        self.encoder = encoder
-        self.name = encoder.name
+        self.encoding = encoding
 
-    def __call__(self, tracklets, detections, img):
-        matrix = np.zeros([len(tracklets), len(detections)])
-        features = self.encoder(detections, img)
+    def __call__(self, tracklets, detection_features, img):
+        matrix = np.zeros([len(tracklets), len(detection_features)])
         for i in range(len(tracklets)):
-            for j in range(len(detections)):
-                matrix[i][j] = self.cos(tracklets[i][self.encoder.name].feature[0], features[j][0])
-        return matrix, features
+            for j in range(len(detection_features)):
+                matrix[i][j] = self.cos(tracklets[i].feature_history[-1][1][self.encoding],
+                                        detection_features[j][self.encoding])
+        return matrix
 
     def cos(self, a, b):
         return np.dot(a, b) / ((np.linalg.norm(a) * np.linalg.norm(b)) + 1e-16)

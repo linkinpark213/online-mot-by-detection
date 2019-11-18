@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+import mot.utils.debug
 from .metric import Metric
 
 
@@ -7,31 +8,21 @@ class CombinedMetric(Metric):
     def __init__(self, metrics):
         super(CombinedMetric).__init__()
         self.metrics = metrics
-        self.name = 'combined'
+        self.encoding = 'combined'
 
-    def __call__(self, tracklets, detections, img):
+    def __call__(self, tracklets, detection_features, img):
         matrices = []
         all_features = []
 
         logger = logging.getLogger('MOT')
 
         for i in range(len(self.metrics)):
-            matrix, features = self.metrics[i](tracklets, detections, img)
+            matrix = self.metrics[i](tracklets, detection_features, img)
 
-            ################
-            # For debugging
-            ################
-            logger.debug('Metric {}:'.format(self.metrics[i].name))
-            for line in matrix:
-                text = ''
-                for i in line:
-                    text += '{:.3f} '.format(i)
-                logger.debug(text)
-            logger.debug('')
-            ################
+            # Log for debugging
+            mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.metrics[i].encoding, logger)
 
             matrices.append(matrix)
-            all_features.append(features)
 
         matrices = np.array(matrices)
         matrix = np.zeros_like(matrices[0])
@@ -39,27 +30,18 @@ class CombinedMetric(Metric):
             for j in range(matrix.shape[1]):
                 matrix[i][j] = self.combine(matrices[:, i, j])
 
-        feature_dict = {}
-        for i in range(len(self.metrics)):
-            if type(all_features[i]) is dict:
-                for key in all_features[i].keys():
-                    feature_dict[key] = all_features[i][key]
-            else:
-                feature_dict[self.metrics[i].name] = all_features[i]
+        # feature_dict = {}
+        # for i in range(len(self.metrics)):
+        #     if type(all_features[i]) is dict:
+        #         for key in all_features[i].keys():
+        #             feature_dict[key] = all_features[i][key]
+        #     else:
+        #         feature_dict[self.metrics[i].name] = all_features[i]
 
-        ################
         # For debugging
-        ################
-        logger.debug('Combined Metric:')
-        for line in matrix:
-            text = ''
-            for i in line:
-                text += '{:.3f} '.format(i)
-            logger.debug(text)
-        logger.debug('')
-        ################
+        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding, logger)
 
-        return matrix, feature_dict
+        return matrix
 
     def combine(self, scores):
         raise NotImplementedError('Extend the CombinedMetric class to implement your own combination method.')

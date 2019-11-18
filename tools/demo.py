@@ -32,7 +32,7 @@ def run_demo(tracker, args):
             if args.save_result != '':
                 result_writer = open(args.save_result, 'w+')
         tracker.tick(image)
-        image = mot.utils.draw_tracklets(image, tracker.tracklets_active)
+        image = mot.utils.draw_targets(image, tracker.tracklets_active)
         image = mot.utils.draw_frame_num(image, n)
 
         # Write to video if demanded.
@@ -46,7 +46,7 @@ def run_demo(tracker, args):
         # Display image if demanded.
         if args.display:
             cv2.imshow('Demo', image)
-            key = cv2.waitKey(1)
+            key = cv2.waitKey(0 if args.debug else 1)
             if key == 27:
                 break
 
@@ -66,7 +66,7 @@ if __name__ == '__main__':
                         help='Path to the output video file. Leave it blank to disable.')
     parser.add_argument('--save_result', default='', required=False,
                         help='Path to the output tracking result file. Leave it blank to disable.')
-    parser.add_argument('--ignore_display', action='store_false', default=False, required=False, dest='display',
+    parser.add_argument('--ignore_display', action='store_false', default=True, required=False, dest='display',
                         help='Add \'--ignore_display\' to only write to video / result file')
     parser.add_argument('--debug', action='store_true', default=False, required=False, dest='debug',
                         help='Add \'--debug\' to show lower-leveled loggings')

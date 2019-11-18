@@ -11,8 +11,8 @@ class GreedyMatcher(Matcher):
         super().__init__(metric)
         self.sigma = sigma
 
-    def __call__(self, tracklets, detections, img):
-        similarity_matrix, features = self.metric(tracklets, detections, img)
+    def __call__(self, tracklets, detection_features, img):
+        similarity_matrix = self.metric(tracklets, detection_features, img)
         row_ind = []
         col_ind = []
         for i in range(similarity_matrix.shape[0]):
@@ -22,4 +22,4 @@ class GreedyMatcher(Matcher):
                     if j not in col_ind:
                         row_ind.append(i)
                         col_ind.append(j)
-        return row_ind, col_ind, features
+        return row_ind, col_ind

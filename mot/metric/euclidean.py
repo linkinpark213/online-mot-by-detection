@@ -7,27 +7,26 @@ class EuclideanMetric(Metric):
     An affinity metric that considers the euclidean distances between tracklets' features and detections' features.
     """
 
-    def __init__(self, encoder, history=1):
+    def __init__(self, encoding, history=1):
         super(EuclideanMetric).__init__()
-        self.encoder = encoder
-        self.name = encoder.name
+        self.encoding = encoding
         assert history > 0, 'At least one step backward in history consideration'
         self.history = 1
 
-    def __call__(self, tracklets, detections, img):
-        matrix = np.zeros([len(tracklets), len(detections)])
-        features = self.encoder(detections, img)
+    def __call__(self, tracklets, detection_features, img):
+        matrix = np.zeros([len(tracklets), len(detection_features)])
         for i in range(len(tracklets)):
-            for j in range(len(detections)):
+            for j in range(len(detection_features)):
                 sum = 0
                 if len(tracklets[i].feature_history) < self.history:
                     history = len(tracklets[i].feature_history)
                 else:
                     history = self.history
                 for k in range(history):
-                    sum += self.euclidean(tracklets[i].feature_history[-k - 1][1][self.encoder.name][0], features[j][0])
+                    sum += self.euclidean(tracklets[i].feature_history[-k - 1][1][self.encoding][0],
+                                          detection_features[j][self.encoding][0])
                 matrix[i][j] = - sum / history
-        return matrix, features
+        return matrix
 
     def euclidean(self, a, b):
         return 1 - np.linalg.norm(a - b)

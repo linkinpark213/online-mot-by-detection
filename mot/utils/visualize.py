@@ -63,9 +63,9 @@ _keypoint_connections = [
 ]
 
 
-def draw_tracklets(image, tracklets, confirmed_only=True, detected_only=True):
+def draw_targets(image, tracklets, confirmed_only=True, detected_only=True):
     """
-    Draw the boxes of tracklets.
+    Draw the boxes of targets.
     :param image: A 3D numpy array with shape (h, w, 3). The video frame.
     :param tracklets: A list of Tracklet objects. The currently active tracklets.
     :param confirmed_only: Set to True to draw boxes only for tracklets that are confirmed.
@@ -74,9 +74,9 @@ def draw_tracklets(image, tracklets, confirmed_only=True, detected_only=True):
     """
     for tracklet in tracklets:
         if (tracklet.is_confirmed() or not confirmed_only) and (tracklet.is_detected() or not detected_only):
-            image = draw_object(image, tracklet.last_detection.box, tracklet.id)
+            image = draw_target_box(image, tracklet.last_detection.box, tracklet.id)
             if hasattr(tracklet.last_detection, 'keypoints'):
-                image = draw_skeleton(image, tracklet.last_detection.keypoints, tracklet.id)
+                image = draw_target_skeleton(image, tracklet.last_detection.keypoints, tracklet.id)
     return image
 
 
@@ -91,7 +91,7 @@ def draw_frame_num(image, frame_num):
     return image
 
 
-def draw_object(image, box, id):
+def draw_target_box(image, box, id):
     image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])),
                           _colors[int(id) % _colors.__len__()], thickness=3)
     image = cv2.putText(image, '{:d}'.format(int(id)), (int(box[0]), int(box[1]) - 8),
@@ -101,7 +101,7 @@ def draw_object(image, box, id):
     return image
 
 
-def draw_skeleton(image, keypoints, id):
+def draw_target_skeleton(image, keypoints, id):
     for connection in _keypoint_connections:
         image = cv2.line(image,
                          (int(keypoints[connection[0]][0]), int(keypoints[connection[0]][1])),

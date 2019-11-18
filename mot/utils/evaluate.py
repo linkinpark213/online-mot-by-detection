@@ -33,7 +33,7 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
             image = cv2.imread(os.path.join(mot_subset_path, sequence, 'img1', frame_filenames[i]))
             result_file.write(snapshot_to_mot(tracker))
             tracker.tick(image)
-            image = mot.utils.visualize.draw_tracklets(image, tracker.tracklets_active)
+            image = mot.utils.visualize.draw_targets(image, tracker.tracklets_active)
 
             video_writer.write(image)
             if show_result:
