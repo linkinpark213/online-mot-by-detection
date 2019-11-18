@@ -12,7 +12,6 @@ class CombinedMetric(Metric):
 
     def __call__(self, tracklets, detection_features, img):
         matrices = []
-        all_features = []
 
         logger = logging.getLogger('MOT')
 
@@ -29,14 +28,6 @@ class CombinedMetric(Metric):
         for i in range(matrix.shape[0]):
             for j in range(matrix.shape[1]):
                 matrix[i][j] = self.combine(matrices[:, i, j])
-
-        # feature_dict = {}
-        # for i in range(len(self.metrics)):
-        #     if type(all_features[i]) is dict:
-        #         for key in all_features[i].keys():
-        #             feature_dict[key] = all_features[i][key]
-        #     else:
-        #         feature_dict[self.metrics[i].name] = all_features[i]
 
         # For debugging
         mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding, logger)

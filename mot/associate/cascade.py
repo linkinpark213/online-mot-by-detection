@@ -7,33 +7,15 @@ class CascadeMatcher(Matcher):
         self.matchers = matchers
 
     def __call__(self, tracklets, detection_features, img):
-        remaining_tracklets = tracklets.copy()
-        # all_features = []
         all_row_ind = []
         all_col_ind = []
         for matcher in self.matchers:
-            row_ind, col_ind = matcher(remaining_tracklets, detection_features, img)
-            tracklets_to_remove = []
+            row_ind, col_ind = matcher(tracklets, detection_features, img)
             for i in range(len(row_ind)):
                 row = row_ind[i]
                 col = col_ind[i]
-                if not col in all_col_ind:
-                    tracklets_to_remove.append(remaining_tracklets[row])
+                if not row in all_row_ind and not col in all_col_ind:
                     all_row_ind.append(row)
                     all_col_ind.append(col)
-            for tracklet in tracklets_to_remove:
-                remaining_tracklets.remove(tracklet)
-
-        # Generate feature dictionaries for the detections
-        # feature_dicts = []
-        # for i in range(len(detection_features)):
-        #     feature_dict = {}
-        #     for j in range(len(self.matchers)):
-        #         if type(all_features[j]) is dict:
-        #             for key in all_features[j].keys():
-        #                 feature_dict[key] = all_features[j][key][i]
-        #         else:
-        #             feature_dict[self.matchers[j].metric.name] = all_features[j][i]
-        #     feature_dicts.append(feature_dict)
 
         return all_row_ind, all_col_ind
