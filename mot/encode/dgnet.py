@@ -14,9 +14,9 @@ import pdb
 
 
 class DGNetEncoder(Encoder):
-    def __init__(self, model_path):
+    def __init__(self, model_path, name='dgnet'):
         super(DGNetEncoder).__init__()
-        self.name = 'dgnet'
+        self.name = name
 
         self.model = ft_netAB(751, norm=False, stride=1, pool='max')
         save_path = os.path.join(model_path, 'id_00100000.pt')

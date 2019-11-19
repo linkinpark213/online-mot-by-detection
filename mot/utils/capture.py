@@ -17,3 +17,11 @@ class ImagesCapture:
         if image is not None:
             return True, image
         return False, None
+
+    def get(self, propId):
+        if propId == cv2.CAP_PROP_FRAME_COUNT:
+            return len(self.image_filenames)
+        elif propId == cv2.CAP_PROP_FRAME_HEIGHT:
+            return cv2.imread(self.image_filenames[0]).shape[0]
+        elif propId == cv2.CAP_PROP_FRAME_WIDTH:
+            return cv2.imread(self.image_filenames[0]).shape[1]

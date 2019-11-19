@@ -1,6 +1,7 @@
 import cv2
 import logging
 import numpy as np
+from .tracklet import Tracklet
 
 
 class Tracker:
@@ -59,12 +60,39 @@ class Tracker:
     def update(self, row_ind, col_ind, detections, detection_features):
         """
         Update the tracklets.
+        *****************************************************
+        Override this function for customized updating policy
+        *****************************************************
         :param row_ind: A list of integers. Indices of the matched tracklets.
         :param col_ind: A list of integers. Indices of the matched detections.
         :param detection_boxes: A list of Detection objects.
         :param detection_features: The features of the detections. It can be any form you want.
         """
-        raise NotImplementedError('Extend the Tracker class to implement your own updating strategy.')
+        # Update tracked tracklets' features
+        for i in range(len(row_ind)):
+            self.tracklets_active[row_ind[i]].update(self.frame_num, detections[col_ind[i]],
+                                                     detection_features[col_ind[i]])
+
+        # Deal with unmatched tracklets
+        tracklets_to_kill = []
+        unmatched_tracklets = []
+        for i in range(len(self.tracklets_active)):
+            if i not in row_ind:
+                if self.tracklets_active[i].fade():
+                    tracklets_to_kill.append(self.tracklets_active[i])
+                else:
+                    unmatched_tracklets.append(self.tracklets_active[i])
+
+        # Kill tracklets that are unmatched for a while
+        for tracklet in tracklets_to_kill:
+            self.tracklets_active.remove(tracklet)
+            self.tracklets_finished.append(tracklet)
+
+        # Create new tracklets with unmatched detections
+        for i in range(len(detection_features)):
+            if i not in col_ind:
+                self.add_tracklet(
+                    Tracklet(0, self.frame_num, detections[i], detection_features[i], None))
 
     def assignment_matrix(self, similarity_matrix):
         """

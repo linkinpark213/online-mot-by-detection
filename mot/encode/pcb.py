@@ -12,9 +12,9 @@ from .PCB.model import PCB, PCB_test
 
 
 class PCBEncoder(Encoder):
-    def __init__(self, model_path):
+    def __init__(self, model_path, name='pcb'):
         super(PCBEncoder).__init__()
-        self.name = 'pcb'
+        self.name = name
         model_structure = PCB(751)
         model = model_structure.convert_to_rpp()
         save_path = os.path.join(model_path, 'full', 'net_last.pth')
