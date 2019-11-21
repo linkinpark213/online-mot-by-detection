@@ -15,7 +15,7 @@ class CustomTracker(Tracker):
         iou_metric = mot.metric.IoUMetric()
         iou_matcher = mot.associate.HungarianMatcher(iou_metric, sigma=0.3)
 
-        reid_encoder = mot.encode.DGNetEncoder('mot/encode/DGNet/outputs/checkpoints/')
+        reid_encoder = mot.encode.DGNetEncoder('mot/encode/DGNet/')
 
         reid_metric = mot.metric.CosineMetric('dgnet')
         combined_metric = mot.metric.ProductMetric((reid_metric, iou_metric))
