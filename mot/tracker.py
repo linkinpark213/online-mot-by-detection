@@ -29,7 +29,7 @@ class Tracker:
         self.frame_num += 1
 
         # Prediction
-        predictions = self.predict(img)
+        self.predict(img)
 
         # Detection
         detections = self.detector(img)
@@ -65,9 +65,9 @@ class Tracker:
         """
         Predict target positions in the incoming frame.
         :param img: The image ndarray.
-        :return: A list of Prediction objects, with predictions for .
         """
-        return self.predictor(self.tracklets_active, img)
+        if self.predictor is not None:
+            self.predictor(self.tracklets_active, img)
 
     def update(self, row_ind, col_ind, detections, detection_features):
         """
@@ -107,7 +107,8 @@ class Tracker:
                 new_tracklet = Tracklet(0, self.frame_num, detections[i], detection_features[i])
                 new_tracklets.append(new_tracklet)
                 self.add_tracklet(new_tracklet)
-            self.predictor.initiate(new_tracklets)
+            if self.predictor is not None:
+                self.predictor.initiate(new_tracklets)
 
     def assignment_matrix(self, similarity_matrix):
         """
