@@ -63,7 +63,7 @@ _keypoint_connections = [
 ]
 
 
-def draw_targets(image, tracklets, confirmed_only=True, detected_only=True, draw_predictions=False,
+def draw_targets(image, tracklets, confirmed_only=True, detected_only=True, draw_centers=False, draw_predictions=False,
                  draw_skeletons=True):
     """
     Draw the boxes of targets.
@@ -71,6 +71,7 @@ def draw_targets(image, tracklets, confirmed_only=True, detected_only=True, draw
     :param tracklets: A list of Tracklet objects. The currently active tracklets.
     :param confirmed_only: Set to True to draw boxes only for tracklets that are confirmed.
     :param detected_only: Set to True to draw boxes only for tracklets that are detected in the frame.
+    :param draw_centers: Set to True to draw red dots at target centers.
     :param draw_predictions: Set to True to draw prediction boxes for each target, if it's available.
     :param draw_skeletons: Set to True to draw skeletons of each target, if it's available.
     :return: A 3D numpy array with shape (h, w, 3). The video frame with boxes of tracked targets drawn.
@@ -96,12 +97,13 @@ def draw_frame_num(image, frame_num):
     return image
 
 
-def draw_target_box(image, box, id):
+def draw_target_box(image, box, id, draw_center=False):
     """
     Draw the box with an ID tag for a tracked target.
     :param image: A 3D numpy array with shape (h, w, 3). The video frame.
     :param box: A list or numpy array of 4 float numbers. The box of a tracked target in (x1, y1, x2, y2).
     :param id: An integer. The id of the tracked target.
+    :param draw_center: Set to true to draw a red dot at the target center.
     :return: A 3D numpy array with shape (h, w, 3). The video frame with a new target box drawn.
     """
     image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])),
@@ -113,8 +115,9 @@ def draw_target_box(image, box, id):
                           _colors[int(id) % _colors.__len__()], thickness=-1)
     image = cv2.putText(image, id_string, (int(box[0] + 2), int(box[1]) + id_size[1] + 4),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), thickness=2)
-    image = cv2.circle(image, (int((box[0] + box[2]) / 2), int((box[1] + box[3]) / 2)), radius=10,
-                       color=(0, 0, 255), thickness=-1)
+    if draw_center:
+        image = cv2.circle(image, (int((box[0] + box[2]) / 2), int((box[1] + box[3]) / 2)), radius=10,
+                           color=(0, 0, 255), thickness=-1)
     return image
 
 
