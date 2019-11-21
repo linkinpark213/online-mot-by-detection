@@ -47,8 +47,13 @@ class DetectronRCNNPredictor(Predictor):
         image = torch.as_tensor(image.astype("float32").transpose(2, 0, 1))
         # Size of feature maps, used in the detector
         feat_height, feat_width = image.shape[1:3]
+        scale_x = feat_width / width
+        scale_y = feat_height / height
         proposal_boxes = Boxes(torch.tensor([tracklet.last_detection.box for tracklet in tracklets]))
-        proposals = Instances((height, width), proposal_boxes=proposal_boxes)
+
+        # Scale proposals to the same size as boxes
+        proposal_boxes.scale(scale_x, scale_y)
+        proposals = Instances((feat_height, feat_width), proposal_boxes=proposal_boxes)
 
         inputs = {"image": image, "height": height, "width": width, "proposals": proposals}
 
@@ -64,7 +69,6 @@ class DetectronRCNNPredictor(Predictor):
         pred_class_logits, pred_proposal_deltas = self.model.roi_heads.box_predictor(box_features)
         del box_features
 
-        import detectron2.modeling.roi_heads.fast_rcnn
         raw_outputs = FastRCNNOutputs(
             self.model.roi_heads.box2box_transform,
             pred_class_logits,
@@ -78,18 +82,16 @@ class DetectronRCNNPredictor(Predictor):
         scores = raw_outputs.predict_probs()[0]
 
         num_bbox_reg_classes = boxes.shape[1] // 4
-        results = Instances((feat_height, feat_width))
         boxes = Boxes(boxes.reshape(-1, 4))
+        # Scale regressed boxes to the same size as original image
+        boxes.scale(1 / scale_x, 1 / scale_y)
         boxes.clip((feat_height, feat_width))
         boxes = boxes.tensor.view(-1, num_bbox_reg_classes, 4)
-        results.pred_boxes = Boxes(boxes[:, 0, :])
-        results.scores = scores[:, 0]
+        boxes = boxes[:, 0, :]
+        scores = scores[:, 0]
 
-        # Project boxes to original image size
-        results = detector_postprocess(results, height, width)
-
-        pred_boxes = results.pred_boxes.tensor.detach().cpu().numpy()
-        scores = results.scores.detach().cpu().numpy()
+        pred_boxes = boxes.detach().cpu().numpy()
+        scores = scores.detach().cpu().numpy()
         return pred_boxes, scores
 
     def predict(self, tracklets, img):
