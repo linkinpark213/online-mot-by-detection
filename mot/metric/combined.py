@@ -42,3 +42,12 @@ class ProductMetric(CombinedMetric):
 class SummationMetric(CombinedMetric):
     def combine(self, scores):
         return np.sum(scores)
+
+
+class WeightedMetric(CombinedMetric):
+    def __init__(self, metrics, weights):
+        super().__init__(metrics)
+        self.weights = weights
+
+    def combine(self, scores):
+        return np.sum([score * weight for (score, weight) in zip(scores, self.weights)])

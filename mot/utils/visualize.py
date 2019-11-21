@@ -151,8 +151,8 @@ def draw_target_skeleton(image, keypoints, id):
     return image
 
 
-def visualize_snapshot(frame, tracker, confirmed_only=True, detected_only=True, draw_predictions=False,
-                       draw_skeletons=True):
+def visualize_snapshot(frame, tracker, confirmed_only=True, detected_only=True, draw_centers=False,
+                       draw_predictions=False, draw_skeletons=True):
     """
     Visualize a frame with boxes (and skeletons) of all tracked targets.
     :param frame: A 3D numpy array with shape (h, w, 3). The video frame.
@@ -160,7 +160,7 @@ def visualize_snapshot(frame, tracker, confirmed_only=True, detected_only=True, 
     :return: A 3D numpy array with shape (h, w, 3). The video frame with all targets and frame number drawn.
     """
     image = draw_targets(frame, tracker.tracklets_active,
-                         confirmed_only=confirmed_only, detected_only=detected_only, draw_predictions=draw_predictions,
-                         draw_skeletons=draw_skeletons)
+                         confirmed_only=confirmed_only, detected_only=detected_only, draw_centers=draw_centers,
+                         draw_predictions=draw_predictions, draw_skeletons=draw_skeletons)
     image = draw_frame_num(image, tracker.frame_num)
     return image

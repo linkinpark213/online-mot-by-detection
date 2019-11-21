@@ -18,6 +18,7 @@ class CustomTracker(Tracker):
         reid_encoder = mot.encode.DGNetEncoder('mot/encode/DGNet/')
 
         reid_metric = mot.metric.CosineMetric('dgnet')
+        reid_metric = mot.metric.GatedMetric(reid_metric, 0.9)
         combined_metric = mot.metric.ProductMetric((reid_metric, iou_metric))
         combined_matcher = mot.associate.HungarianMatcher(combined_metric, sigma=0.5)
 

@@ -17,7 +17,7 @@ from mmaction.models import build_recognizer
 class IoUTracker(Tracker):
     def __init__(self, sigma_conf=0.6):
         detector = mot.detect.Detectron(
-            '/home/linkinpark213/Source/detectron2/configs/COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml',
+            'https://raw.githubusercontent.com/facebookresearch/detectron2/22e04d1432363be727797a081e3e9d48981f5189/configs/COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml',
             'detectron2://COCO-Detection/faster_rcnn_R_50_FPN_3x/137849458/model_final_280758.pkl')
         metric = mot.metric.IoUMetric()
         encoder = mot.encode.ImagePatchEncoder(resize_to=(224, 224))
@@ -76,7 +76,8 @@ def get_video_writer(save_video_path, width, height):
 
 def track_and_recognize(tracker, recognizer, args):
     capture = cv2.VideoCapture(args.video_path)
-    video_writer = get_video_writer(args.save_video, 1280, 720)
+    video_writer = get_video_writer(args.save_video, capture.get(cv2.CAP_PROP_FRAME_WIDTH),
+                                    capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
     while True:
         ret, frame = capture.read()
         if not ret:
