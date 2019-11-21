@@ -5,10 +5,11 @@ from .tracklet import Tracklet
 
 
 class Tracker:
-    def __init__(self, detector, encoders, matcher):
+    def __init__(self, detector, encoders, matcher, predictor=None):
         self.detector = detector
         self.encoders = encoders
         self.matcher = matcher
+        self.predictor = predictor
         self.max_id = 0
         self.tracklets_active = []
         self.tracklets_finished = []
@@ -26,6 +27,9 @@ class Tracker:
         :param img: A 3D numpy array with shape (H, W, 3). The new frame in the sequence.
         """
         self.frame_num += 1
+
+        # Prediction
+        predictions = self.predict(img)
 
         # Detection
         detections = self.detector(img)
@@ -56,6 +60,14 @@ class Tracker:
             for i in range(len(detections)):
                 features[i][encoder.name] = _features[i]
         return features
+
+    def predict(self, img):
+        """
+        Predict target positions in the incoming frame.
+        :param img: The image ndarray.
+        :return: A list of Prediction objects, with predictions for .
+        """
+        return self.predictor(self.tracklets_active, img)
 
     def update(self, row_ind, col_ind, detections, detection_features):
         """
@@ -90,9 +102,12 @@ class Tracker:
 
         # Create new tracklets with unmatched detections
         for i in range(len(detection_features)):
+            new_tracklets = []
             if i not in col_ind:
-                self.add_tracklet(
-                    Tracklet(0, self.frame_num, detections[i], detection_features[i], None))
+                new_tracklet = Tracklet(0, self.frame_num, detections[i], detection_features[i])
+                new_tracklets.append(new_tracklet)
+                self.add_tracklet(new_tracklet)
+            self.predictor.initiate(new_tracklets)
 
     def assignment_matrix(self, similarity_matrix):
         """

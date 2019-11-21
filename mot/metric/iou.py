@@ -1,4 +1,7 @@
+import logging
 import numpy as np
+import mot.utils.box
+import mot.utils.debug
 from .metric import Metric
 
 
@@ -7,28 +10,20 @@ class IoUMetric(Metric):
     An affinity metric that only considers the IoU of tracklets' box and detected box.
     """
 
-    def __init__(self):
+    def __init__(self, use_prediction=False):
         super(IoUMetric).__init__()
         self.encoding = 'box'
+        self.use_prediction = use_prediction
 
     def __call__(self, tracklets, detection_features, img):
         matrix = np.zeros([len(tracklets), len(detection_features)])
         for i in range(len(tracklets)):
             for j in range(len(detection_features)):
-                matrix[i][j] = self.iou(tracklets[i].last_detection.box, detection_features[j][self.encoding])
+                if self.use_prediction:
+                    matrix[i][j] = mot.utils.box.iou(tracklets[i].prediction.box, detection_features[j][self.encoding])
+                else:
+                    matrix[i][j] = mot.utils.box.iou(tracklets[i].last_detection.box,
+                                                     detection_features[j][self.encoding])
+
+        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding, logging.getLogger('MOT'))
         return matrix
-
-    def iou(self, a, b):
-        b1_x1, b1_y1, b1_x2, b1_y2 = a[0:4]
-        b2_x1, b2_y1, b2_x2, b2_y2 = b[0:4]
-
-        x1 = max(b1_x1, b2_x1)
-        y1 = max(b1_y1, b2_y1)
-        x2 = min(b1_x2, b2_x2)
-        y2 = min(b1_y2, b2_y2)
-        intersection = max(x2 - x1 + 1, 0) * max(y2 - y1 + 1, 0)
-        area1 = (b1_x2 - b1_x1 + 1) * (b1_y2 - b1_y1 + 1)
-        area2 = (b2_x2 - b2_x1 + 1) * (b2_y2 - b2_y1 + 1)
-        union = area1 + area2 - intersection
-
-        return intersection / (union + 1e-16)

@@ -17,10 +17,6 @@ class CombinedMetric(Metric):
 
         for i in range(len(self.metrics)):
             matrix = self.metrics[i](tracklets, detection_features, img)
-
-            # Log for debugging
-            mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.metrics[i].encoding, logger)
-
             matrices.append(matrix)
 
         matrices = np.array(matrices)

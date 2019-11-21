@@ -57,7 +57,7 @@ def run_demo(tracker, args):
         if not ret:
             break
         tracker.tick(frame)
-        image = mot.utils.visualize_snapshot(frame, tracker)
+        image = mot.utils.visualize_snapshot(frame, tracker, draw_predictions=True, draw_skeletons=True)
 
         # Write to video if demanded.
         video_writer.write(image)

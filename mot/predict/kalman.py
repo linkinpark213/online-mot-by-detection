@@ -4,7 +4,8 @@ Implementation code for Kalman filter is borrowed from https://github.com/nwojke
 """
 import scipy
 import numpy as np
-from mot.predict import Predictor
+import mot.utils.box
+from mot.predict import Predictor, Prediction
 
 
 class KalmanFilter(object):
@@ -205,71 +206,26 @@ class KalmanPredictor(Predictor):
         self.box_type = box_type
         self.predict_type = predict_type
 
-    def __call__(self, tracklet):
-        return self.predict(tracklet)
-
     def convert(self, box, in_type, out_type):
         assert in_type in ['xyxy', 'xywh', 'xyah'] and out_type in ['xyxy', 'xywh',
                                                                     'xyah'], "Unknown box representation"
-        if in_type == 'xyxy':
-            if out_type == 'xyah':
-                return self.xyxy2xyah(box)
-            elif out_type == 'xywh':
-                return self.xyxy2xywh(box)
-        elif in_type == 'xyah':
-            if out_type == 'xyxy':
-                return self.xyah2xyxy(box)
-            elif out_type == 'xywh':
-                return self.xyah2xywh(box)
-        elif in_type == 'xywh':
-            if out_type == 'xyxy':
-                return self.xywh2xyxy(box)
-            elif out_type == 'xyah':
-                return self.xywh2xyah(box)
+        return getattr(mot.utils.box, in_type + '2' + out_type)(box)
 
-    def xyxy2xywh(self, box):
-        measurement = box.copy()[:4]
-        measurement[0] = (box[0] + box[2]) / 2
-        measurement[1] = (box[1] + box[3]) / 2
-        measurement[2] = box[2] - box[0]
-        measurement[3] = box[3] - box[1]
-        return measurement
+    def initiate(self, tracklets):
+        for tracklet in tracklets:
+            measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
+            tracklet.mean, tracklet.covariance = KalmanFilter.initiate(measurement)
 
-    def xyxy2xyah(self, box):
-        measurement = self.xyxy2xywh(box)
-        measurement[2] = measurement[2] / measurement[3]
-        return measurement
+    def update(self, tracklets):
+        for tracklet in tracklets:
+            measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
+            tracklet.mean, tracklet.covariance = KalmanFilter.update(tracklet.mean, tracklet.covariance, measurement)
 
-    def xyah2xywh(self, box):
-        measurement = box.copy()[:4]
-        measurement[2] = measurement[2] * measurement[3]
-        return measurement
-
-    def xyah2xyxy(self, box):
-        measurement = self.xyah2xywh(box)
-        return self.xywh2xyxy(measurement)
-
-    def xywh2xyxy(self, box):
-        measurement = box.copy()[:4]
-        measurement[0] = measurement[0] - measurement[2] / 2
-        measurement[1] = measurement[1] - measurement[3] / 2
-        measurement[2] = measurement[0] + measurement[2]
-        measurement[3] = measurement[1] + measurement[3]
-        return measurement
-
-    def xywh2xyah(self, box):
-        measurement = box.copy()[:4]
-        measurement[2] = measurement[2] / measurement[3]
-        return measurement
-
-    def initiate(self, tracklet):
-        measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
-        tracklet.mean, tracklet.covariance = KalmanFilter.initiate(measurement)
-
-    def update(self, tracklet):
-        measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
-        tracklet.mean, tracklet.covariance = KalmanFilter.update(tracklet.mean, tracklet.covariance, measurement)
-
-    def predict(self, tracklet):
-        tracklet.mean, tracklet.covariance = KalmanFilter.predict(tracklet.mean, tracklet.covariance)
-        return self.convert(tracklet.mean, self.predict_type, self.box_type)
+    def predict(self, tracklets, img):
+        self.update(tracklets)
+        predictions = []
+        for tracklet in tracklets:
+            tracklet.mean, tracklet.covariance = KalmanFilter.predict(tracklet.mean, tracklet.covariance)
+            tracklet.prediction = Prediction(self.convert(tracklet.mean, self.predict_type, 'xyxy'), 0)
+            predictions.append(tracklet.prediction)
+        return predictions

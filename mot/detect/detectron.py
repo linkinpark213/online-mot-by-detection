@@ -7,11 +7,12 @@ from detectron2.engine import DefaultPredictor
 
 
 class Detectron(Detector):
-    def __init__(self, config, checkpoint, conf_threshold=0.5):
+    def __init__(self, config, checkpoint=None, conf_threshold=0.5):
         super(Detectron).__init__()
         cfg = get_cfg()
         cfg.merge_from_file(config)
-        cfg.MODEL.WEIGHTS = checkpoint
+        if checkpoint is not None:
+            cfg.MODEL.WEIGHTS = checkpoint
         cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = conf_threshold
         self.predictor = DefaultPredictor(cfg)
 

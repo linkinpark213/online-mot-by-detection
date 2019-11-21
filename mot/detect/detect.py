@@ -12,6 +12,6 @@ class Detector:
 
 
 class Detection:
-    def __init__(self, box, conf):
+    def __init__(self, box, score):
         self.box = box
-        self.conf = conf
+        self.score = score

@@ -63,19 +63,24 @@ _keypoint_connections = [
 ]
 
 
-def draw_targets(image, tracklets, confirmed_only=True, detected_only=True):
+def draw_targets(image, tracklets, confirmed_only=True, detected_only=True, draw_predictions=False,
+                 draw_skeletons=True):
     """
     Draw the boxes of targets.
     :param image: A 3D numpy array with shape (h, w, 3). The video frame.
     :param tracklets: A list of Tracklet objects. The currently active tracklets.
     :param confirmed_only: Set to True to draw boxes only for tracklets that are confirmed.
     :param detected_only: Set to True to draw boxes only for tracklets that are detected in the frame.
+    :param draw_predictions: Set to True to draw prediction boxes for each target, if it's available.
+    :param draw_skeletons: Set to True to draw skeletons of each target, if it's available.
     :return: A 3D numpy array with shape (h, w, 3). The video frame with boxes of tracked targets drawn.
     """
     for tracklet in tracklets:
         if (tracklet.is_confirmed() or not confirmed_only) and (tracklet.is_detected() or not detected_only):
+            if draw_predictions and tracklet.prediction is not None:
+                image = draw_target_prediction(image, tracklet.prediction.box)
             image = draw_target_box(image, tracklet.last_detection.box, tracklet.id)
-            if hasattr(tracklet.last_detection, 'keypoints'):
+            if draw_skeletons and hasattr(tracklet.last_detection, 'keypoints'):
                 image = draw_target_skeleton(image, tracklet.last_detection.keypoints, tracklet.id)
     return image
 
@@ -113,6 +118,18 @@ def draw_target_box(image, box, id):
     return image
 
 
+def draw_target_prediction(image, box):
+    """
+    Draw the prediction box with an ID tag for a tracked target.
+    :param image: A 3D numpy array with shape (h, w, 3). The video frame.
+    :param box: A list or numpy array of 4 float numbers. The box of a tracked target in (x1, y1, x2, y2).
+    :return: A 3D numpy array with shape (h, w, 3). The video frame with a new target prediction box drawn.
+    """
+    image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])),
+                          (255, 255, 255), thickness=1)
+    return image
+
+
 def draw_target_skeleton(image, keypoints, id):
     """
     Draw the skeleton for a tracked target..
@@ -131,13 +148,16 @@ def draw_target_skeleton(image, keypoints, id):
     return image
 
 
-def visualize_snapshot(frame, tracker):
+def visualize_snapshot(frame, tracker, confirmed_only=True, detected_only=True, draw_predictions=False,
+                       draw_skeletons=True):
     """
     Visualize a frame with boxes (and skeletons) of all tracked targets.
     :param frame: A 3D numpy array with shape (h, w, 3). The video frame.
     :param tracker: A Tracker object, of which the active tracklets are to be visualized.
     :return: A 3D numpy array with shape (h, w, 3). The video frame with all targets and frame number drawn.
     """
-    image = draw_targets(frame, tracker.tracklets_active)
+    image = draw_targets(frame, tracker.tracklets_active,
+                         confirmed_only=confirmed_only, detected_only=detected_only, draw_predictions=draw_predictions,
+                         draw_skeletons=draw_skeletons)
     image = draw_frame_num(image, tracker.frame_num)
     return image
