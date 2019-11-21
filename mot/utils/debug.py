@@ -1,4 +1,5 @@
 import cv2
+import logging
 
 
 def log_affinity_matrix(matrix, tracklets, metric_name, logger):
@@ -11,7 +12,10 @@ def log_affinity_matrix(matrix, tracklets, metric_name, logger):
             text += '{:.3f}\t| '.format(i)
         logger.debug(text)
     logger.debug('==============================')
-    display_affinity_matrix(matrix, metric_name, [tracklet.id for tracklet in tracklets])
+
+    logger = logging.getLogger('MOT')
+    if logger.level == logging.DEBUG:
+        display_affinity_matrix(matrix, metric_name, [tracklet.id for tracklet in tracklets])
 
 
 def display_affinity_matrix(matrix, metric_name, tracklet_ids):
