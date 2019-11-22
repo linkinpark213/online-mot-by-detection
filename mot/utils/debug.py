@@ -13,7 +13,6 @@ def log_affinity_matrix(matrix, tracklets, metric_name, logger):
         logger.debug(text)
     logger.debug('==============================')
 
-    logger = logging.getLogger('MOT')
     if logger.level <= logging.DEBUG:
         display_affinity_matrix(matrix, metric_name, [tracklet.id for tracklet in tracklets])
 

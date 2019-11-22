@@ -11,8 +11,8 @@ class GatedMetric(Metric):
         self.gate_value = gate_value
         self.encoding = original_metric.encoding + '_gated'
 
-    def __call__(self, tracklets, detection_features, img):
-        matrix = self.original_metric(tracklets, detection_features, img)
+    def __call__(self, tracklets, detection_features):
+        matrix = self.original_metric(tracklets, detection_features)
         matrix[np.where(matrix < self.gate_value)] = 0
 
         logger = logging.getLogger('MOT')

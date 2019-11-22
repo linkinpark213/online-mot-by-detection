@@ -6,11 +6,11 @@ class CascadeMatcher(Matcher):
         super().__init__(None)
         self.matchers = matchers
 
-    def __call__(self, tracklets, detection_features, img):
+    def __call__(self, tracklets, detection_features):
         all_row_ind = []
         all_col_ind = []
         for matcher in self.matchers:
-            row_ind, col_ind = matcher(tracklets, detection_features, img)
+            row_ind, col_ind = matcher(tracklets, detection_features)
             for i in range(len(row_ind)):
                 row = row_ind[i]
                 col = col_ind[i]

@@ -10,13 +10,13 @@ class CombinedMetric(Metric):
         self.metrics = metrics
         self.encoding = 'combined'
 
-    def __call__(self, tracklets, detection_features, img):
+    def __call__(self, tracklets, detection_features):
         matrices = []
 
         logger = logging.getLogger('MOT')
 
         for i in range(len(self.metrics)):
-            matrix = self.metrics[i](tracklets, detection_features, img)
+            matrix = self.metrics[i](tracklets, detection_features)
             matrices.append(matrix)
 
         matrices = np.array(matrices)

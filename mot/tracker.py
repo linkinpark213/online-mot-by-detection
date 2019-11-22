@@ -23,6 +23,7 @@ class Tracker:
 
     def tick(self, img):
         """
+        Detect, encode and match, following the tracking-by-detection paradigm.
         The tracker works online. For each new frame, the tracker ticks once.
         :param img: A 3D numpy array with shape (H, W, 3). The new frame in the sequence.
         """
@@ -38,7 +39,7 @@ class Tracker:
         features = self.encode(detections, img)
 
         # Data Association
-        row_ind, col_ind = self.matcher(self.tracklets_active, features, img)
+        row_ind, col_ind = self.matcher(self.tracklets_active, features)
 
         # Tracklet Update
         self.update(row_ind, col_ind, detections, features)
@@ -137,3 +138,7 @@ class Tracker:
         tracklet.id = self.max_id
         self.max_id += 1
         self.tracklets_active.append(tracklet)
+
+    def kill_tracklet(self, tracklet):
+        self.tracklets_active.remove(tracklet)
+        self.tracklets_finished.append(tracklet)

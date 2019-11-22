@@ -13,7 +13,7 @@ class CosineMetric(Metric):
         super(CosineMetric).__init__()
         self.encoding = encoding
 
-    def __call__(self, tracklets, detection_features, img):
+    def __call__(self, tracklets, detection_features):
         matrix = np.zeros([len(tracklets), len(detection_features)])
         for i in range(len(tracklets)):
             for j in range(len(detection_features)):

@@ -11,8 +11,8 @@ from mot.tracker import Tracker, Tracklet
 class CustomTracker(Tracker):
     def __init__(self, sigma_active=0.5, lambda_active=0.6, lambda_new=0.3):
         detector = mot.detect.Detectron(
-            'https://raw.githubusercontent.com/facebookresearch/detectron2/22e04d1432363be727797a081e3e9d48981f5189/configs/COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x.yaml',
-            'detectron2://COCO-Keypoints/keypoint_rcnn_X_101_32x8d_FPN_3x/139686956/model_final_5ad38f.pkl')
+            'https://raw.githubusercontent.com/facebookresearch/detectron2/22e04d1432363be727797a081e3e9d48981f5189/configs/Misc/cascade_mask_rcnn_R_50_FPN_3x.yaml',
+            'detectron2://Misc/cascade_mask_rcnn_R_50_FPN_3x/144998488/model_final_480dd8.pkl')
         iou_metric = mot.metric.IoUMetric(use_prediction=True)
         iou_matcher = mot.associate.HungarianMatcher(iou_metric, sigma=0.5)
 
@@ -41,17 +41,12 @@ class CustomTracker(Tracker):
             tracklet.update(self.frame_num, tracklet.prediction, {'box': tracklet.prediction.box})
 
         # Deal with unmatched tracklets
-        tracklets_to_kill = []
         for i, tracklet in enumerate(self.tracklets_active):
             if tracklet.prediction.score < self.sigma_active:
                 if tracklet.fade():
-                    tracklets_to_kill.append(tracklet)
-        for tracklet in tracklets_to_kill:
-            self.tracklets_active.remove(tracklet)
-            self.tracklets_finished.append(tracklet)
+                    self.kill_tracklet(tracklet)
 
         # Kill tracklets with lower scores using NMS
-        tracklets_to_kill = []
         for i, tracklet in enumerate(self.tracklets_active):
             ious = mot.utils.box.iou(tracklet.prediction.box, [t.prediction.box for t in self.tracklets_active])
             overlapping_boxes = np.argwhere(ious > self.lambda_active)[0]
@@ -60,15 +55,10 @@ class CustomTracker(Tracker):
                     continue
                 else:
                     if tracklet.prediction.score >= self.tracklets_active[j].prediction.score:
-                        tracklets_to_kill.append(self.tracklets_active[j])
+                        self.kill_tracklet((self.tracklets_active[j]))
                     else:
-                        tracklets_to_kill.append(tracklet)
+                        self.kill_tracklet(tracklet)
                         break
-        for tracklet in tracklets_to_kill:
-            self.tracklets_active.remove(tracklet)
-            self.tracklets_finished.append(tracklet)
-
-        # Kill tracklets that failed to regress new box
 
         # Update tracklets
         for tracklet in self.tracklets_active:

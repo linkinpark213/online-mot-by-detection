@@ -15,7 +15,7 @@ class IoUMetric(Metric):
         self.encoding = 'box'
         self.use_prediction = use_prediction
 
-    def __call__(self, tracklets, detection_features, img):
+    def __call__(self, tracklets, detection_features):
         matrix = np.zeros([len(tracklets), len(detection_features)])
         for i in range(len(tracklets)):
             for j in range(len(detection_features)):

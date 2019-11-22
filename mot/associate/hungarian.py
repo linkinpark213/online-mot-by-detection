@@ -8,8 +8,8 @@ class HungarianMatcher(Matcher):
         super().__init__(metric)
         self.sigma = sigma
 
-    def __call__(self, tracklets, detection_features, img):
-        similarity_matrix = self.metric(tracklets, detection_features, img)
+    def __call__(self, tracklets, detection_features):
+        similarity_matrix = self.metric(tracklets, detection_features)
         row_ind, col_ind = scipy.optimize.linear_sum_assignment(1 - similarity_matrix)
         rows_to_remove = []
         cols_to_remove = []
@@ -22,4 +22,4 @@ class HungarianMatcher(Matcher):
         for i in range(len(rows_to_remove)):
             row_ind.remove(rows_to_remove[i])
             col_ind.remove(cols_to_remove[i])
-        return np.array(row_ind), np.array(col_ind)
+        return row_ind, col_ind

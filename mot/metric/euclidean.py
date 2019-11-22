@@ -15,7 +15,7 @@ class EuclideanMetric(Metric):
         assert history > 0, 'At least one step backward in history consideration'
         self.history = 1
 
-    def __call__(self, tracklets, detection_features, img):
+    def __call__(self, tracklets, detection_features):
         matrix = np.zeros([len(tracklets), len(detection_features)])
         for i in range(len(tracklets)):
             for j in range(len(detection_features)):
