@@ -91,10 +91,14 @@ if __name__ == '__main__':
     parser.add_argument('--debug', action='store_true', default=False, required=False, dest='debug',
                         help='Add \'--debug\' to show lower-leveled loggings')
     args = parser.parse_args()
+
+    logger = logging.getLogger('MOT')
     if args.debug:
-        logging.basicConfig(level=logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+        if args.display:
+            logger.__setattr__('display', True)
     else:
-        logging.basicConfig(level=logging.INFO)
+        logger.setLevel(logging.INFO)
 
     # Load tracker from tracker definition script
     # See example trackers in the `example` folder

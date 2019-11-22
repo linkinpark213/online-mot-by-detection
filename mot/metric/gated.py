@@ -15,7 +15,6 @@ class GatedMetric(Metric):
         matrix = self.original_metric(tracklets, detection_features)
         matrix[np.where(matrix < self.gate_value)] = 0
 
-        logger = logging.getLogger('MOT')
         # For debugging
-        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding, logger)
+        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding)
         return matrix

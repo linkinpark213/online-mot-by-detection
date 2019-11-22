@@ -25,5 +25,5 @@ class IoUMetric(Metric):
                     matrix[i][j] = mot.utils.box.iou(tracklets[i].last_detection.box,
                                                      detection_features[j][self.encoding])
 
-        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding, logging.getLogger('MOT'))
+        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding)
         return matrix

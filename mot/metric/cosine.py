@@ -19,7 +19,7 @@ class CosineMetric(Metric):
             for j in range(len(detection_features)):
                 matrix[i][j] = self.cos(tracklets[i].feature_history[-1][1][self.encoding],
                                         detection_features[j][self.encoding])
-        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding, logging.getLogger('MOT'))
+        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding)
         return matrix
 
     def cos(self, a, b):

@@ -13,8 +13,6 @@ class CombinedMetric(Metric):
     def __call__(self, tracklets, detection_features):
         matrices = []
 
-        logger = logging.getLogger('MOT')
-
         for i in range(len(self.metrics)):
             matrix = self.metrics[i](tracklets, detection_features)
             matrices.append(matrix)
@@ -26,7 +24,7 @@ class CombinedMetric(Metric):
                 matrix[i][j] = self.combine(matrices[:, i, j])
 
         # For debugging
-        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding, logger)
+        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding)
 
         return matrix
 

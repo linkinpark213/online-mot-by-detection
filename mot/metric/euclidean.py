@@ -28,7 +28,7 @@ class EuclideanMetric(Metric):
                     sum += self.euclidean(tracklets[i].feature_history[-k - 1][1][self.encoding][0],
                                           detection_features[j][self.encoding][0])
                 matrix[i][j] = - sum / history
-        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding, logging.getLogger('MOT'))
+        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding)
         return matrix
 
     def euclidean(self, a, b):

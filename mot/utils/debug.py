@@ -2,7 +2,8 @@ import cv2
 import logging
 
 
-def log_affinity_matrix(matrix, tracklets, metric_name, logger):
+def log_affinity_matrix(matrix, tracklets, metric_name):
+    logger = logging.getLogger('MOT')
     logger.debug('Metric {}:'.format(metric_name))
     logger.debug('==============================')
     logger.debug('| T\\D\t|')
@@ -13,7 +14,7 @@ def log_affinity_matrix(matrix, tracklets, metric_name, logger):
         logger.debug(text)
     logger.debug('==============================')
 
-    if logger.level <= logging.DEBUG:
+    if logger.level <= logging.DEBUG and hasattr(logger, 'display'):
         display_affinity_matrix(matrix, metric_name, [tracklet.id for tracklet in tracklets])
 
 
