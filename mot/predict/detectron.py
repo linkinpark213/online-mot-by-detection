@@ -84,8 +84,8 @@ class DetectronRCNNPredictor(Predictor):
         num_bbox_reg_classes = boxes.shape[1] // 4
         boxes = Boxes(boxes.reshape(-1, 4))
         # Scale regressed boxes to the same size as original image
-        boxes.scale(1 / scale_x, 1 / scale_y)
         boxes.clip((feat_height, feat_width))
+        boxes.scale(1 / scale_x, 1 / scale_y)
         boxes = boxes.tensor.view(-1, num_bbox_reg_classes, 4)
         boxes = boxes[:, 0, :]
         scores = scores[:, 0]

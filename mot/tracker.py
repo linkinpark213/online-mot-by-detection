@@ -14,6 +14,7 @@ class Tracker:
         self.tracklets_active = []
         self.tracklets_finished = []
         self.frame_num = 0
+        self.logger = logging.getLogger('MOT')
 
     def clear(self):
         self.max_id = 0
@@ -44,7 +45,7 @@ class Tracker:
         # Tracklet Update
         self.update(row_ind, col_ind, detections, features)
 
-        logging.info(
+        self.logger.info(
             'Frame #{}: {} target(s) active, {} object(s) detected'.format(self.frame_num, len(self.tracklets_active),
                                                                            len(detections)))
 

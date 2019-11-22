@@ -92,6 +92,7 @@ if __name__ == '__main__':
                         help='Add \'--debug\' to show lower-leveled loggings')
     args = parser.parse_args()
 
+    logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger('MOT')
     if args.debug:
         logger.setLevel(logging.DEBUG)

@@ -47,18 +47,21 @@ class CustomTracker(Tracker):
                     self.kill_tracklet(tracklet)
 
         # Kill tracklets with lower scores using NMS
+        tracklets_to_kill = []
         for i, tracklet in enumerate(self.tracklets_active):
             ious = mot.utils.box.iou(tracklet.prediction.box, [t.prediction.box for t in self.tracklets_active])
-            overlapping_boxes = np.argwhere(ious > self.lambda_active)[0]
+            overlapping_boxes = np.argwhere(ious > self.lambda_active)
             for j in overlapping_boxes:
-                if i == j:
+                if i == j[0]:
                     continue
                 else:
-                    if tracklet.prediction.score >= self.tracklets_active[j].prediction.score:
-                        self.kill_tracklet((self.tracklets_active[j]))
+                    if tracklet.prediction.score >= self.tracklets_active[j[0]].prediction.score:
+                        tracklets_to_kill.append(self.tracklets_active[j[0]])
                     else:
-                        self.kill_tracklet(tracklet)
+                        tracklets_to_kill.append(tracklet)
                         break
+        for tracklet in tracklets_to_kill:
+            self.kill_tracklet(tracklet)
 
         # Update tracklets
         for tracklet in self.tracklets_active:
