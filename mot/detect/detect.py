@@ -12,6 +12,7 @@ class Detector:
 
 
 class Detection:
-    def __init__(self, box, score):
+    def __init__(self, box, score, mask=None):
         self.box = box
         self.score = score
+        self.mask = mask

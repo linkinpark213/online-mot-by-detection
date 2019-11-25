@@ -5,11 +5,16 @@ from .tracklet import Tracklet
 
 
 class Tracker:
-    def __init__(self, detector, encoders, matcher, predictor=None):
+    def __init__(self, detector, encoders, matcher, predictor=None, max_ttl=30, max_feature_history=30,
+                 max_detection_history=3000, min_time_lived=0):
         self.detector = detector
         self.encoders = encoders
         self.matcher = matcher
         self.predictor = predictor
+        self.max_ttl = max_ttl
+        self.max_feature_history = max_feature_history
+        self.max_detection_history = max_detection_history
+        self.min_time_lived = min_time_lived
         self.max_id = 0
         self.tracklets_active = []
         self.tracklets_finished = []
@@ -99,18 +104,26 @@ class Tracker:
 
         # Kill tracklets that are unmatched for a while
         for tracklet in tracklets_to_kill:
-            self.tracklets_active.remove(tracklet)
-            self.tracklets_finished.append(tracklet)
+            self.kill_tracklet(tracklet)
 
         # Create new tracklets with unmatched detections
         for i in range(len(detection_features)):
             new_tracklets = []
             if i not in col_ind:
-                new_tracklet = Tracklet(0, self.frame_num, detections[i], detection_features[i])
+                new_tracklet = Tracklet(0, self.frame_num, detections[i], detection_features[i], max_ttl=self.max_ttl,
+                                        max_feature_history=self.max_feature_history,
+                                        max_detection_history=self.max_detection_history)
                 new_tracklets.append(new_tracklet)
                 self.add_tracklet(new_tracklet)
             if self.predictor is not None:
                 self.predictor.initiate(new_tracklets)
+
+    def terminate(self):
+        """
+        Terminate tracking and move all active tracklets to the finished ones.
+        """
+        for tracklet in self.tracklets_active:
+            self.kill_tracklet(tracklet)
 
     def assignment_matrix(self, similarity_matrix):
         """
@@ -142,4 +155,5 @@ class Tracker:
 
     def kill_tracklet(self, tracklet):
         self.tracklets_active.remove(tracklet)
-        self.tracklets_finished.append(tracklet)
+        if tracklet.time_lived >= self.min_time_lived:
+            self.tracklets_finished.append(tracklet)

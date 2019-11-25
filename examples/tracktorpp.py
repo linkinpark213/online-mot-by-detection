@@ -20,7 +20,7 @@ class CustomTracker(Tracktor):
 
     def update(self, row_ind, col_ind, detections, detection_features):
         """
-        Update the tracklets.
+        Update the tracklets. Tracktor introduces a new MOT paradigm and involves additional matching steps.
         :param row_ind: A list of integers. Indices of the matched tracklets.
         :param col_ind: A list of integers. Indices of the matched detections.
         :param detection_boxes: A list of Detection objects.

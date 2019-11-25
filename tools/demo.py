@@ -1,4 +1,3 @@
-import os
 import cv2
 import logging
 import argparse
@@ -6,51 +5,11 @@ import mot.utils
 import importlib.util
 
 
-def get_capture(demo_path):
-    if demo_path == '':
-        return cv2.VideoCapture(0)
-    else:
-        if os.path.isdir(args.demo_path):
-            return mot.utils.ImagesCapture(args.demo_path)
-        elif os.path.isfile(args.demo_path):
-            return cv2.VideoCapture(args.demo_path)
-        else:
-            raise AssertionError('Parameter "demo_path" is not a file or directory.')
-
-
-def get_video_writer(save_video_path, width, height):
-    if save_video_path != '':
-        return cv2.VideoWriter(save_video_path, cv2.VideoWriter_fourcc(*'mp4v'), 30, (int(width), int(height)))
-    else:
-        class MuteVideoWriter():
-            def write(self, *args, **kwargs):
-                pass
-
-            def release(self):
-                pass
-
-        return MuteVideoWriter()
-
-
-def get_result_writer(save_result_path):
-    if args.save_result != '':
-        return open(save_result_path, 'w+')
-    else:
-        class MuteResultWriter():
-            def write(self, *args, **kwargs):
-                pass
-
-            def close(self):
-                pass
-
-        return MuteResultWriter()
-
-
 def run_demo(tracker, args):
-    capture = get_capture(args.demo_path)
-    video_writer = get_video_writer(args.save_video, capture.get(cv2.CAP_PROP_FRAME_WIDTH),
-                                    capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    result_writer = get_result_writer(args.save_result)
+    capture = mot.utils.get_capture(args.demo_path)
+    video_writer = mot.utils.get_video_writer(args.save_video, capture.get(cv2.CAP_PROP_FRAME_WIDTH),
+                                              capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    result_writer = mot.utils.get_result_writer(args.save_result)
 
     while True:
         ret, frame = capture.read()
@@ -71,6 +30,8 @@ def run_demo(tracker, args):
             key = cv2.waitKey(0 if args.debug else 1)
             if key == 27:
                 break
+
+    tracker.terminate()
 
     # Close writers after tracking
     video_writer.release()

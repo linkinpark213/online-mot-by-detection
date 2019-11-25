@@ -30,6 +30,8 @@ if __name__ == '__main__':
     capture = cv2.VideoCapture(args.video_path)
     writer = None
     frame_no = 0
+    frame_width = capture.get(cv2.CAP_PROP_FRAME_WIDTH)
+    frame_height = capture.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
     while True:
         ret, frame = capture.read()
@@ -37,8 +39,7 @@ if __name__ == '__main__':
             break
         if writer is None:
             writer = cv2.VideoWriter(os.path.join(args.output_path, args.video_path.split('/')[-1]),
-                                     cv2.VideoWriter_fourcc(*'mp4v'),
-                                     30, (frame.shape[1], frame.shape[0]))
+                                     cv2.VideoWriter_fourcc(*'mp4v'), 30, (frame_width, frame_height))
 
         boxes = results[np.where(results[:, 0] == frame_no)]
         for box in boxes:
