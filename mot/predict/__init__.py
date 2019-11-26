@@ -4,6 +4,6 @@ from .predict import Predictor, Prediction
 from .kalman import KalmanPredictor
 
 if importlib.util.find_spec('detectron2'):
-    from .detectron import DetectronRCNNPredictor
+    from .detectron2 import DetectronRCNNPredictor
 if importlib.util.find_spec('mmdet'):
     from .mmdetection import MMTwoStagePredictor
