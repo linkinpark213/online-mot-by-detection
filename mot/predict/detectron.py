@@ -1,33 +1,44 @@
 import torch
+from mot.detect import Detectron
 from detectron2.config import get_cfg
 import detectron2.data.transforms as T
 from .predict import Predictor, Prediction
+from detectron2.modeling import build_model
 from detectron2.structures import Boxes, Instances
 from detectron2.checkpoint import DetectionCheckpointer
-from detectron2.modeling import build_model, detector_postprocess
 from detectron2.modeling.roi_heads.fast_rcnn import FastRCNNOutputs
-from detectron2.modeling.postprocessing import detector_postprocess
 
 
 class DetectronRCNNPredictor(Predictor):
-    def __init__(self, config, checkpoint=None, conf_threshold=0.5):
+    """
+    By far this is only tested on Faster R-CNN, but should work for all TwoStageDetectors.
+    So Cascade R-CNN isn't supported.
+    """
+
+    def __init__(self, config_or_detector, checkpoint=None, conf_threshold=0.5):
         super(DetectronRCNNPredictor).__init__()
-        cfg = get_cfg()
-        cfg.merge_from_file(config)
-        if checkpoint is not None:
-            cfg.MODEL.WEIGHTS = checkpoint
-        self.model = build_model(cfg)
-        self.model.proposal_generator = None
-        self.model.eval()
+        if isinstance(config_or_detector, str):
+            cfg = get_cfg()
+            cfg.merge_from_file(config_or_detector)
+            if checkpoint is not None:
+                cfg.MODEL.WEIGHTS = checkpoint
+            self.model = build_model(cfg)
+            self.model.eval()
 
-        checkpointer = DetectionCheckpointer(self.model)
-        checkpointer.load(cfg.MODEL.WEIGHTS)
+            checkpointer = DetectionCheckpointer(self.model)
+            checkpointer.load(cfg.MODEL.WEIGHTS)
 
-        self.transform_gen = T.ResizeShortestEdge(
-            [cfg.INPUT.MIN_SIZE_TEST, cfg.INPUT.MIN_SIZE_TEST], cfg.INPUT.MAX_SIZE_TEST
-        )
+            self.transform_gen = T.ResizeShortestEdge(
+                [cfg.INPUT.MIN_SIZE_TEST, cfg.INPUT.MIN_SIZE_TEST], cfg.INPUT.MAX_SIZE_TEST
+            )
 
-        self.conf_threshold = conf_threshold
+            self.conf_threshold = conf_threshold
+        elif isinstance(config_or_detector, Detectron):
+            # Or initiate from a Detectron detector
+            self.model = config_or_detector.predictor.model
+            self.transform_gen = config_or_detector.predictor.transform_gen
+        else:
+            raise AssertionError('config_or_detector should be a config file path or a Detectron object')
 
     def __call__(self, tracklets, img):
         return self.predict(tracklets, img)

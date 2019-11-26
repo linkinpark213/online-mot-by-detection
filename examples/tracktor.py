@@ -11,21 +11,22 @@ from mot.tracker import Tracker, Tracklet
 class CustomTracker(Tracker):
     def __init__(self, sigma_active=0.5, lambda_active=0.6, lambda_new=0.3):
         # detector = mot.detect.Detectron(
-        #     'https://raw.githubusercontent.com/facebookresearch/detectron2/22e04d1432363be727797a081e3e9d48981f5189/configs/Misc/cascade_mask_rcnn_R_50_FPN_3x.yaml',
-        #     'detectron2://Misc/cascade_mask_rcnn_R_50_FPN_3x/144998488/model_final_480dd8.pkl')
+        #     'https://raw.githubusercontent.com/facebookresearch/detectron2/22e04d1432363be727797a081e3e9d48981f5189/configs/COCO-Detection/faster_rcnn_X_101_32x8d_FPN_3x.yaml',
+        #     'detectron2://COCO-Detection/faster_rcnn_X_101_32x8d_FPN_3x/139173657/model_final_68b088.pkl')
         detector = mot.detect.MMDetector(
-            '/home/linkinpark213/Source/mmdetection/configs/cascade_rcnn_x101_64x4d_fpn_1x.py',
-            'https://s3.ap-northeast-2.amazonaws.com/open-mmlab/mmdetection/models/cascade_rcnn_x101_64x4d_fpn_2x_20181218-5add321e.pth'
+            '/home/linkinpark213/Source/mmdetection/configs/faster_rcnn_x101_64x4d_fpn_1x.py',
+            'https://s3.ap-northeast-2.amazonaws.com/open-mmlab/mmdetection/models/faster_rcnn_x101_64x4d_fpn_2x_20181218-fe94f9b8.pth'
         )
         iou_metric = mot.metric.IoUMetric(use_prediction=True)
         iou_matcher = mot.associate.HungarianMatcher(iou_metric, sigma=0.5)
 
         matcher = iou_matcher
-        predictor = mot.predict.DetectronRCNNPredictor(
-            'https://raw.githubusercontent.com/facebookresearch/detectron2/22e04d1432363be727797a081e3e9d48981f5189/configs/COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml',
-            'detectron2://COCO-Detection/faster_rcnn_R_50_FPN_3x/137849458/model_final_280758.pkl'
-        )
-        # self.predictor = None
+        # predictor = mot.predict.DetectronRCNNPredictor(
+        #     'https://raw.githubusercontent.com/facebookresearch/detectron2/22e04d1432363be727797a081e3e9d48981f5189/configs/COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml',
+        #     'detectron2://COCO-Detection/faster_rcnn_R_50_FPN_3x/137849458/model_final_280758.pkl'
+        # )
+        # predictor = mot.predict.DetectronRCNNPredictor(detector)
+        predictor = mot.predict.MMTwoStagePredictor(detector)
         self.sigma_active = sigma_active
         self.lambda_active = lambda_active
         self.lambda_new = lambda_new
