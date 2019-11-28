@@ -19,7 +19,7 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
     for sequence in os.listdir(mot_subset_path):
         print('Processing sequence {}'.format(sequence))
         capture = mot.utils.get_capture(os.path.join(mot_subset_path, sequence, 'img1'))
-        video_writer = mot.utils.get_video_writer(os.path.join(mot_subset_path, sequence + '.mp4'),
+        video_writer = mot.utils.get_video_writer(os.path.join(output_video_path, sequence + '.mp4'),
                                                   capture.get(cv2.CAP_PROP_FRAME_WIDTH),
                                                   capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         result_writer = mot.utils.get_result_writer(os.path.join(output_path, sequence + '.txt'))

@@ -12,7 +12,7 @@ if __name__ == '__main__':
                         help='Path to the test video file or directory of test images. Leave it blank to use webcam.')
     parser.add_argument('--output_path', required=True,
                         help='Path to the output tracking result file.')
-    parser.add_argument('--save_video', required=True,
+    parser.add_argument('--save_video', default='', required=False,
                         help='Path to the output video file. Leave it blank to disable saving video.')
     args = parser.parse_args()
 
