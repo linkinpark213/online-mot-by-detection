@@ -14,8 +14,6 @@ if __name__ == '__main__':
                         help='Path to the output tracking result file.')
     parser.add_argument('--save_video', required=True,
                         help='Path to the output video file. Leave it blank to disable saving video.')
-    parser.add_argument('--ignore_display', action='store_false', default=True, required=False, dest='display',
-                        help='Add \'--ignore_display\' to only write to video / result file')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG)
@@ -30,5 +28,4 @@ if __name__ == '__main__':
 
     tracker = tracker_module.CustomTracker()
 
-    evaluate_mot_online(tracker, args.mot_subset_path, output_path=args.output_path, output_video_path=args.save_video,
-                        show_result=(not args.display))
+    evaluate_mot_online(tracker, args.mot_subset_path, output_path=args.output_path, output_video_path=args.save_video)
