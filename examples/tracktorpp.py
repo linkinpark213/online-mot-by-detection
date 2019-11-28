@@ -12,7 +12,7 @@ class CustomTracker(Tracktor):
         super().__init__(sigma_active=sigma_active, lambda_active=lambda_active, lambda_new=lambda_new)
         reid_encoder = mot.encode.DGNetEncoder('mot/encode/DGNet')
         reid_metric = mot.metric.CosineMetric(reid_encoder.name)
-        reid_metric = mot.metric.GatedMetric(reid_metric, 0.9)
+        reid_metric = mot.metric.GatedMetric(reid_metric, 0.7)
         self.secondary_matcher = mot.associate.HungarianMatcher(reid_metric, 0.9)
         self.encoders.append(reid_encoder)
         self.max_ttl = max_ttl
