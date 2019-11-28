@@ -26,11 +26,11 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
         frame_filenames = os.listdir(os.path.join(mot_subset_path, sequence, 'img1'))
         frame_filenames.sort()
         for i in range(frame_filenames.__len__()):
+            image = cv2.imread(os.path.join(mot_subset_path, sequence, 'img1', frame_filenames[i]))
             if video_writer is None:
                 video_writer = cv2.VideoWriter(os.path.join(output_video_path, '{}.mp4'.format(sequence)),
                                                cv2.VideoWriter_fourcc(*'mp4v'),
                                                30, (image.shape[1], image.shape[0]))
-            image = cv2.imread(os.path.join(mot_subset_path, sequence, 'img1', frame_filenames[i]))
             result_file.write(snapshot_to_mot(tracker))
             tracker.tick(image)
             image = mot.utils.visualize.draw_targets(image, tracker.tracklets_active)
