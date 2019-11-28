@@ -43,7 +43,8 @@ class CustomTracker(Tracker):
         # Update tracked tracklets' features
         for i in range(len(row_ind)):
             tracklet = self.tracklets_active[row_ind[i]]
-            tracklet.update(self.frame_num, tracklet.prediction, {'box': tracklet.prediction.box})
+            tracklet.update(self.frame_num, tracklet.prediction,
+                            {'box': tracklet.prediction.box, **detection_features[col_ind[i]]})
 
         # Deal with unmatched tracklets
         for i, tracklet in enumerate(self.tracklets_active):
