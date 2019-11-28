@@ -20,12 +20,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG)
     logger = logging.getLogger('MOT')
-    if args.debug:
-        logger.setLevel(logging.DEBUG)
-        if args.display:
-            logger.__setattr__('display', True)
-    else:
-        logger.setLevel(logging.INFO)
+    logger.setLevel(logging.INFO)
 
     # Load tracker from tracker definition script
     # See example trackers in the `example` folder
