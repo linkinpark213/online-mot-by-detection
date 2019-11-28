@@ -1,5 +1,5 @@
 import numpy as np
-from mot.detect.detect import Detector
+from mot.detect.detect import Detector, Detection
 
 
 class MOTPublicDetector(Detector):
@@ -14,4 +14,5 @@ class MOTPublicDetector(Detector):
 
     def __call__(self, img):
         self.frame_id += 1
-        return self.detections[np.where(self.detections[:, 0] == self.frame_id)][:, 1:]
+        boxes = self.detections[np.where(self.detections[:, 0] == self.frame_id)][:, 1:]
+        return [Detection(boxes[i][0:4], boxes[4]) for i in range(len(boxes))]
