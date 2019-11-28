@@ -19,7 +19,7 @@ class CosineMetric(Metric):
         for i in range(len(tracklets)):
             for j in range(len(detection_features)):
                 affinities = []
-                for k in range(max(self.history, len(tracklets.feature_history))):
+                for k in range(max(self.history, len(tracklets[i].feature_history))):
                     affinities.append(self.cos(tracklets[i].feature_history[-k - 1][1][self.encoding],
                                                detection_features[j][self.encoding]))
                 matrix[i][j] = sum(affinities) / len(affinities)
