@@ -22,13 +22,9 @@ class ImagesCapture:
         if propId == cv2.CAP_PROP_FRAME_COUNT:
             return len(self.image_filenames)
         elif propId == cv2.CAP_PROP_FRAME_HEIGHT:
-            image_path = os.path.join(self.images_path, self.image_filenames[0])
-            print(image_path)
-            return cv2.imread(image_path).shape[0]
+            return cv2.imread(os.path.join(self.images_path, self.image_filenames[0])).shape[0]
         elif propId == cv2.CAP_PROP_FRAME_WIDTH:
-            image_path = os.path.join(self.images_path, self.image_filenames[0])
-            print(image_path)
-            return cv2.imread(image_path).shape[1]
+            return cv2.imread(os.path.join(self.images_path, self.image_filenames[0])).shape[1]
 
 
 def get_capture(demo_path):

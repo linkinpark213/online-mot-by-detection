@@ -23,6 +23,8 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
                                                   capture.get(cv2.CAP_PROP_FRAME_WIDTH),
                                                   capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
         result_writer = mot.utils.get_result_writer(os.path.join(output_path, sequence + '.txt'))
+        detector = mot.detect.MOTPublicDetector(os.path.join(mot_subset_path, sequence, 'det', 'det.txt'))
+        tracker.detector = detector
 
         while True:
             ret, frame = capture.read()
@@ -38,6 +40,7 @@ def evaluate_mot_online(tracker, mot_subset_path, output_path='results',
             result_writer.write(mot.utils.snapshot_to_mot(tracker))
 
         tracker.terminate()
+        tracker.clear()
 
         # Close writers after tracking
         video_writer.release()
