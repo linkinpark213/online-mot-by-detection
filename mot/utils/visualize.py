@@ -80,7 +80,7 @@ def draw_targets(image, tracklets, confirmed_only=True, detected_only=True, draw
         if (tracklet.is_confirmed() or not confirmed_only) and (tracklet.is_detected() or not detected_only):
             if draw_predictions and tracklet.prediction is not None:
                 image = draw_target_prediction(image, tracklet.prediction.box)
-            image = draw_target_box(image, tracklet.last_detection.box, tracklet.id)
+            image = draw_target_box(image, tracklet.last_detection.box, tracklet.id, draw_centers)
             if draw_skeletons and hasattr(tracklet.last_detection, 'keypoints'):
                 image = draw_target_skeleton(image, tracklet.last_detection.keypoints, tracklet.id)
     return image

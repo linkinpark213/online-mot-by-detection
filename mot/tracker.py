@@ -84,7 +84,7 @@ class Tracker:
         *****************************************************
         :param row_ind: A list of integers. Indices of the matched tracklets.
         :param col_ind: A list of integers. Indices of the matched detections.
-        :param detection_boxes: A list of Detection objects.
+        :param detections: A list of Detection objects.
         :param detection_features: The features of the detections. It can be any form you want.
         """
         # Update tracked tracklets' features
