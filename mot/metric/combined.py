@@ -6,9 +6,9 @@ from .metric import Metric
 
 class CombinedMetric(Metric):
     def __init__(self, metrics):
-        super(CombinedMetric).__init__()
         self.metrics = metrics
         self.encoding = 'combined'
+        super(CombinedMetric).__init__('combined', history=1)
 
     def __call__(self, tracklets, detection_features):
         matrices = []

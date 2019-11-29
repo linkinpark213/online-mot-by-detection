@@ -10,21 +10,9 @@ class CosineMetric(Metric):
     """
 
     def __init__(self, encoding, history=1):
-        super(CosineMetric).__init__()
-        self.encoding = encoding
-        self.history = history
+        super(CosineMetric, self).__init__(encoding, history)
 
-    def __call__(self, tracklets, detection_features):
-        matrix = np.zeros([len(tracklets), len(detection_features)])
-        for i in range(len(tracklets)):
-            for j in range(len(detection_features)):
-                affinities = []
-                for k in range(min(self.history, len(tracklets[i].feature_history))):
-                    affinities.append(self.cos(tracklets[i].feature_history[-k - 1][1][self.encoding],
-                                               detection_features[j][self.encoding]))
-                matrix[i][j] = sum(affinities) / len(affinities)
-        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding)
-        return matrix
-
-    def cos(self, a, b):
+    def distance(self, tracklet_feature, detection_feature):
+        a = tracklet_feature[self.encoding]
+        b = detection_feature[self.encoding]
         return np.dot(a, b) / ((np.linalg.norm(a) * np.linalg.norm(b)) + 1e-16)

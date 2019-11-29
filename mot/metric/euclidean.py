@@ -10,26 +10,9 @@ class EuclideanMetric(Metric):
     """
 
     def __init__(self, encoding, history=1):
-        super(EuclideanMetric).__init__()
-        self.encoding = encoding
-        assert history > 0, 'At least one step backward in history consideration'
-        self.history = 1
+        super(EuclideanMetric).__init__(encoding, history)
 
-    def __call__(self, tracklets, detection_features):
-        matrix = np.zeros([len(tracklets), len(detection_features)])
-        for i in range(len(tracklets)):
-            for j in range(len(detection_features)):
-                sum = 0
-                if len(tracklets[i].feature_history) < self.history:
-                    history = len(tracklets[i].feature_history)
-                else:
-                    history = self.history
-                for k in range(history):
-                    sum += self.euclidean(tracklets[i].feature_history[-k - 1][1][self.encoding][0],
-                                          detection_features[j][self.encoding][0])
-                matrix[i][j] = - sum / history
-        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding)
-        return matrix
-
-    def euclidean(self, a, b):
+    def distance(self, tracklet_feature, detection_feature):
+        a = tracklet_feature[self.encoding]
+        b = detection_feature[self.encoding]
         return 1 - np.linalg.norm(a - b)
