@@ -10,7 +10,7 @@ class EuclideanMetric(Metric):
     """
 
     def __init__(self, encoding, history=1):
-        super(EuclideanMetric).__init__(encoding, history)
+        super(EuclideanMetric, self).__init__(encoding, history)
 
     def distance(self, tracklet_feature, detection_feature):
         a = tracklet_feature[self.encoding]

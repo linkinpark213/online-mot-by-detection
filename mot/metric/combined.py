@@ -8,7 +8,7 @@ class CombinedMetric(Metric):
     def __init__(self, metrics):
         self.metrics = metrics
         self.encoding = 'combined'
-        super(CombinedMetric).__init__('combined', history=1)
+        super(CombinedMetric, self).__init__('combined', history=1)
 
     def __call__(self, tracklets, detection_features):
         matrices = []
