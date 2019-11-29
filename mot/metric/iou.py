@@ -13,7 +13,7 @@ class IoUMetric(Metric):
     def __init__(self, use_prediction=False):
         self.encoding = 'box'
         self.use_prediction = use_prediction
-        super(IoUMetric).__init__('box', history=1)
+        super(IoUMetric, self).__init__('box', history=1)
 
     def __call__(self, tracklets, detection_features):
         matrix = np.zeros([len(tracklets), len(detection_features)])
