@@ -65,6 +65,8 @@ class CustomTracker(Tracker):
             features = self.encode(detections, img)
             new_row_ind, new_col_ind = self.secondary_matcher(self.tracklets_inactive, features)
             self.update_step_2(new_row_ind, new_col_ind, detections, features)
+        else:
+            self.initiate_new_tracklets(detections, features)
 
         self.logger.info(
             'Frame #{}: {} target(s) active, {} new detections'.format(self.frame_num, len(self.tracklets_active),
@@ -152,6 +154,9 @@ class CustomTracker(Tracker):
                 self.kill_tracklet(tracklet)
 
         # Initiate new tracklets
+        self.initiate_new_tracklets(detections, detection_features)
+
+    def initiate_new_tracklets(self, detections, detection_features):
         for i, detection in enumerate(detections):
             new_tracklet = Tracklet(0, self.frame_num, detections[i], detection_features[i], max_ttl=1)
             self.add_tracklet(new_tracklet)
