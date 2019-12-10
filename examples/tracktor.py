@@ -73,6 +73,7 @@ class CustomTracker(Tracker):
                                                                        len(detections)))
 
     def down_tracklet(self, tracklet):
+        tracklet.ttl = self.max_ttl
         self.tracklets_active.remove(tracklet)
         self.tracklets_inactive.append(tracklet)
 
@@ -80,7 +81,7 @@ class CustomTracker(Tracker):
         self.tracklets_inactive.remove(tracklet)
         self.tracklets_active.append(tracklet)
 
-    def kill_tracklet(self, tracklet):
+    def terminate_tracklet(self, tracklet):
         self.tracklets_inactive.remove(tracklet)
         self.tracklets_finished.append(tracklet)
 
@@ -151,7 +152,7 @@ class CustomTracker(Tracker):
         # Kill inactive tracklets that expires TTL
         for i, tracklet in enumerate(self.tracklets_inactive):
             if tracklet.fade():
-                self.kill_tracklet(tracklet)
+                self.terminate_tracklet(tracklet)
 
         # Initiate new tracklets
         self.initiate_new_tracklets(detections, detection_features)

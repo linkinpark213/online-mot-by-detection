@@ -56,6 +56,8 @@ if __name__ == '__main__':
                         help='Add \'--ignore_display\' to only write to video / result file')
     parser.add_argument('--debug', action='store_true', default=False, required=False, dest='debug',
                         help='Add \'--debug\' to show lower-leveled loggings')
+    parser.add_argument('--save_log', default='', required=False,
+                        help='Path to save the logs. Leave it blank to disable.')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.DEBUG)
@@ -66,6 +68,10 @@ if __name__ == '__main__':
             logger.__setattr__('display', True)
     else:
         logger.setLevel(logging.INFO)
+
+    if args.save_log != '':
+        handler = logging.FileHandler(args.save_log)
+        logger.addHandler(handler)
 
     # Load tracker from tracker definition script
     # See example trackers in the `example` folder
