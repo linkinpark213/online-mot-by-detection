@@ -27,9 +27,14 @@ def run_demo(tracker, args):
         # Display image if demanded.
         if args.display:
             cv2.imshow('Demo', image)
-            key = cv2.waitKey(0 if args.debug else 1)
+            key = cv2.waitKey(0 if hasattr(args, 'frame_by_frame') and args.frame_by_frame else 1)
             if key == 27:
                 break
+            elif key == 32:
+                if not hasattr(args, 'frame_by_frame'):
+                    args.frame_by_frame = True
+                else:
+                    args.frame_by_frame = not args.frame_by_frame
 
     tracker.terminate()
 
