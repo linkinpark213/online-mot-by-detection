@@ -15,14 +15,14 @@ class Tracker:
         self.max_feature_history = max_feature_history
         self.max_detection_history = max_detection_history
         self.min_time_lived = min_time_lived
-        self.max_id = 0
+        self.max_id = 1
         self.tracklets_active = []
         self.tracklets_finished = []
         self.frame_num = 0
         self.logger = logging.getLogger('MOT')
 
     def clear(self):
-        self.max_id = 0
+        self.max_id = 1
         self.tracklets_active = []
         self.tracklets_finished = []
         self.frame_num = 0
