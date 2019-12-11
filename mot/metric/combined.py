@@ -1,6 +1,5 @@
 import logging
 import numpy as np
-import mot.utils.debug
 from .metric import Metric
 
 
@@ -24,7 +23,7 @@ class CombinedMetric(Metric):
                 matrix[i][j] = self.combine(matrices[:, i, j])
 
         # For debugging
-        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding)
+        self._log_affinity_matrix(matrix, tracklets, self.encoding)
 
         return matrix
 

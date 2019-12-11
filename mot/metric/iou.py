@@ -1,7 +1,6 @@
 import logging
 import numpy as np
 import mot.utils.box
-import mot.utils.debug
 from .metric import Metric
 
 
@@ -25,5 +24,5 @@ class IoUMetric(Metric):
                     matrix[i][j] = mot.utils.box.iou(tracklets[i].last_detection.box,
                                                      detection_features[j][self.encoding])
 
-        mot.utils.debug.log_affinity_matrix(matrix, tracklets, self.encoding)
+        self._log_affinity_matrix(matrix, tracklets, self.encoding)
         return matrix

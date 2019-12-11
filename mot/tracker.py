@@ -47,12 +47,11 @@ class Tracker:
         # Data Association
         row_ind, col_ind = self.matcher(self.tracklets_active, features)
 
+        # Log before updating
+        self.log(self.tracklets_active, detections, row_ind, col_ind)
+
         # Tracklet Update
         self.update(row_ind, col_ind, detections, features)
-
-        self.logger.info(
-            'Frame #{}: {} target(s) active, {} object(s) detected'.format(self.frame_num, len(self.tracklets_active),
-                                                                           len(detections)))
 
     def encode(self, detections, img):
         """
@@ -157,3 +156,32 @@ class Tracker:
         self.tracklets_active.remove(tracklet)
         if tracklet.time_lived >= self.min_time_lived:
             self.tracklets_finished.append(tracklet)
+
+    def log(self, tracklets, detections, row_ind, col_ind):
+        # Start with current situation
+        self.logger.info(
+            'Frame #{}: {} target(s) active, {} object(s) detected'.format(self.frame_num, len(self.tracklets_active),
+                                                                           len(detections)))
+        # And detections
+        if len(detections) > 0:
+            self.logger.debug('Detections:')
+            for i, detection in enumerate(detections):
+                box = detection.box
+                self.logger.debug(
+                    '\t#{:d}: l = {:.2f}, \tt = {:.2f}, \tr = {:.2f}, \tb = {:.2f}'.format(i, box[0], box[1], box[2],
+                                                                                           box[3]))
+
+        # And matches
+        if len(row_ind) > 0:
+            self.logger.debug('Matches:')
+            for i, row in enumerate(row_ind):
+                self.logger.debug('\tTracklet #{:d} -- Detection #{:d}'.format(tracklets[row].id, col_ind[i]))
+
+        if len(detections) - len(col_ind) > 0:
+            self.logger.debug('New tracklets:')
+            count = 0
+            for i, col in enumerate(detections):
+                if i not in col_ind:
+                    self.logger.debug(
+                        '\tTracklet #{:d}, from Detection #{:d}'.format(self.max_id + count + 1, col_ind[i]))
+                    count += 1

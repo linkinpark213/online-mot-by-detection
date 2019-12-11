@@ -44,7 +44,9 @@ class CustomTracker(Tracker):
         # Data Association
         row_ind, col_ind = self.matcher(self.tracklets_active, features)
 
-        # Primary matching: Active tracklets and detections
+        self.log_step_1(self.tracklets_active, detections, row_ind, col_ind)
+
+        # Primary matching: Active tracklets and detections (and detections are less relied on)
         self.update_step_1(row_ind, col_ind, detections, features)
 
         # After the primary matching, update tracklets' features
@@ -64,40 +66,69 @@ class CustomTracker(Tracker):
         if hasattr(self, 'secondary_matcher') and self.secondary_matcher is not None:
             features = self.encode(detections, img)
             new_row_ind, new_col_ind = self.secondary_matcher(self.tracklets_inactive, features)
+            self.log_step_2(self.tracklets_inactive, detections, new_row_ind, new_col_ind)
             self.update_step_2(new_row_ind, new_col_ind, detections, features)
         else:
-            self.initiate_new_tracklets(detections, features)
+            self.initiate_new_tracklets(detections, features, [])
 
         self.logger.info(
             'Frame #{}: {} target(s) active, {} new detections'.format(self.frame_num, len(self.tracklets_active),
                                                                        len(detections)))
 
     def down_tracklet(self, tracklet):
+        """
+        Set a tracklet to temporarily inactive.
+        Args:
+            tracklet: A Tracklet object. The tracklet to set temporarily inactive.
+        """
         tracklet.ttl = self.max_ttl
         self.tracklets_active.remove(tracklet)
         self.tracklets_inactive.append(tracklet)
 
     def revive_tracklet(self, tracklet):
+        """
+        Bring an inactive tracklet back to active tracklet list.
+        Args:
+            tracklet: A Tracklet object. The tracklet to bring back.
+        """
         self.tracklets_inactive.remove(tracklet)
         self.tracklets_active.append(tracklet)
 
     def terminate_tracklet(self, tracklet):
+        """
+        Permanently kill a tracklet. This tracklet should be in the inactive list.
+        Args:
+            tracklet: A Tracklet object. The tracklet to kill.
+        """
         self.tracklets_inactive.remove(tracklet)
         self.tracklets_finished.append(tracklet)
 
+    def log_step_1(self, tracklets, detections, row_ind, col_ind):
+        # Start with current situation
+        self.logger.info(
+            'Frame #{}: {} target(s) active, {} object(s) detected'.format(self.frame_num, len(self.tracklets_active),
+                                                                           len(detections)))
+
+        # And strong tracklets
+        if len(row_ind) > 0:
+            self.logger.debug('Tracklets that successfully predicted new boxes:')
+            for i, row in enumerate(row_ind):
+                box = tracklets[i].prediction.box
+                self.logger.debug(
+                    '\tTracklet #{:d}: l = {:.2f}, \tt = {:.2f}, \tr = {:.2f}, \tb = {:.2f}'.format(tracklets[i].id,
+                                                                                                    box[0], box[1],
+                                                                                                    box[2], box[3]))
+
     def update_step_1(self, row_ind, col_ind, detections, detection_features):
         """
-        Update the tracklets.
-        :param row_ind: A list of integers. Indices of the matched tracklets.
-        :param col_ind: A list of integers. Indices of the matched detections.
-        :param detection_boxes: A list of Detection objects.
-        :param detection_features: The features of the detections. It can be any form you want.
-        """
-        # Update tracked tracklets' features
-        for i in range(len(row_ind)):
-            tracklet = self.tracklets_active[row_ind[i]]
-            tracklet.last_detection.box = tracklet.prediction.box
+        Update the tracklets that successfully predicted their new position.
 
+        Args:
+            row_ind: A list of integers. Indices of the matched tracklets.
+            col_ind: A list of integers. Indices of the matched detections.
+            detections: A list of Detection objects.
+            detection_features: The features of the detections. It can be any form you want.
+        """
         # Deal with unmatched tracklets
         for i, tracklet in enumerate(self.tracklets_active):
             if tracklet.prediction.score < self.sigma_active:
@@ -126,7 +157,42 @@ class CustomTracker(Tracker):
         for tracklet in self.tracklets_active:
             tracklet.last_detection.box = tracklet.prediction.box
 
+    def log_step_2(self, tracklets, detections, row_ind, col_ind):
+        # And detections
+        if len(detections) > 0:
+            self.logger.debug('Remaining detections:')
+            for i, detection in enumerate(detections):
+                box = detection.box
+                self.logger.debug(
+                    '\t#{:d}: l = {:.2f}, \tt = {:.2f}, \tr = {:.2f}, \tb = {:.2f}'.format(i, box[0], box[1], box[2],
+                                                                                           box[3]))
+
+        # And matches
+        if len(row_ind) > 0:
+            self.logger.debug('Matches:')
+            for i, row in enumerate(row_ind):
+                self.logger.debug('\tTracklet #{:d} -- Detection #{:d}'.format(tracklets[row].id, col_ind[i]))
+
+    def log_initiate(self, detections, col_ind):
+        if len(col_ind > 0):
+            self.logger.debug('New tracklets:')
+            count = 0
+            for i, col in enumerate(detections):
+                if i not in col_ind:
+                    count += 1
+                    self.logger.debug(
+                        '\tTracklet #{:d}, from Detection #{:d}'.format(self.max_id + count + 1, col_ind[i]))
+
     def update_step_2(self, row_ind, col_ind, detections, detection_features):
+        """
+        Update inactive tracklets according to their matches with remaining detections.
+
+        Args:
+            row_ind: A list of integers. Indices of the matched tracklets.
+            col_ind: A list of integers. Indices of the matched detections.
+            detections: A list of Detection objects.
+            detection_features: The features of the detections. It can be any form you want.
+        """
         # Revive matched inactive tracklets
         tracklets_to_revive = []
         for i in range(len(row_ind)):
@@ -137,28 +203,32 @@ class CustomTracker(Tracker):
             self.revive_tracklet(tracklet)
 
         # Remove matched detections
-        detections_to_remove = []
         for i, detection in enumerate(detections):
             if i not in col_ind:
                 for tracklet in self.tracklets_active:
                     if mot.utils.box.iou(detection.box, tracklet.last_detection.box) > self.lambda_new:
-                        detections_to_remove.append(detection)
+                        col_ind.append(i)
                         break
-            else:
-                detections_to_remove.append(detection)
-        for detection in detections_to_remove:
-            detections.remove(detection)
 
         # Kill inactive tracklets that expires TTL
         for i, tracklet in enumerate(self.tracklets_inactive):
             if tracklet.fade():
                 self.terminate_tracklet(tracklet)
 
-        # Initiate new tracklets
-        self.initiate_new_tracklets(detections, detection_features)
+        self.initiate_new_tracklets(detections, detection_features, col_ind)
 
-    def initiate_new_tracklets(self, detections, detection_features):
+    def initiate_new_tracklets(self, detections, detection_features, matched_col_ind):
+        # Initiate new tracklets
+        if len(detections) - len(matched_col_ind) > 0:
+            self.logger.debug('New tracklets:')
         for i, detection in enumerate(detections):
-            new_tracklet = Tracklet(0, self.frame_num, detections[i], detection_features[i], max_ttl=1)
-            self.add_tracklet(new_tracklet)
-            self.predictor.initiate([new_tracklet])
+            new_tracklets = []
+            count = 0
+            if i not in matched_col_ind:
+                self.logger.debug(
+                    '\tTracklet #{:d}, from Detection #{:d}'.format(self.max_id + count, i))
+                count += 1
+                new_tracklet = Tracklet(0, self.frame_num, detections[i], detection_features[i], max_ttl=1)
+                self.add_tracklet(new_tracklet)
+            if self.predictor is not None:
+                self.predictor.initiate(new_tracklets)
