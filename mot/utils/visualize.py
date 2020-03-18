@@ -1,5 +1,9 @@
 import cv2
 import numpy as np
+from typing import List, Union
+
+# from mot.tracker import Tracker
+from mot.structures import Tracklet
 
 _colors = [(47, 47, 211),
            (74, 195, 139),
@@ -62,49 +66,70 @@ _keypoint_connections = [
     [14, 16]
 ]
 
+__all__ = ['snapshot_from_tracker', 'snapshot_from_results', 'snapshot_from_detection']
 
-def draw_targets(image, tracklets, confirmed_only=True, detected_only=True, draw_centers=False, draw_predictions=False,
-                 draw_skeletons=True):
+
+def _draw_targets(image: np.ndarray, tracklets: List[Tracklet], confirmed_only: bool = True, detected_only: bool = True,
+                  draw_centers: bool = False, draw_predictions: bool = False, draw_masks: bool = True,
+                  draw_skeletons: bool = True) -> np.ndarray:
     """
     Draw the boxes of targets.
-    :param image: A 3D numpy array with shape (h, w, 3). The video frame.
-    :param tracklets: A list of Tracklet objects. The currently active tracklets.
-    :param confirmed_only: Set to True to draw boxes only for tracklets that are confirmed.
-    :param detected_only: Set to True to draw boxes only for tracklets that are detected in the frame.
-    :param draw_centers: Set to True to draw red dots at target centers.
-    :param draw_predictions: Set to True to draw prediction boxes for each target, if it's available.
-    :param draw_skeletons: Set to True to draw skeletons of each target, if it's available.
-    :return: A 3D numpy array with shape (h, w, 3). The video frame with boxes of tracked targets drawn.
+
+    Args:
+        image: A 3D numpy array with shape (h, w, 3). The video frame.
+        tracklets: A list of Tracklet objects. The currently active tracklets.
+        confirmed_only: A boolean value. Set to True to only visualize targets that are confirmed.
+        detected_only: A boolean value. Set to True to only disable visualizing targets that are only predicted.
+        draw_centers: A boolean value. Set to True to visualize center points of targets.
+        draw_predictions: A boolean value. Set to True to visualize predictions of targets too, if it's available.
+        draw_masks: A boolean value. Set to True to visualize target masks, if it's available.
+        draw_skeletons: A boolean value. Set to True to visualize target body keypoints, if it's available.
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with boxes of tracked targets drawn.
     """
     for tracklet in tracklets:
         if (tracklet.is_confirmed() or not confirmed_only) and (tracklet.is_detected() or not detected_only):
             if draw_predictions and tracklet.prediction is not None:
-                image = draw_target_prediction(image, tracklet.prediction.box)
-            image = draw_target_box(image, tracklet.last_detection.box, tracklet.id, draw_centers)
+                image = _draw_target_prediction(image, tracklet.prediction.box)
+
+            image = _draw_target_box(image, tracklet.last_detection.box, tracklet.id, draw_centers)
+
+            if draw_masks:
+                pass
             if draw_skeletons and hasattr(tracklet.last_detection, 'keypoints'):
-                image = draw_target_skeleton(image, tracklet.last_detection.keypoints, tracklet.id)
+                image = _draw_target_skeleton(image, tracklet.last_detection.keypoints, tracklet.id)
     return image
 
 
-def draw_frame_num(image, frame_num):
+def _draw_frame_num(image: np.ndarray, frame_num: int) -> np.ndarray:
     """
     Draw the frame number at the top-left corner of the frame.
-    :param image: A 3D numpy array with shape (h, w, 3). The video frame.
-    :param frame_num: Frame number.
-    :return: A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
+
+    Args:
+        image: A 3D numpy array with shape (h, w, 3). The video frame.
+        frame_num: Frame number.
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
     """
     cv2.putText(image, '{}'.format(frame_num), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), thickness=2)
     return image
 
 
-def draw_target_box(image, box, id, draw_center=False):
+def _draw_target_box(image: np.ndarray, box: Union[List[float], np.ndarray], id: int,
+                     draw_center: bool = False) -> np.ndarray:
     """
     Draw the box with an ID tag for a tracked target.
-    :param image: A 3D numpy array with shape (h, w, 3). The video frame.
-    :param box: A list or numpy array of 4 float numbers. The box of a tracked target in (x1, y1, x2, y2).
-    :param id: An integer. The id of the tracked target.
-    :param draw_center: Set to true to draw a red dot at the target center.
-    :return: A 3D numpy array with shape (h, w, 3). The video frame with a new target box drawn.
+
+    Args:
+        image: A 3D numpy array with shape (h, w, 3). The video frame.
+        box: A list or numpy array of 4 float numbers. The box of a tracked target in (x1, y1, x2, y2).
+        id: An integer. The id of the tracked target.
+        draw_center: Set to true to draw a red dot at the target center.
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with a new target box drawn.
     """
     image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])),
                           _colors[int(id) % _colors.__len__()], thickness=3)
@@ -121,25 +146,49 @@ def draw_target_box(image, box, id, draw_center=False):
     return image
 
 
-def draw_target_prediction(image, box):
+def _draw_target_prediction(image: np.ndarray, box: Union[List[float], np.ndarray]) -> np.ndarray:
     """
     Draw the prediction box with an ID tag for a tracked target.
-    :param image: A 3D numpy array with shape (h, w, 3). The video frame.
-    :param box: A list or numpy array of 4 float numbers. The box of a tracked target in (x1, y1, x2, y2).
-    :return: A 3D numpy array with shape (h, w, 3). The video frame with a new target prediction box drawn.
+
+    Args:
+        image: A 3D numpy array with shape (h, w, 3). The video frame.
+        box: A list or numpy array of 4 float numbers. The box of a tracked target in (x1, y1, x2, y2).
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with a new target prediction box drawn.
     """
     image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])),
                           (255, 255, 255), thickness=1)
     return image
 
 
-def draw_target_skeleton(image, keypoints, id):
+def _draw_target_mask(image: np.ndarray, mask: np.ndarray, id: int) -> np.ndarray:
     """
-    Draw the skeleton for a tracked target..
-    :param image: A 3D numpy array with shape (h, w, 3). The video frame.
-    :param keypoints: A 2D list or 2D numpy array of 17 pairs of float numbers. The (x, y) of all body keypoints.
-    :param id: An integer. The id of the tracked target.
-    :return: A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
+    Draw the skeleton for a tracked target.
+
+    Args:
+        image: A 3D numpy array with shape (h, w, 3). The video frame.
+        mask: A 2D list or 2D numpy array of 17 pairs of float numbers. The (x, y) of all body keypoints.
+        id: An integer. The id of the tracked target.
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
+    """
+    # TODO: Implement visualization of masks.
+    return image
+
+
+def _draw_target_skeleton(image: np.ndarray, keypoints: Union[List[List[float]], np.ndarray], id: int) -> np.ndarray:
+    """
+    Draw the skeleton for a tracked target.
+
+    Args:
+        image: A 3D numpy array with shape (h, w, 3). The video frame.
+        keypoints: A 2D list or 2D numpy array of 17 pairs of float numbers. The (x, y) of all body keypoints.
+        id: An integer. The id of the tracked target.
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
     """
     for connection in _keypoint_connections:
         image = cv2.line(image,
@@ -151,16 +200,67 @@ def draw_target_skeleton(image, keypoints, id):
     return image
 
 
-def visualize_snapshot(frame, tracker, confirmed_only=True, detected_only=True, draw_centers=False,
-                       draw_predictions=False, draw_skeletons=True):
+def snapshot_from_tracker(frame: np.ndarray, tracker: object, confirmed_only: bool = True, detected_only: bool = True,
+                          draw_centers: bool = False, draw_predictions: bool = False, draw_masks: bool = False,
+                          draw_skeletons: bool = True) -> np.ndarray:
     """
     Visualize a frame with boxes (and skeletons) of all tracked targets.
-    :param frame: A 3D numpy array with shape (h, w, 3). The video frame.
-    :param tracker: A Tracker object, of which the active tracklets are to be visualized.
-    :return: A 3D numpy array with shape (h, w, 3). The video frame with all targets and frame number drawn.
+
+    Args:
+        frame: A 3D numpy array with shape (h, w, 3). The video frame.
+        tracker: A Tracker object, of which the active tracklets are to be visualized.
+        confirmed_only: A boolean value. Set to True to only visualize targets that are confirmed.
+        detected_only: A boolean value. Set to True to only disable visualizing targets that are only predicted.
+        draw_centers: A boolean value. Set to True to visualize center points of targets.
+        draw_predictions: A boolean value. Set to True to visualize predictions of targets too, if it's available.
+        draw_masks: A boolean value. Set to True to visualize target masks, if it's available.
+        draw_skeletons: A boolean value. Set to True to visualize target body keypoints, if it's available.
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with all targets and frame number drawn.
     """
-    image = draw_targets(frame, tracker.tracklets_active,
-                         confirmed_only=confirmed_only, detected_only=detected_only, draw_centers=draw_centers,
-                         draw_predictions=draw_predictions, draw_skeletons=draw_skeletons)
-    image = draw_frame_num(image, tracker.frame_num)
+    image = _draw_targets(frame, tracker.tracklets_active,
+                          confirmed_only=confirmed_only, detected_only=detected_only, draw_centers=draw_centers,
+                          draw_predictions=draw_predictions, draw_masks=draw_masks, draw_skeletons=draw_skeletons)
+    image = _draw_frame_num(image, tracker.frame_num)
     return image
+
+
+def snapshot_from_results(frame: np.ndarray, boxes: np.ndarray, frame_num: int = -1) -> np.ndarray:
+    """
+    Visualize a frame with a line of tracker output.
+
+    Args:
+        frame: A 3D numpy array with shape (h, w, 3). The video frame.
+        boxes: A 2D numpy array with shape (b, 6+). The boxes in the tracker output file.
+            6 = 1 (Frame number) + 1 (ID) + 4 (x1, y1, x2, y2)
+        frame_num: An integer. The current frame number. (Default -1 means unavailable)
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with all targets drawn.
+    """
+    for box in boxes:
+        frame = _draw_target_box(frame, box[2:6], box[1])
+    if frame >= 0:
+        frame = _draw_frame_num(frame, frame_num)
+    return frame
+
+
+def snapshot_from_detection(frame: np.ndarray, boxes: np.ndarray, frame_num: int = -1) -> np.ndarray:
+    """
+    Visualize a frame with detection boxes.
+
+    Args:
+        frame: A 3D numpy array with shape (h, w, 3). The video frame.
+        boxes: A 2D numpy array with shape (b, 6+). The boxes in the tracker output file.
+            6 = 1 (Frame number) + 1 (ID) + 4 (x1, y1, x2, y2)
+        frame_num: An integer. The current frame number. (Default -1 means unavailable)
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with all targets and frame number drawn.
+    """
+    for box in boxes:
+        frame = _draw_target_box(frame, box[2:6], box[1])
+    if frame_num >= 0:
+        frame = _draw_frame_num(frame, frame_num)
+    return frame

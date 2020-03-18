@@ -1,12 +1,16 @@
-from .matcher import Matcher
+from typing import List, Dict, Tuple
+
+from mot.structures import Tracklet
+from .matcher import Matcher, MATCHER_REGISTRY, build_matcher
 
 
+@MATCHER_REGISTRY.register()
 class CascadeMatcher(Matcher):
-    def __init__(self, matchers):
+    def __init__(self, cfg):
         super().__init__(None)
-        self.matchers = matchers
+        self.matchers = [build_matcher(matcher) for matcher in cfg.matchers]
 
-    def __call__(self, tracklets, detection_features):
+    def data_association(self, tracklets: List, detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
         all_row_ind = []
         all_col_ind = []
         for matcher in self.matchers:

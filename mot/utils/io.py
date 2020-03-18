@@ -1,6 +1,8 @@
 import os
 import cv2
 
+__all__ = ['get_capture', 'get_result_writer', 'get_video_writer']
+
 
 class ImagesCapture:
     def __init__(self, images_path):
@@ -8,15 +10,17 @@ class ImagesCapture:
         self.n = 0
         self.image_filenames = os.listdir(images_path)
         self.image_filenames.sort()
+        if self.image_filenames[0][0] == '.':
+            self.image_filenames.pop(0)
 
     def read(self):
         if self.n >= len(self.image_filenames):
             return False, None
         image = cv2.imread(os.path.join(self.images_path, self.image_filenames[self.n]))
+        assert image is not None, 'Image file {} is not valid'.format(os.path.join(self.images_path,
+                                                                                   self.image_filenames[self.n]))
         self.n += 1
-        if image is not None:
-            return True, image
-        return False, None
+        return True, image
 
     def get(self, propId):
         if propId == cv2.CAP_PROP_FRAME_COUNT:
@@ -25,6 +29,17 @@ class ImagesCapture:
             return cv2.imread(os.path.join(self.images_path, self.image_filenames[0])).shape[0]
         elif propId == cv2.CAP_PROP_FRAME_WIDTH:
             return cv2.imread(os.path.join(self.images_path, self.image_filenames[0])).shape[1]
+
+
+class DummyWriter():
+    def write(self, *args, **kwargs):
+        pass
+
+    def close(self):
+        pass
+
+    def release(self):
+        pass
 
 
 def get_capture(demo_path):
@@ -43,25 +58,11 @@ def get_video_writer(save_video_path, width, height):
     if save_video_path != '':
         return cv2.VideoWriter(save_video_path, cv2.VideoWriter_fourcc(*'mp4v'), 30, (int(width), int(height)))
     else:
-        class MuteVideoWriter():
-            def write(self, *args, **kwargs):
-                pass
-
-            def release(self):
-                pass
-
-        return MuteVideoWriter()
+        return DummyWriter()
 
 
 def get_result_writer(save_result_path):
     if save_result_path != '':
         return open(save_result_path, 'w+')
     else:
-        class MuteResultWriter():
-            def write(self, *args, **kwargs):
-                pass
-
-            def close(self):
-                pass
-
-        return MuteResultWriter()
+        return DummyWriter()

@@ -1,6 +1,41 @@
-class Matcher:
-    def __init__(self, metric):
-        self.metric = metric
+from abc import ABCMeta, abstractmethod
+from typing import List, Dict, Tuple, Union
 
-    def __call__(self, tracklets, detection_features):
-        raise NotImplementedError('Extend the Matcher class to implement your own association algorithm.')
+from mot.metric import Metric, build_metric
+from mot.utils import Registry
+from mot.structures import Tracklet
+
+__all__ = ['Matcher', 'MATCHER_REGISTRY', 'build_matcher']
+
+MATCHER_REGISTRY = Registry('matchers')
+
+
+class Matcher(metaclass=ABCMeta):
+    def __init__(self, cfg):
+        if cfg is not None:
+            # In cascade matcher, no metric is needed
+            self.metric = build_metric(cfg.metric)
+            self.sigma = cfg.threshold
+
+    def __call__(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
+        return self.data_association(tracklets, detection_features)
+
+    @abstractmethod
+    def data_association(self, tracklets: List, detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
+        """
+        Perform online data association between tracklets and features of detections.
+
+        Args:
+            tracklets: A list of tracklet objects, the tracklets to match.
+                May not be all active tracklets in cases of cascade matching.
+            detection_features: A list of dictionaries, the features of new detections.
+
+        Returns:
+            row_ind: A list of integers, the indices of matched tracklets.
+            col_ind: A list of integers, the indices of matched detections, in correspondence to `row_ind`.
+        """
+        pass
+
+
+def build_matcher(cfg):
+    return MATCHER_REGISTRY.get(cfg.type)(cfg)

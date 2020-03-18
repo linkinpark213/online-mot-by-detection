@@ -1,18 +1,35 @@
-class Detector:
-    def __init__(self):
-        raise NotImplementedError('Extend the Detector class to implement your own detector.')
+import numpy as np
+from typing import List
+from abc import abstractmethod, ABCMeta
 
-    def __call__(self, img):
+from mot.structures import Detection
+from mot.utils import Registry
+
+__all__ = ['Detector', 'DETECTOR_REGISTRY', 'build_detector']
+
+DETECTOR_REGISTRY = Registry('detectors')
+
+
+class Detector(metaclass=ABCMeta):
+    def __init__(self) -> None:
+        pass
+
+    def __call__(self, img: np.ndarray) -> List[Detection]:
+        return self.detect(img)
+
+    @abstractmethod
+    def detect(self, img: np.ndarray) -> List[Detection]:
         """
         Detect all objects in an image.
-        :param img: A numpy array of shape (H, W, 3)
-        :return: A list of N Detection objects.
+
+        Args:
+            img: A numpy array of shape (H, W, 3)
+
+        Returns:
+            A list of N Detection objects.
         """
-        raise NotImplementedError('Extend the Detector class to implement your own detector.')
+        pass
 
 
-class Detection:
-    def __init__(self, box, score, mask=None):
-        self.box = box
-        self.score = score
-        self.mask = mask
+def build_detector(cfg):
+    return DETECTOR_REGISTRY.get(cfg.type)(cfg)

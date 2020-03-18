@@ -1,57 +1,53 @@
 import torch
-from mot.detect import Detectron
+import numpy as np
+from typing import List, Union, Tuple
+
 from detectron2.config import get_cfg
 import detectron2.data.transforms as T
-from .predict import Predictor, Prediction
 from detectron2.modeling import build_model
 from detectron2.structures import Boxes, Instances
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.modeling.roi_heads.fast_rcnn import FastRCNNOutputs
 
+from mot.detect import Detectron
+from .predict import Predictor, PREDICTOR_REGISTRY
+from mot.structures import Tracklet, Detection, Prediction
 
+
+@PREDICTOR_REGISTRY.register()
 class DetectronRCNNPredictor(Predictor):
     """
     By far this is only tested on Faster R-CNN, but should work for all TwoStageDetectors.
     So Cascade R-CNN isn't supported.
     """
 
-    def __init__(self, config_or_detector, checkpoint=None, conf_threshold=0.5):
+    def __init__(self, cfg):
         super(DetectronRCNNPredictor).__init__()
-        if isinstance(config_or_detector, str):
-            cfg = get_cfg()
-            cfg.merge_from_file(config_or_detector)
-            if checkpoint is not None:
-                cfg.MODEL.WEIGHTS = checkpoint
-            self.model = build_model(cfg)
-            self.model.eval()
+        detectron2_cfg = get_cfg()
+        detectron2_cfg.merge_from_file(cfg.config)
+        if cfg.checkpoint is not None:
+            detectron2_cfg.MODEL.WEIGHTS = cfg.checkpoint
+        self.model = build_model(detectron2_cfg)
+        self.model.eval()
 
-            checkpointer = DetectionCheckpointer(self.model)
-            checkpointer.load(cfg.MODEL.WEIGHTS)
+        checkpointer = DetectionCheckpointer(self.model)
+        checkpointer.load(detectron2_cfg.MODEL.WEIGHTS)
 
-            self.transform_gen = T.ResizeShortestEdge(
-                [cfg.INPUT.MIN_SIZE_TEST, cfg.INPUT.MIN_SIZE_TEST], cfg.INPUT.MAX_SIZE_TEST
-            )
+        self.transform_gen = T.ResizeShortestEdge(
+            [detectron2_cfg.INPUT.MIN_SIZE_TEST, detectron2_cfg.INPUT.MIN_SIZE_TEST], detectron2_cfg.INPUT.MAX_SIZE_TEST
+        )
 
-            self.conf_threshold = conf_threshold
-        elif isinstance(config_or_detector, Detectron):
-            # Or initiate from a Detectron detector
-            self.model = config_or_detector.predictor.model
-            self.transform_gen = config_or_detector.predictor.transform_gen
-        else:
-            raise AssertionError('config_or_detector should be a config file path or a Detectron object')
+        self.conf_threshold = cfg.conf_threshold
 
-    def __call__(self, tracklets, img):
-        return self.predict(tracklets, img)
-
-    def initiate(self, tracklets):
+    def initiate(self, tracklets: List[Tracklet]) -> None:
         # No need to initiate
         pass
 
-    def update(self, tracklets):
+    def update(self, tracklets: List[Tracklet]) -> None:
         # No need to update
         pass
 
-    def regress_and_classify(self, image, tracklets):
+    def regress_and_classify(self, image: np.ndarray, tracklets: List[Tracklet]) -> Tuple[np.ndarray, np.ndarray]:
         # Convert boxes to proposals
         height, width = image.shape[:2]
         image = self.transform_gen.get_transform(image).apply_image(image)
@@ -105,7 +101,7 @@ class DetectronRCNNPredictor(Predictor):
         scores = scores.detach().cpu().numpy()
         return pred_boxes, scores
 
-    def predict(self, tracklets, img):
+    def predict(self, tracklets: List[Tracklet], img: np.ndarray) -> List[Prediction]:
         # Use last detection boxes of tracklets as region proposals
         if len(tracklets) != 0:
             pred_boxes, scores = self.regress_and_classify(img, tracklets)

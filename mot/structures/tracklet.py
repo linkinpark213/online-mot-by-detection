@@ -1,36 +1,40 @@
-from .detect import Detection
+import numpy as np
+from typing import List, Dict, Tuple, Union
+
+from mot.structures import Detection, Prediction
 
 
 class Tracklet:
     min_time_lived = 3
 
-    def __init__(self, id, frame_id, detection, feature, max_ttl=30, max_feature_history=30,
-                 max_detection_history=3000):
-        self.id = id
+    def __init__(self, id: int, frame_id: int, detection: Detection, feature: Dict, max_ttl: int = 30,
+                 max_feature_history: int = 30, max_detection_history: int = 3000) -> None:
+        # Tracklet ID number, usually starts from 1. Shouldn't be modified during online tracking.
+        self.id: int = id
         # Box coordinate of the last target position with (left, top, right, bottom).
-        self.last_detection = detection
+        self.last_detection: Detection = detection
         # An array storing past features. Only keeping `max_history` frames.
-        self.detection_history = [(frame_id, detection)]
+        self.detection_history: List[Tuple[int, Detection]] = [(frame_id, detection)]
         # A feature dictionary.
-        self.feature = feature
+        self.feature: Dict = feature
         # An array storing past features. Only keeping `max_history` frames.
-        self.feature_history = [(frame_id, feature)]
+        self.feature_history: List[Tuple[int, Dict]] = [(frame_id, feature)]
         # Max Time-to-Live. Tracklets will get killed if TTL times out.
-        self.max_ttl = max_ttl
+        self.max_ttl: int = max_ttl
         # Parameter limiting the past history boxes to keep.
-        self.max_detection_history = max_detection_history
+        self.max_detection_history: int = max_detection_history
         # Parameter limiting the past history features to keep.
-        self.max_feature_history = max_feature_history
+        self.max_feature_history: int = max_feature_history
         # The actual Time-to-Live of a tracklet.
-        self.ttl = max_ttl
+        self.ttl: int = max_ttl
         # The time lived (time matched with a measurement) of the tracklet.
-        self.time_lived = 0
+        self.time_lived: int = 0
         # The motion prediction, if any.
-        self.prediction = None
+        self.prediction: Union[None, Prediction] = None
         # Whether the target was just detected or not.
-        self.detected = True
+        self.detected: bool = True
 
-    def predict(self):
+    def predict(self) -> np.ndarray:
         if self.prediction is not None:
             return self.prediction.box
         else:

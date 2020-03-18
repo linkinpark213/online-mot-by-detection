@@ -1,4 +1,4 @@
-from .metric import Metric
+from .metric import Metric, METRIC_REGISTRY, build_metric
 from .iou import IoUMetric
 from .gated import GatedMetric
 from .cosine import CosineMetric

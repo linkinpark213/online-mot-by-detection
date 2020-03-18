@@ -1,29 +1,33 @@
+import numpy as np
+
 import mot.encode
 import mot.metric
 import mot.detect
 import mot.predict
-import numpy as np
 import mot.associate
 import mot.utils.box
-from mot.tracker import Tracker, Tracklet
+from mot.detect import build_detector
+from mot.associate import build_matcher
+from mot.encode import build_encoder
+from mot.predict import build_predictor
+from mot.structures import Tracklet
+from .tracker import Tracker, TRACKER_REGISTRY
 
 
-class CustomTracker(Tracker):
-    def __init__(self, sigma_active=0.5, lambda_active=0.6, lambda_new=0.3):
-        detector = mot.detect.MMDetector(
-            '/home/linkinpark213/Source/mmdetection/configs/faster_rcnn_x101_64x4d_fpn_1x.py',
-            'https://s3.ap-northeast-2.amazonaws.com/open-mmlab/mmdetection/models/faster_rcnn_x101_64x4d_fpn_2x_20181218-fe94f9b8.pth'
-        )
-        iou_metric = mot.metric.IoUMetric(use_prediction=True)
-        iou_matcher = mot.associate.HungarianMatcher(iou_metric, sigma=0.5)
-
-        matcher = iou_matcher
-        predictor = mot.predict.MMTwoStagePredictor(detector)
-        self.sigma_active = sigma_active
-        self.lambda_active = lambda_active
-        self.lambda_new = lambda_new
+@TRACKER_REGISTRY.register()
+class Tracktor(Tracker):
+    def __init__(self, cfg):
+        detector = build_detector(cfg.detector)
+        matcher = build_matcher(cfg.matcher)
+        encoders = [build_encoder(encoder_cfg) for encoder_cfg in cfg.encoders]
+        predictor = build_predictor(cfg.predictor)
+        self.sigma_active = cfg.sigma_active
+        self.lambda_active = cfg.lambda_active
+        self.lambda_new = cfg.lambda_new
         self.tracklets_inactive = []
-        super().__init__(detector, [], matcher, predictor)
+        if hasattr(cfg, 'secondary_matcher'):
+            self.secondary_matcher = build_matcher(cfg.secondary_matcher)
+        super().__init__(detector, encoders, matcher, predictor)
 
     def tick(self, img):
         """
@@ -50,10 +54,10 @@ class CustomTracker(Tracker):
         self.update_step_1(row_ind, col_ind, detections, features)
 
         # After the primary matching, update tracklets' features
-        features = self.encode([tracklet.prediction for tracklet in self.tracklets_active], img)
+        tracklet_features = self.encode([tracklet.prediction for tracklet in self.tracklets_active], img)
         for i, tracklet in enumerate(self.tracklets_active):
             tracklet.update(self.frame_num, tracklet.last_detection,
-                            {'box': tracklet.last_detection.box, **features[i]})
+                            {'box': tracklet.last_detection.box, **tracklet_features[i]})
 
         # Remove matched detections and proceed to the secondary matching
         detections_to_remove = []

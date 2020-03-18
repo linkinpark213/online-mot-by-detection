@@ -1,11 +1,14 @@
 """
-Implementation code for Kalman filter is borrowed from https://github.com/nwojke/deep_sort with minor modifications.
-
+Implementation code for Kalman filter is borrowed from original DeepSORT repo with minor modifications:
+https://github.com/nwojke/deep_sort
 """
 import scipy
 import numpy as np
+from typing import List
+
 import mot.utils.box
-from mot.predict import Predictor, Prediction
+from mot.structures import Tracklet, Prediction
+from .predict import Predictor, PREDICTOR_REGISTRY
 
 
 class KalmanFilter(object):
@@ -200,28 +203,29 @@ class KalmanFilter(object):
         return squared_maha
 
 
+@PREDICTOR_REGISTRY.register()
 class KalmanPredictor(Predictor):
-    def __init__(self, box_type='xyxy', predict_type='xyah'):
+    def __init__(self, cfg):
         super(KalmanPredictor).__init__()
-        self.box_type = box_type
-        self.predict_type = predict_type
+        self.box_type: str = cfg.box_type
+        self.predict_type: str = cfg.predict_type
 
-    def convert(self, box, in_type, out_type):
+    def convert(self, box: np.ndarray, in_type: str, out_type: str) -> np.ndarray:
         assert in_type in ['xyxy', 'xywh', 'xyah'] and out_type in ['xyxy', 'xywh',
                                                                     'xyah'], "Unknown box representation"
         return getattr(mot.utils.box, in_type + '2' + out_type)(box)
 
-    def initiate(self, tracklets):
+    def initiate(self, tracklets: List[Tracklet]) -> None:
         for tracklet in tracklets:
             measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
             tracklet.mean, tracklet.covariance = KalmanFilter.initiate(measurement)
 
-    def update(self, tracklets):
+    def update(self, tracklets: List[Tracklet]) -> None:
         for tracklet in tracklets:
             measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
             tracklet.mean, tracklet.covariance = KalmanFilter.update(tracklet.mean, tracklet.covariance, measurement)
 
-    def predict(self, tracklets, img):
+    def predict(self, tracklets: List[Tracklet], img: np.ndarray) -> List[Prediction]:
         self.update(tracklets)
         predictions = []
         for tracklet in tracklets:

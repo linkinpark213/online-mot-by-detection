@@ -4,6 +4,9 @@ import argparse
 import mot.utils
 import importlib.util
 
+from mot.tracker import build_tracker
+from mot.utils import file_to_cfg
+
 
 def run_demo(tracker, args):
     capture = mot.utils.get_capture(args.demo_path)
@@ -16,7 +19,7 @@ def run_demo(tracker, args):
         if not ret:
             break
         tracker.tick(frame)
-        image = mot.utils.visualize_snapshot(frame, tracker, draw_predictions=True, draw_skeletons=False)
+        image = mot.utils.snapshot_from_tracker(frame, tracker, draw_predictions=True, draw_skeletons=False)
 
         # Write to video if demanded.
         video_writer.write(image)
@@ -45,7 +48,7 @@ def run_demo(tracker, args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('tracker_config', default='examples/deepsort.py')
+    parser.add_argument('tracker_config', default='configs/deepsort.py')
     parser.add_argument('--demo_path', default='', required=False,
                         help='Path to the test video file or directory of test images. Leave it blank to use webcam.')
     parser.add_argument('--save_video', default='', required=False,
@@ -75,10 +78,12 @@ if __name__ == '__main__':
 
     # Load tracker from tracker definition script
     # See example trackers in the `example` folder
-    spec = importlib.util.spec_from_file_location('CustomTracker', args.tracker_config)
-    tracker_module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(tracker_module)
+    # spec = importlib.util.spec_from_file_location('CustomTracker', args.tracker_config)
+    # tracker_module = importlib.util.module_from_spec(spec)
+    # spec.loader.exec_module(tracker_module)
 
-    tracker = tracker_module.CustomTracker()
+    cfg = file_to_cfg(args.tracker_config)
+
+    tracker = build_tracker(cfg)
 
     run_demo(tracker, args)

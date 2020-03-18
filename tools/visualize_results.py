@@ -42,8 +42,8 @@ if __name__ == '__main__':
                                      cv2.VideoWriter_fourcc(*'mp4v'), 30, (frame_width, frame_height))
 
         boxes = results[np.where(results[:, 0] == frame_no)]
-        for box in boxes:
-            frame = vis.draw_target_box(frame, box[2:6], box[1])
+
+        frame = vis.snapshot_from_results(frame, boxes, frame_no)
 
         writer.write(frame)
         if args.display:

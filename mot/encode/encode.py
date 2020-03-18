@@ -1,6 +1,26 @@
-class Encoder:
-    def __init__(self):
-        self.name = 'encoding'
+import numpy as np
+from typing import List
+from abc import ABCMeta, abstractmethod
 
-    def __call__(self, detections, img):
-        raise NotImplementedError('Extend the Encoder class to implement your own feature extractor.')
+from mot.utils import Registry
+from mot.structures import Detection
+
+__all__ = ['Encoder', 'ENCODER_REGISTRY', 'build_encoder']
+
+ENCODER_REGISTRY = Registry('encoders')
+
+
+class Encoder(metaclass=ABCMeta):
+    def __init__(self, name: str = None):
+        self.name: str = name if name is not None else 'encoding'
+
+    def __call__(self, detections: List[Detection], img: np.ndarray) -> List[object]:
+        return self.encode(detections, img)
+
+    @abstractmethod
+    def encode(self, detections: List[Detection], img: np.ndarray) -> List[object]:
+        pass
+
+
+def build_encoder(cfg):
+    return ENCODER_REGISTRY.get(cfg.type)(cfg)

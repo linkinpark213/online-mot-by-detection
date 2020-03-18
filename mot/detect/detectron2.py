@@ -1,22 +1,26 @@
 import torch
 import detectron2
 import numpy as np
-from .detect import Detector, Detection
+from typing import List
 from detectron2.config import get_cfg
 from detectron2.engine import DefaultPredictor
 
+from mot.structures import Detection
+from .detect import Detector, DETECTOR_REGISTRY
 
+
+@DETECTOR_REGISTRY.register()
 class Detectron(Detector):
-    def __init__(self, config, checkpoint=None, conf_threshold=0.5):
+    def __init__(self, cfg):
         super(Detectron).__init__()
-        cfg = get_cfg()
-        cfg.merge_from_file(config)
-        if checkpoint is not None:
-            cfg.MODEL.WEIGHTS = checkpoint
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = conf_threshold
-        self.predictor = DefaultPredictor(cfg)
+        detectron2_cfg = get_cfg()
+        detectron2_cfg.merge_from_file(cfg.config)
+        if cfg.checkpoint is not None:
+            detectron2_cfg.MODEL.WEIGHTS = cfg.checkpoint
+        detectron2_cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = cfg.conf_threshold
+        self.predictor = DefaultPredictor(detectron2_cfg)
 
-    def __call__(self, img):
+    def detect(self, img: np.ndarray) -> List[Detection]:
         raw_results = self.predictor(img)['instances']
         pred_boxes = raw_results.pred_boxes.tensor.detach().cpu().numpy()
         pred_classes = raw_results.pred_classes.detach().cpu().numpy()

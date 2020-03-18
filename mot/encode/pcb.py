@@ -2,22 +2,27 @@ import os
 import cv2
 import torch
 import numpy as np
+from typing import List
 import torch.optim as optim
-from .encode import Encoder
-from .PCB.loss import TripletLoss
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
 import torchvision.transforms as transforms
+
+from .PCB.loss import TripletLoss
 from .PCB.model import PCB, PCB_test
 
+from mot.structures import Detection
+from .encode import Encoder, ENCODER_REGISTRY
 
+
+@ENCODER_REGISTRY.register()
 class PCBEncoder(Encoder):
-    def __init__(self, model_path, name='pcb'):
+    def __init__(self, cfg):
         super(PCBEncoder).__init__()
-        self.name = name
+        self.name = cfg.name if hasattr(cfg, 'name') else 'pcb'
         model_structure = PCB(751)
         model = model_structure.convert_to_rpp()
-        save_path = os.path.join(model_path, 'full', 'net_last.pth')
+        save_path = os.path.join(cfg.model_path, 'full', 'net_last.pth')
         model.load_state_dict(torch.load(save_path))
 
         self.model = PCB_test(model, True)
@@ -67,7 +72,7 @@ class PCBEncoder(Encoder):
         img_flip = img.index_select(3, inv_idx)
         return img_flip
 
-    def __call__(self, detections, full_img):
+    def encode(self, detections: List[Detection], full_img: np.ndarray) -> List[object]:
         model = self.model.eval()
         model = model.cuda()
         features = torch.FloatTensor()

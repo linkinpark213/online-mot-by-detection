@@ -1,19 +1,23 @@
 import torch
-from .detect import Detector, Detection
 import numpy as np
-from mmdet.apis import inference_detector, init_detector, show_result
+from typing import List
+from mmdet.apis import inference_detector, init_detector
+
+from .detect import Detector, DETECTOR_REGISTRY
+from mot.structures import Detection
 
 
+@DETECTOR_REGISTRY.register()
 class MMDetector(Detector):
-    def __init__(self, config, checkpoint, conf_threshold=0.5):
+    def __init__(self, cfg):
         super(MMDetector).__init__()
-        self.conf_thres = conf_threshold
+        self.conf_thres = cfg.conf_threshold
         self.model = init_detector(
-            config,
-            checkpoint,
+            cfg.config,
+            cfg.checkpoint,
             device=torch.device('cuda', 0))
 
-    def __call__(self, img):
+    def detect(self, img: np.ndarray) -> List[Detection]:
         raw_result = inference_detector(self.model, img)
         if isinstance(raw_result, tuple):
             box_result = raw_result[0][0]

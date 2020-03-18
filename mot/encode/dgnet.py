@@ -2,24 +2,28 @@ import os
 import cv2
 import torch
 import numpy as np
-import torch.optim as optim
 import torch.nn as nn
-from .encode import Encoder
+from typing import List
+import torch.optim as optim
 from .PCB.loss import TripletLoss
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
 import torchvision.transforms as transforms
+
 from .DGNet.reIDmodel import ft_net, ft_netAB, ft_net_dense, PCB, PCB_test
-import pdb
+
+from mot.structures import Detection
+from .encode import Encoder, ENCODER_REGISTRY
 
 
+@ENCODER_REGISTRY.register()
 class DGNetEncoder(Encoder):
-    def __init__(self, model_path, name='dgnet'):
+    def __init__(self, cfg):
         super(DGNetEncoder).__init__()
-        self.name = name
+        self.name = cfg.name
 
         self.model = ft_netAB(751, norm=False, stride=1, pool='max')
-        save_path = os.path.join(model_path, 'id_00100000.pt')
+        save_path = os.path.join(cfg.model_path, 'id_00100000.pt')
         state_dict = torch.load(save_path)
         self.model.load_state_dict(state_dict['a'], strict=False)
         self.model.classifier1.classifier = nn.Sequential()
@@ -78,7 +82,7 @@ class DGNetEncoder(Encoder):
         f = f.div(fnorm.expand_as(f))
         return f
 
-    def __call__(self, detections, full_img):
+    def encode(self, detections: List[Detection], full_img: np.ndarray) -> List[object]:
         features = torch.FloatTensor()
         all_crops = []
         for detection in detections:

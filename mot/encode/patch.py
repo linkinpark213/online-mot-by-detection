@@ -1,14 +1,18 @@
 import cv2
+import numpy as np
+from typing import List, Tuple
+
 from .encode import Encoder
+from mot.structures import Detection
 
 
 class ImagePatchEncoder(Encoder):
-    def __init__(self, resize_to=(256, 256)):
+    def __init__(self, cfg):
         super(ImagePatchEncoder, self).__init__()
-        self.resize_to = resize_to
-        self.name = 'patch'
+        self.resize_to: Tuple[int, int] = cfg.resize_to
+        self.name: str = cfg.name if hasattr(cfg, 'name') else 'patch'
 
-    def __call__(self, detections, img):
+    def encode(self, detections: List[Detection], img: np.ndarray):
         imgs = []
         for detection in detections:
             box = detection.box
@@ -18,7 +22,7 @@ class ImagePatchEncoder(Encoder):
         return imgs
 
     @staticmethod
-    def crop(img, x_c, y_c, window_size):
+    def crop(img: np.ndarray, x_c: float, y_c: float, window_size: int):
         x_base = 0
         y_base = 0
         padded_img = img

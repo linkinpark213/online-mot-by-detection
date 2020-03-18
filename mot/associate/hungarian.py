@@ -1,14 +1,16 @@
 import numpy as np
 import scipy.optimize
-from .matcher import Matcher
+from typing import List, Dict, Tuple
+
+from .matcher import Matcher, MATCHER_REGISTRY
 
 
+@MATCHER_REGISTRY.register()
 class HungarianMatcher(Matcher):
-    def __init__(self, metric, sigma):
-        super().__init__(metric)
-        self.sigma = sigma
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
-    def __call__(self, tracklets, detection_features):
+    def data_association(self, tracklets: List, detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
         similarity_matrix = self.metric(tracklets, detection_features)
         row_ind, col_ind = scipy.optimize.linear_sum_assignment(1 - similarity_matrix)
         rows_to_remove = []

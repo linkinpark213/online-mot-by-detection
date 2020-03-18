@@ -3,27 +3,17 @@ import mmcv
 import torch
 import random
 import argparse
+import numpy as np
+from mmcv.runner import load_checkpoint
+from mmaction.models import build_recognizer
+
 import mot.utils
 import mot.detect
 import mot.encode
 import mot.metric
-import numpy as np
 import mot.associate
-from mot.tracker import Tracker
-from mmcv.runner import load_checkpoint
-from mmaction.models import build_recognizer
-
-
-class IoUTracker(Tracker):
-    def __init__(self, sigma_conf=0.6):
-        detector = mot.detect.Detectron(
-            'https://raw.githubusercontent.com/facebookresearch/detectron2/22e04d1432363be727797a081e3e9d48981f5189/configs/COCO-Detection/faster_rcnn_R_50_FPN_3x.yaml',
-            'detectron2://COCO-Detection/faster_rcnn_R_50_FPN_3x/137849458/model_final_280758.pkl')
-        metric = mot.metric.IoUMetric()
-        encoder = mot.encode.ImagePatchEncoder(resize_to=(224, 224))
-        matcher = mot.associate.GreedyMatcher(metric, sigma=0.3)
-        super().__init__(detector, [encoder], matcher)
-        self.sigma_conf = sigma_conf
+from mot.tracker import Tracker, build_tracker
+from mot.utils.config import file_to_cfg, Config
 
 
 class TSN:
@@ -83,7 +73,7 @@ def track_and_recognize(tracker, recognizer, args):
         if not ret:
             break
         tracker.tick(frame)
-        frame = mot.utils.visualize_snapshot(frame, tracker)
+        frame = mot.utils.snapshot_from_tracker(frame, tracker)
 
         # Perform action recognition each second
         for tracklet in tracker.tracklets_active:
@@ -107,7 +97,7 @@ def track_and_recognize(tracker, recognizer, args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('tracker_config', default='examples/deepsort.py')
+    parser.add_argument('tracker_config', default='configs/iou_tracker.py')
     parser.add_argument('recognizer_config', help='test config file of TSN action recognizer')
     parser.add_argument('recognizer_checkpoint', help='checkpoint file of TSN action recognizer')
     parser.add_argument('--video_path', default='', required=False,
@@ -116,7 +106,14 @@ if __name__ == '__main__':
                         help='Path to the output video file. Leave it blank to disable.')
     args = parser.parse_args()
 
-    tracker = IoUTracker()
+    cfg = file_to_cfg(args.tracker_config)
+    cfg.encoders.append(Config(dict(
+        type='ImagePatchEncoder',
+        resize_to=(224, 224)
+    )))
+
+    tracker = build_tracker(cfg)
+
     recognizer = TSN(args.recognizer_config, args.recognizer_checkpoint)
 
     track_and_recognize(tracker, recognizer, args)

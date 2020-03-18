@@ -1,15 +1,20 @@
 import logging
 import numpy as np
-from .metric import Metric
+from typing import List, Dict, Union
+
+from mot.structures import Tracklet
+from .metric import Metric, METRIC_REGISTRY, build_metric
 
 
+@METRIC_REGISTRY.register()
 class CombinedMetric(Metric):
-    def __init__(self, metrics):
-        self.metrics = metrics
-        self.encoding = 'combined'
-        super(CombinedMetric, self).__init__('combined', history=1)
+    def __init__(self, cfg):
+        self.metrics = [build_metric(metric_cfg) for metric_cfg in cfg.metrics]
+        self.name = cfg.name if hasattr(cfg, 'name') else 'combined'
+        super(CombinedMetric, self).__init__(None)
 
-    def __call__(self, tracklets, detection_features):
+    def affinity_matrix(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Union[
+        np.ndarray, List[List[float]]]:
         matrices = []
 
         for i in range(len(self.metrics)):
@@ -23,24 +28,30 @@ class CombinedMetric(Metric):
                 matrix[i][j] = self.combine(matrices[:, i, j])
 
         # For debugging
-        self._log_affinity_matrix(matrix, tracklets, self.encoding)
+        self._log_affinity_matrix(matrix, tracklets, self.name)
 
         return matrix
+
+    def similarity(self, tracklet_feature: Dict, detection_feature: Dict) -> float:
+        return 0.0
 
     def combine(self, scores):
         raise NotImplementedError('Extend the CombinedMetric class to implement your own combination method.')
 
 
+@METRIC_REGISTRY.register()
 class ProductMetric(CombinedMetric):
     def combine(self, scores):
         return np.product(scores)
 
 
+@METRIC_REGISTRY.register()
 class SummationMetric(CombinedMetric):
     def combine(self, scores):
         return np.sum(scores)
 
 
+@METRIC_REGISTRY.register()
 class WeightedMetric(CombinedMetric):
     def __init__(self, metrics, weights):
         super().__init__(metrics)

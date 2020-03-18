@@ -1,41 +1,38 @@
 import mmcv
 import torch
 import numpy as np
+from typing import List
 from mot.detect import MMDetector
 from mmdet.apis import init_detector
 from mmdet.models import TwoStageDetector
-from .predict import Predictor, Prediction
 from mmcv.parallel import collate, scatter
 from mmdet.datasets.pipelines import Compose
 from mmdet.core import bbox2result, bbox2roi
 
+from mot.structures import Tracklet, Prediction
+from .predict import Predictor, PREDICTOR_REGISTRY
 
+
+@PREDICTOR_REGISTRY.register()
 class MMTwoStagePredictor(Predictor):
     """
     By far this is only tested on Faster R-CNN, but should work for all TwoStageDetectors.
     So Cascade R-CNN isn't supported.
     """
 
-    def __init__(self, config_or_detector, checkpoint=None, conf_threshold=0.5):
+    def __init__(self, cfg):
         super(MMTwoStagePredictor).__init__()
-        if isinstance(config_or_detector, str):
-            self.model = init_detector(
-                config_or_detector,
-                checkpoint,
-                device=torch.device('cuda', 0))
-        elif isinstance(config_or_detector, MMDetector):
-            assert isinstance(config_or_detector.model, TwoStageDetector), 'The model has to be a 2-stage detector.'
-            self.model = config_or_detector.model
-        else:
-            raise AssertionError('config_or_detector should be a config file path or an MMDetector object')
+        self.model = init_detector(
+            cfg.config,
+            cfg.checkpoint,
+            device=torch.device('cuda', 0))
+        self.conf_thres = cfg.conf_threshold
 
-        self.conf_thres = conf_threshold
-
-    def initiate(self, tracklets):
+    def initiate(self, tracklets: List[Tracklet]) -> None:
         # No need to initiate
         pass
 
-    def update(self, tracklets):
+    def update(self, tracklets: List[Tracklet]) -> None:
         # No need to update
         pass
 
@@ -82,7 +79,7 @@ class MMTwoStagePredictor(Predictor):
 
             return bbox_results
 
-    def predict(self, tracklets, img):
+    def predict(self, tracklets: List[Tracklet], img: np.ndarray) -> List[Prediction]:
         if len(tracklets) != 0:
             bbox_results = self.regress_and_classify(img, tracklets)
             predictions = []

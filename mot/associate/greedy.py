@@ -1,17 +1,19 @@
 import numpy as np
-from .matcher import Matcher
+from typing import List, Dict, Tuple
+
+from .matcher import Matcher, MATCHER_REGISTRY
 
 
+@MATCHER_REGISTRY.register()
 class GreedyMatcher(Matcher):
     """
     A greedy matching algorithm, re-implemented according to the IoU tracker paper.
     """
 
-    def __init__(self, metric, sigma):
-        super().__init__(metric)
-        self.sigma = sigma
+    def __init__(self, cfg):
+        super().__init__(cfg)
 
-    def __call__(self, tracklets, detection_features):
+    def data_association(self, tracklets: List, detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
         similarity_matrix = self.metric(tracklets, detection_features)
         row_ind = []
         col_ind = []
