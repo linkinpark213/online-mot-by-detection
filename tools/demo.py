@@ -8,6 +8,21 @@ from mot.tracker import build_tracker
 from mot.utils import file_to_cfg
 
 
+def snapshot_to_mot(tracker, time_lived_threshold=1, ttl_threshold=3, detected_only=True):
+    data = ''
+    for tracklet in tracker.tracklets_active:
+        if tracklet.time_lived >= time_lived_threshold and tracklet.ttl >= ttl_threshold and (
+                tracklet.is_detected() or not detected_only):
+            box = tracklet.last_detection.box
+            data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, -1, -1, -1, -1\n'.format(tracker.frame_num,
+                                                                                          tracklet.id,
+                                                                                          box[0],
+                                                                                          box[1],
+                                                                                          box[2] - box[0],
+                                                                                          box[3] - box[1])
+    return data
+
+
 def run_demo(tracker, args):
     capture = mot.utils.get_capture(args.demo_path)
     video_writer = mot.utils.get_video_writer(args.save_video, capture.get(cv2.CAP_PROP_FRAME_WIDTH),
@@ -19,13 +34,14 @@ def run_demo(tracker, args):
         if not ret:
             break
         tracker.tick(frame)
-        image = mot.utils.snapshot_from_tracker(frame, tracker, draw_predictions=True, draw_skeletons=False)
+        image = mot.utils.snapshot_from_tracker(frame, tracker, draw_predictions=True, draw_skeletons=False,
+                                                draw_masks=True)
 
         # Write to video if demanded.
         video_writer.write(image)
 
         # Write to result file if demanded.
-        result_writer.write(mot.utils.snapshot_to_mot(tracker))
+        result_writer.write(snapshot_to_mot(tracker))
 
         # Display image if demanded.
         if args.display:
@@ -49,17 +65,17 @@ def run_demo(tracker, args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('tracker_config', default='configs/deepsort.py')
-    parser.add_argument('--demo_path', default='', required=False,
+    parser.add_argument('--demo-path', default='', required=False,
                         help='Path to the test video file or directory of test images. Leave it blank to use webcam.')
-    parser.add_argument('--save_video', default='', required=False,
+    parser.add_argument('--save-video', default='', required=False,
                         help='Path to the output video file. Leave it blank to disable.')
-    parser.add_argument('--save_result', default='', required=False,
+    parser.add_argument('--save-result', default='', required=False,
                         help='Path to the output tracking result file. Leave it blank to disable.')
-    parser.add_argument('--ignore_display', action='store_false', default=True, required=False, dest='display',
+    parser.add_argument('--ignore-display', action='store_false', default=True, required=False, dest='display',
                         help='Add \'--ignore_display\' to only write to video / result file')
     parser.add_argument('--debug', action='store_true', default=False, required=False, dest='debug',
                         help='Add \'--debug\' to show lower-leveled loggings')
-    parser.add_argument('--save_log', default='', required=False,
+    parser.add_argument('--save-log', default='', required=False,
                         help='Path to save the logs. Leave it blank to disable.')
     args = parser.parse_args()
 
@@ -75,12 +91,6 @@ if __name__ == '__main__':
     if args.save_log != '':
         handler = logging.FileHandler(args.save_log)
         logger.addHandler(handler)
-
-    # Load tracker from tracker definition script
-    # See example trackers in the `example` folder
-    # spec = importlib.util.spec_from_file_location('CustomTracker', args.tracker_config)
-    # tracker_module = importlib.util.module_from_spec(spec)
-    # spec.loader.exec_module(tracker_module)
 
     cfg = file_to_cfg(args.tracker_config)
 

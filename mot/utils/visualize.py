@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 from typing import List, Union
 
-# from mot.tracker import Tracker
 from mot.structures import Tracklet
 
 _colors = [(47, 47, 211),
@@ -96,7 +95,7 @@ def _draw_targets(image: np.ndarray, tracklets: List[Tracklet], confirmed_only: 
             image = _draw_target_box(image, tracklet.last_detection.box, tracklet.id, draw_centers)
 
             if draw_masks:
-                pass
+                image = _draw_target_mask(image, tracklet.last_detection.mask, tracklet.id)
             if draw_skeletons and hasattr(tracklet.last_detection, 'keypoints'):
                 image = _draw_target_skeleton(image, tracklet.last_detection.keypoints, tracklet.id)
     return image
@@ -168,13 +167,13 @@ def _draw_target_mask(image: np.ndarray, mask: np.ndarray, id: int) -> np.ndarra
 
     Args:
         image: A 3D numpy array with shape (h, w, 3). The video frame.
-        mask: A 2D list or 2D numpy array of 17 pairs of float numbers. The (x, y) of all body keypoints.
+        mask: A 2D numpy array with type bool and same spatial shape as the image but no color channel.
         id: An integer. The id of the tracked target.
 
     Returns:
         A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
     """
-    # TODO: Implement visualization of masks.
+    image[mask] = image[mask] // 2 + np.array(_colors[id % len(_colors)]) // 2
     return image
 
 
@@ -200,9 +199,15 @@ def _draw_target_skeleton(image: np.ndarray, keypoints: Union[List[List[float]],
     return image
 
 
-def snapshot_from_tracker(frame: np.ndarray, tracker: object, confirmed_only: bool = True, detected_only: bool = True,
+def draw_association(image: np.ndarray, tracklets: List[Tracklet]) -> np.ndarray:
+    img_h, img_w, _ = image.shape
+
+    return image
+
+
+def snapshot_from_tracker(frame: np.ndarray, tracker, confirmed_only: bool = True, detected_only: bool = True,
                           draw_centers: bool = False, draw_predictions: bool = False, draw_masks: bool = False,
-                          draw_skeletons: bool = True) -> np.ndarray:
+                          draw_skeletons: bool = True, draw_association: bool = False) -> np.ndarray:
     """
     Visualize a frame with boxes (and skeletons) of all tracked targets.
 
@@ -215,6 +220,7 @@ def snapshot_from_tracker(frame: np.ndarray, tracker: object, confirmed_only: bo
         draw_predictions: A boolean value. Set to True to visualize predictions of targets too, if it's available.
         draw_masks: A boolean value. Set to True to visualize target masks, if it's available.
         draw_skeletons: A boolean value. Set to True to visualize target body keypoints, if it's available.
+        draw_association: A boolean value. Set to True to visualize active tracklets and their connections with detections in the frame.
 
     Returns:
         A 3D numpy array with shape (h, w, 3). The video frame with all targets and frame number drawn.
@@ -223,6 +229,8 @@ def snapshot_from_tracker(frame: np.ndarray, tracker: object, confirmed_only: bo
                           confirmed_only=confirmed_only, detected_only=detected_only, draw_centers=draw_centers,
                           draw_predictions=draw_predictions, draw_masks=draw_masks, draw_skeletons=draw_skeletons)
     image = _draw_frame_num(image, tracker.frame_num)
+    if draw_association:
+        pass
     return image
 
 

@@ -18,7 +18,7 @@ TRACKER_REGISTRY = Registry('trackers')
 class Tracker:
     def __init__(self, detector: Detector, encoders: List[Encoder], matcher: Matcher, predictor: Predictor = None,
                  max_ttl: int = 30, max_feature_history: int = 30, max_detection_history: int = 3000,
-                 min_time_lived: int = 0) -> None:
+                 min_time_lived: int = 0, keep_finished_tracks: bool = False) -> None:
         self.detector: Detector = detector
         self.encoders: List[Encoder] = encoders
         self.matcher: Matcher = matcher
@@ -27,6 +27,7 @@ class Tracker:
         self.max_feature_history: int = max_feature_history
         self.max_detection_history: int = max_detection_history
         self.min_time_lived: int = min_time_lived
+        self.keep_finished_tracks: bool = keep_finished_tracks
         self.max_id: int = 1
         self.tracklets_active: List[Tracklet] = []
         self.tracklets_finished: List[Tracklet] = []
@@ -161,8 +162,11 @@ class Tracker:
 
     def kill_tracklet(self, tracklet: Tracklet) -> None:
         self.tracklets_active.remove(tracklet)
-        if tracklet.time_lived >= self.min_time_lived:
-            self.tracklets_finished.append(tracklet)
+        if self.keep_finished_tracks:
+            if tracklet.time_lived >= self.min_time_lived:
+                self.tracklets_finished.append(tracklet)
+        else:
+            del tracklet
 
     def log(self, tracklets: List[Tracklet], detections: List[Detection], row_ind: List[int],
             col_ind: List[int]) -> None:
