@@ -5,7 +5,7 @@ import argparse
 
 from mot.detect import MOTPublicDetector
 from mot.tracker import build_tracker, Tracker
-from mot.utils import get_capture, get_video_writer, get_result_writer, snapshot_from_tracker, file_to_cfg, Config
+from mot.utils import get_capture, get_video_writer, get_result_writer, snapshot_from_tracker, cfg_from_file, Config
 
 
 def evaluate_mot_online(tracker: Tracker, mot_subset_path: str, output_path: str = 'results',
@@ -52,11 +52,10 @@ def evaluate_mot_online(tracker: Tracker, mot_subset_path: str, output_path: str
         print('Results saved to {}/{}.txt'.format(output_path, sequence))
 
 
-def snapshot_to_mot(tracker, time_lived_threshold=1, ttl_threshold=3, detected_only=True):
+def snapshot_to_mot(tracker, time_lived_threshold=1, detected_only=True):
     data = ''
     for tracklet in tracker.tracklets_active:
-        if tracklet.time_lived >= time_lived_threshold and tracklet.ttl >= ttl_threshold and (
-                tracklet.is_detected() or not detected_only):
+        if tracklet.time_lived >= time_lived_threshold and (tracklet.is_detected() or not detected_only):
             box = tracklet.last_detection.box
             data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, -1, -1, -1, -1\n'.format(tracker.frame_num,
                                                                                           tracklet.id,
@@ -82,8 +81,8 @@ if __name__ == '__main__':
     logger = logging.getLogger('MOT')
     logger.setLevel(logging.INFO)
 
-    cfg = file_to_cfg(args.tracker_config)
+    cfg = cfg_from_file(args.tracker_config)
 
-    tracker = build_tracker(cfg)
+    tracker = build_tracker(cfg.tracker)
 
     evaluate_mot_online(tracker, args.mot_subset_path, output_path=args.output_path, output_video_path=args.save_video)

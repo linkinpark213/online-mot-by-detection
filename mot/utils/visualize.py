@@ -173,7 +173,8 @@ def _draw_target_mask(image: np.ndarray, mask: np.ndarray, id: int) -> np.ndarra
     Returns:
         A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
     """
-    image[mask] = image[mask] // 2 + np.array(_colors[id % len(_colors)]) // 2
+    if mask is not None:
+        image[mask] = image[mask] // 2 + np.array(_colors[id % len(_colors)]) // 2
     return image
 
 
@@ -199,15 +200,42 @@ def _draw_target_skeleton(image: np.ndarray, keypoints: Union[List[List[float]],
     return image
 
 
-def draw_association(image: np.ndarray, tracklets: List[Tracklet]) -> np.ndarray:
+def _draw_association(image: np.ndarray, tracklets: List[Tracklet]) -> np.ndarray:
     img_h, img_w, _ = image.shape
+    grid_w = img_w // max(40, len(tracklets))
+    grid_h = grid_w * 2
+    id_size, baseline = cv2.getTextSize('0', cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+    image = np.concatenate((image, np.zeros((grid_h + id_size[1], img_w, 3)).astype(np.uint8)), axis=0)
+    for i, tracklet in enumerate(tracklets):
+        # First draw tracklet in the bottom
+        assert 'patch' in tracklet.feature.keys(), 'ImagePatchEncoder should be enabled to visualize tracklets'
+        patch = tracklet.feature_history[-1][1]['patch']
+        patch_h, patch_w, _ = patch.shape
+        if patch_h > patch_w * 2:
+            patch = cv2.resize(patch, (int(patch_w * (grid_h / patch_h)), grid_h))
+        else:
+            patch = cv2.resize(patch, (grid_w, int(patch_h * (grid_w / patch_w))))
+        grid_t, grid_b = img_h, img_h + patch.shape[0]
+        grid_l, grid_r = grid_w * i + (grid_w - patch.shape[1]) // 2, grid_w * i + (grid_w - patch.shape[1]) // 2 + \
+                         patch.shape[1]
 
+        image[grid_t: grid_b, grid_l:grid_r, :] = patch
+        image = cv2.rectangle(image, (grid_l, grid_t), (grid_r - 2, grid_b - 2),
+                              _colors[int(tracklet.id) % len(_colors)],
+                              thickness=2)
+
+        # Then connect tracklet with the new detection
+        if tracklet.is_detected() and tracklet.is_confirmed():
+            image = cv2.line(image, ((grid_l + grid_r) // 2, img_h),
+                             (int((tracklet.last_detection.box[0] + tracklet.last_detection.box[2]) // 2),
+                              int(tracklet.last_detection.box[3])),
+                             _colors[int(tracklet.id) % len(_colors)], thickness=2)
     return image
 
 
 def snapshot_from_tracker(frame: np.ndarray, tracker, confirmed_only: bool = True, detected_only: bool = True,
                           draw_centers: bool = False, draw_predictions: bool = False, draw_masks: bool = False,
-                          draw_skeletons: bool = True, draw_association: bool = False) -> np.ndarray:
+                          draw_skeletons: bool = True, draw_association: bool = True, **kwargs) -> np.ndarray:
     """
     Visualize a frame with boxes (and skeletons) of all tracked targets.
 
@@ -230,7 +258,7 @@ def snapshot_from_tracker(frame: np.ndarray, tracker, confirmed_only: bool = Tru
                           draw_predictions=draw_predictions, draw_masks=draw_masks, draw_skeletons=draw_skeletons)
     image = _draw_frame_num(image, tracker.frame_num)
     if draw_association:
-        pass
+        image = _draw_association(image, tracker.tracklets_active)
     return image
 
 

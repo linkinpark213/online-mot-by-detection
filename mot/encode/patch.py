@@ -2,10 +2,11 @@ import cv2
 import numpy as np
 from typing import List, Tuple
 
-from .encode import Encoder
 from mot.structures import Detection
+from .encode import Encoder, ENCODER_REGISTRY
 
 
+@ENCODER_REGISTRY.register()
 class ImagePatchEncoder(Encoder):
     def __init__(self, cfg):
         super(ImagePatchEncoder, self).__init__()

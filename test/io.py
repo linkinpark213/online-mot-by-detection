@@ -1,10 +1,10 @@
 from mot.utils.io import get_capture
-from mot.utils.config import file_to_cfg
+from mot.utils.config import cfg_from_file
 
 
 def test_read_config():
     dict_file_path = 'configs/deepsort.py'
-    cfg = file_to_cfg(dict_file_path)
+    cfg = cfg_from_file(dict_file_path)
     print(cfg)
 
 

@@ -18,7 +18,7 @@ TRACKER_REGISTRY = Registry('trackers')
 class Tracker:
     def __init__(self, detector: Detector, encoders: List[Encoder], matcher: Matcher, predictor: Predictor = None,
                  max_ttl: int = 30, max_feature_history: int = 30, max_detection_history: int = 3000,
-                 min_time_lived: int = 0, keep_finished_tracks: bool = False) -> None:
+                 min_time_lived: int = 0, keep_finished_tracks: bool = False, **kwargs) -> None:
         self.detector: Detector = detector
         self.encoders: List[Encoder] = encoders
         self.matcher: Matcher = matcher
@@ -199,5 +199,5 @@ class Tracker:
                     count += 1
 
 
-def build_tracker(cfg):
-    return TRACKER_REGISTRY.get(cfg.type)(cfg)
+def build_tracker(cfg, **kwargs):
+    return TRACKER_REGISTRY.get(cfg.type)(cfg, **kwargs)

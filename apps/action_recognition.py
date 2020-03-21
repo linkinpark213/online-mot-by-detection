@@ -13,7 +13,7 @@ import mot.encode
 import mot.metric
 import mot.associate
 from mot.tracker import Tracker, build_tracker
-from mot.utils.config import file_to_cfg, Config
+from mot.utils.config import cfg_from_file, Config
 
 
 class TSN:
@@ -106,13 +106,14 @@ if __name__ == '__main__':
                         help='Path to the output video file. Leave it blank to disable.')
     args = parser.parse_args()
 
-    cfg = file_to_cfg(args.tracker_config)
+    cfg = cfg_from_file(args.tracker_config)
     cfg.encoders.append(Config(dict(
         type='ImagePatchEncoder',
         resize_to=(224, 224)
     )))
+    kwargs = cfg.to_dict()
 
-    tracker = build_tracker(cfg)
+    tracker = build_tracker(cfg, **kwargs)
 
     recognizer = TSN(args.recognizer_config, args.recognizer_checkpoint)
 

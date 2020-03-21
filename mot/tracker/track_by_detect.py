@@ -12,4 +12,4 @@ class TrackingByDetection(Tracker):
         matcher = build_matcher(cfg.matcher)
         encoders = [build_encoder(encoder_cfg) for encoder_cfg in cfg.encoders]
         predictor = build_predictor(cfg.predictor)
-        super().__init__(detector, encoders, matcher, predictor)
+        super().__init__(detector, encoders, matcher, predictor, **(cfg.to_dict()))

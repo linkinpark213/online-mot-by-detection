@@ -2,10 +2,9 @@ import cv2
 import logging
 import argparse
 import mot.utils
-import importlib.util
 
 from mot.tracker import build_tracker
-from mot.utils import file_to_cfg
+from mot.utils import cfg_from_file
 
 
 def snapshot_to_mot(tracker, time_lived_threshold=1, ttl_threshold=3, detected_only=True):
@@ -23,10 +22,9 @@ def snapshot_to_mot(tracker, time_lived_threshold=1, ttl_threshold=3, detected_o
     return data
 
 
-def run_demo(tracker, args):
+def run_demo(tracker, args, **kwargs):
     capture = mot.utils.get_capture(args.demo_path)
-    video_writer = mot.utils.get_video_writer(args.save_video, capture.get(cv2.CAP_PROP_FRAME_WIDTH),
-                                              capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    video_writer = None
     result_writer = mot.utils.get_result_writer(args.save_result)
 
     while True:
@@ -34,10 +32,12 @@ def run_demo(tracker, args):
         if not ret:
             break
         tracker.tick(frame)
-        image = mot.utils.snapshot_from_tracker(frame, tracker, draw_predictions=True, draw_skeletons=False,
-                                                draw_masks=True)
+        image = mot.utils.snapshot_from_tracker(frame, tracker, **kwargs)
 
-        # Write to video if demanded.
+        # Write to video if demanded. Video size may change because of extra contents visualized.
+        if tracker.frame_num == 1:
+            video_writer = mot.utils.get_video_writer(args.save_video, image.shape[1], image.shape[0])
+
         video_writer.write(image)
 
         # Write to result file if demanded.
@@ -45,7 +45,7 @@ def run_demo(tracker, args):
 
         # Display image if demanded.
         if args.display:
-            cv2.imshow('Demo', image)
+            cv2.imshow('Demo', cv2.resize(image, (image.shape[1] // 2, image.shape[0] // 2)))
             key = cv2.waitKey(0 if hasattr(args, 'frame_by_frame') and args.frame_by_frame else 1)
             if key == 27:
                 break
@@ -92,8 +92,9 @@ if __name__ == '__main__':
         handler = logging.FileHandler(args.save_log)
         logger.addHandler(handler)
 
-    cfg = file_to_cfg(args.tracker_config)
+    cfg = cfg_from_file(args.tracker_config)
+    kwargs = cfg.to_dict()
 
-    tracker = build_tracker(cfg)
+    tracker = build_tracker(cfg.tracker, **kwargs)
 
-    run_demo(tracker, args)
+    run_demo(tracker, args, **kwargs)

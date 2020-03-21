@@ -5,7 +5,7 @@ from mot.structures import Detection, Prediction
 
 
 class Tracklet:
-    min_time_lived = 3
+    min_time_lived = 1
 
     def __init__(self, id: int, frame_id: int, detection: Detection, feature: Dict, max_ttl: int = 30,
                  max_feature_history: int = 30, max_detection_history: int = 3000) -> None:
