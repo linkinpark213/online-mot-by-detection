@@ -27,10 +27,17 @@ class MMDetector(Detector):
             indices = np.where(box_result[:, 4] > self.conf_thres)[0]
             box_result = box_result[indices]
             mask_result = [mask_result[i] for i in indices]
-            mask_result = decode(mask_result).astype(np.bool)
+            if mask_result != []:
+                # If mask result is empty, decode() will raise error
+                mask_result = decode(mask_result).astype(np.bool)
+                return [Detection(box_result[i][:4],
+                                  box_result[i][4],
+                                  mask_result[:, :, i])
+                        for i in range(len(box_result))]
+
             return [Detection(box_result[i][:4],
                               box_result[i][4],
-                              mask_result[:, :, i])
+                              None)
                     for i in range(len(box_result))]
         else:
             # Only boxes with class "person" are counted

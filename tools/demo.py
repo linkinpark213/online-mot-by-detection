@@ -45,7 +45,7 @@ def run_demo(tracker, args, **kwargs):
 
         # Display image if demanded.
         if args.display:
-            cv2.imshow('Demo', cv2.resize(image, (image.shape[1] // 2, image.shape[0] // 2)))
+            cv2.imshow('Demo', cv2.resize(image, (image.shape[1], image.shape[0])))
             key = cv2.waitKey(0 if hasattr(args, 'frame_by_frame') and args.frame_by_frame else 1)
             if key == 27:
                 break
@@ -58,14 +58,15 @@ def run_demo(tracker, args, **kwargs):
     tracker.terminate()
 
     # Close writers after tracking
-    video_writer.release()
+    if video_writer is not None:
+        video_writer.release()
     result_writer.close()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('tracker_config', default='configs/deepsort.py')
-    parser.add_argument('--demo-path', default='', required=False,
+    parser.add_argument('--demo-path', default='0', required=False,
                         help='Path to the test video file or directory of test images. Leave it blank to use webcam.')
     parser.add_argument('--save-video', default='', required=False,
                         help='Path to the output video file. Leave it blank to disable.')

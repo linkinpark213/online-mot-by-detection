@@ -7,7 +7,7 @@ from .tracker import Tracker, TRACKER_REGISTRY
 
 @TRACKER_REGISTRY.register()
 class TrackingByDetection(Tracker):
-    def __init__(self, cfg):
+    def __init__(self, cfg, **kwargs):
         detector = build_detector(cfg.detector)
         matcher = build_matcher(cfg.matcher)
         encoders = [build_encoder(encoder_cfg) for encoder_cfg in cfg.encoders]

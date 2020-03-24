@@ -43,8 +43,8 @@ class DummyWriter():
 
 
 def get_capture(demo_path):
-    if demo_path == '':
-        return cv2.VideoCapture(0)
+    if demo_path == '' or not os.path.exists(demo_path):
+        return cv2.VideoCapture(int(demo_path))
     else:
         if os.path.isdir(demo_path):
             return ImagesCapture(demo_path)
