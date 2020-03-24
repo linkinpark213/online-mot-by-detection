@@ -9,7 +9,7 @@ from mot.utils import get_capture, get_video_writer, get_result_writer, snapshot
 
 
 def evaluate_mot_online(tracker: Tracker, mot_subset_path: str, output_path: str = 'results',
-                        output_video_path: str = 'videos'):
+                        output_video_path: str = 'videos', **kwargs):
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
     if not os.path.isdir(output_video_path):
@@ -35,7 +35,7 @@ def evaluate_mot_online(tracker: Tracker, mot_subset_path: str, output_path: str
             if not ret:
                 break
             tracker.tick(frame)
-            image = snapshot_from_tracker(frame, tracker, draw_predictions=True, draw_skeletons=False)
+            image = snapshot_from_tracker(frame, tracker, **kwargs)
 
             # Write to video if demanded.
             video_writer.write(image)
@@ -82,7 +82,9 @@ if __name__ == '__main__':
     logger.setLevel(logging.INFO)
 
     cfg = cfg_from_file(args.tracker_config)
+    kwargs = cfg.to_dict()
 
     tracker = build_tracker(cfg.tracker)
 
-    evaluate_mot_online(tracker, args.mot_subset_path, output_path=args.output_path, output_video_path=args.save_video)
+    evaluate_mot_online(tracker, args.mot_subset_path, output_path=args.output_path, output_video_path=args.save_video,
+                        **kwargs)

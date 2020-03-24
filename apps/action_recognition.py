@@ -107,7 +107,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     cfg = cfg_from_file(args.tracker_config)
-    cfg.encoders.append(Config(dict(
+    cfg.tracker.encoders.append(Config(dict(
         type='ImagePatchEncoder',
         resize_to=(224, 224)
     )))
