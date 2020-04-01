@@ -52,3 +52,10 @@ tracker = dict(
         predict_type='xywh',
     ),
 )
+confirmed_only = True
+detected_only = True
+draw_predictions = True
+draw_masks = False
+draw_skeletons = False
+draw_association = False
+

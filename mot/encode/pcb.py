@@ -22,7 +22,7 @@ class PCBEncoder(Encoder):
         self.name = cfg.name if hasattr(cfg, 'name') else 'pcb'
         model_structure = PCB(751)
         model = model_structure.convert_to_rpp()
-        save_path = os.path.join(cfg.model_path, 'full', 'net_last.pth')
+        save_path = os.path.join(cfg.model_path)
         model.load_state_dict(torch.load(save_path))
 
         self.model = PCB_test(model, True)
