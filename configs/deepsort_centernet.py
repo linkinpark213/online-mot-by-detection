@@ -3,7 +3,7 @@ tracker = dict(
     detector=dict(
         type='CenterNetDetector',
         arch='dla_34',
-        code_path='/home/linkinpark213/Source/CenterNet/src',
+        src_path='/home/linkinpark213/Source/CenterNet/src',
         checkpoint='/home/linkinpark213/Source/CenterNet/models/ctdet_coco_dla_2x.pth',
         conf_threshold=0.5,
     ),

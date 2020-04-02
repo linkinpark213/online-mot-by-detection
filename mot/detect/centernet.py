@@ -13,7 +13,7 @@ class CenterNetDetector(Detector):
     def __init__(self, cfg):
         super(Detector).__init__()
         # Add CenterNet `src` and `src/lib` path to system path
-        self.CENTERNET_PATH = cfg.code_path
+        self.CENTERNET_PATH = cfg.src_path
         assert os.path.isdir(self.CENTERNET_PATH)
         sys.path.insert(0, self.CENTERNET_PATH)
         sys.path.insert(0, os.path.join(self.CENTERNET_PATH, 'lib'))
