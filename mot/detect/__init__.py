@@ -6,4 +6,5 @@ if importlib.util.find_spec('detectron2'):
     from .detectron2 import Detectron
 if importlib.util.find_spec('mmdet'):
     from .mmdetection import MMDetector
+from .centernet import CenterNetDetector
 from .mot_public_detector import MOTPublicDetector
