@@ -1,3 +1,4 @@
+import time
 import logging
 import numpy as np
 from typing import List, Dict, Union
@@ -15,10 +16,31 @@ __all__ = ['Tracker', 'TRACKER_REGISTRY', 'build_tracker']
 TRACKER_REGISTRY = Registry('trackers')
 
 
+def timer(name: str):
+    def decorator(func):
+        def wrapper(*args, **kw):
+            start_time = time.time()
+            ret = func(*args, **kw)
+            time_spent = time.time() - start_time
+            logging.getLogger('MOT').info('{}: {:.2f}ms'.format(name, time_spent * 1000))
+            return ret
+
+        return wrapper
+
+    return decorator
+
+
 class Tracker:
-    def __init__(self, detector: Detector, encoders: List[Encoder], matcher: Matcher, predictor: Predictor = None,
-                 max_ttl: int = 30, max_feature_history: int = 30, max_detection_history: int = 3000,
-                 min_time_lived: int = 0, keep_finished_tracks: bool = False, **kwargs) -> None:
+    def __init__(self, detector: Detector,
+                 encoders: List[Encoder],
+                 matcher: Matcher,
+                 predictor: Predictor = None,
+                 max_ttl: int = 30,
+                 max_feature_history: int = 30,
+                 max_detection_history: int = 3000,
+                 min_time_lived: int = 0,
+                 keep_finished_tracks: bool = False,
+                 **kwargs) -> None:
         self.detector: Detector = detector
         self.encoders: List[Encoder] = encoders
         self.matcher: Matcher = matcher
@@ -54,20 +76,32 @@ class Tracker:
         self.predict(img)
 
         # Detection
-        detections = self.detector(img)
+        detections = self.detect(img)
 
         # Encoding
         features = self.encode(detections, img)
 
         # Data Association
-        row_ind, col_ind = self.matcher(self.tracklets_active, features)
-
-        # Log before updating
-        self.log(self.tracklets_active, detections, row_ind, col_ind)
+        row_ind, col_ind = self.match(self.tracklets_active, features)
 
         # Tracklet Update
         self.update(row_ind, col_ind, detections, features)
 
+        # Log before updating
+        self.logger.info('Frame #{}: {} dets, {} matched, {} target left'.format(self.frame_num,
+                                                                                 len(detections),
+                                                                                 len(row_ind),
+                                                                                 len(self.tracklets_active)))
+
+    @timer('det')
+    def detect(self, img: np.ndarray):
+        return self.detector(img)
+
+    @timer('assoc')
+    def match(self, tracklets: List[Tracklet], detection_features: List[Dict]):
+        return self.matcher(tracklets, detection_features)
+
+    @timer('enc')
     def encode(self, detections: List[Union[Detection, Prediction]], img: np.ndarray) -> List[Dict]:
         """
         Encode detections using all encoders.
@@ -86,6 +120,7 @@ class Tracker:
                 features[i][encoder.name] = _features[i]
         return features
 
+    @timer('pred')
     def predict(self, img: np.ndarray) -> None:
         """
         Predict target positions in the incoming frame.
@@ -167,36 +202,6 @@ class Tracker:
                 self.tracklets_finished.append(tracklet)
         else:
             del tracklet
-
-    def log(self, tracklets: List[Tracklet], detections: List[Detection], row_ind: List[int],
-            col_ind: List[int]) -> None:
-        # Start with current situation
-        self.logger.info(
-            'Frame #{}: {} target(s) active, {} object(s) detected'.format(self.frame_num, len(self.tracklets_active),
-                                                                           len(detections)))
-        # And detections
-        if len(detections) > 0:
-            self.logger.debug('Detections:')
-            for i, detection in enumerate(detections):
-                box = detection.box
-                self.logger.debug(
-                    '\t#{:d}: l = {:.2f}, \tt = {:.2f}, \tr = {:.2f}, \tb = {:.2f}'.format(i, box[0], box[1], box[2],
-                                                                                           box[3]))
-
-        # And matches
-        if len(row_ind) > 0:
-            self.logger.debug('Matches:')
-            for i, row in enumerate(row_ind):
-                self.logger.debug('\tTracklet #{:d} -- Detection #{:d}'.format(tracklets[row].id, col_ind[i]))
-
-        if len(detections) - len(col_ind) > 0:
-            self.logger.debug('New tracklets:')
-            count = 0
-            for i, col in enumerate(detections):
-                if i not in col_ind:
-                    self.logger.debug(
-                        '\tTracklet #{:d}, from Detection #{:d}'.format(self.max_id + count + 1, i))
-                    count += 1
 
 
 def build_tracker(cfg):

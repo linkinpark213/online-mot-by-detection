@@ -20,13 +20,12 @@ class IoUMetric(Metric):
     def affinity_matrix(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Union[
         np.ndarray, List[List[float]]]:
         matrix = np.zeros([len(tracklets), len(detection_features)])
+        det_boxes = np.stack([feature[self.encoding] for feature in detection_features])
         for i in range(len(tracklets)):
-            for j in range(len(detection_features)):
-                if self.use_prediction:
-                    matrix[i][j] = mot.utils.box.iou(tracklets[i].prediction.box, detection_features[j][self.encoding])
-                else:
-                    matrix[i][j] = mot.utils.box.iou(tracklets[i].last_detection.box,
-                                                     detection_features[j][self.encoding])
+            if self.use_prediction:
+                matrix[i] = mot.utils.box.iou(tracklets[i].prediction.box, det_boxes)
+            else:
+                matrix[i] = mot.utils.box.iou(tracklets[i].last_detection.box, det_boxes)
 
         self._log_affinity_matrix(matrix, tracklets, self.encoding)
         return matrix

@@ -15,7 +15,7 @@ def evaluate_mot_online(tracker: Tracker, mot_subset_path: str, output_path: str
     if not os.path.isdir(output_video_path):
         os.mkdir(output_video_path)
 
-    for sequence in os.listdir(mot_subset_path):
+    for sequence in sorted(os.listdir(mot_subset_path)):
         print('Processing sequence {}'.format(sequence))
         capture = get_capture(os.path.join(mot_subset_path, sequence, 'img1'))
         video_writer = get_video_writer(os.path.join(output_video_path, sequence + '.mp4'),

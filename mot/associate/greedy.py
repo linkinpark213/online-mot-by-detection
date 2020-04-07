@@ -20,8 +20,7 @@ class GreedyMatcher(Matcher):
         for i in range(similarity_matrix.shape[0]):
             if len(similarity_matrix[i]) > 0:
                 j = np.argmax(similarity_matrix[i])
-                if similarity_matrix[i, j] > self.sigma:
-                    if j not in col_ind:
-                        row_ind.append(i)
-                        col_ind.append(j)
+                if similarity_matrix[i, j] > self.sigma and j not in col_ind:
+                    row_ind.append(i)
+                    col_ind.append(j)
         return row_ind, col_ind
