@@ -32,4 +32,4 @@ class Detector(metaclass=ABCMeta):
 
 
 def build_detector(cfg):
-    return DETECTOR_REGISTRY.get(cfg.type)(cfg)
+    return DETECTOR_REGISTRY.get(cfg.type)(**(cfg.to_dict()))

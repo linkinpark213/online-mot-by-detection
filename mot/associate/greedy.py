@@ -10,8 +10,8 @@ class GreedyMatcher(Matcher):
     A greedy matching algorithm, re-implemented according to the IoU tracker paper.
     """
 
-    def __init__(self, cfg):
-        super().__init__(cfg)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def data_association(self, tracklets: List, detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
         similarity_matrix = self.metric(tracklets, detection_features)

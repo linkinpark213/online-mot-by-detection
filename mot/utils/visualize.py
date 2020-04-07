@@ -208,7 +208,7 @@ def _draw_association(image: np.ndarray, tracklets: List[Tracklet]) -> np.ndarra
     image = np.concatenate((image, np.zeros((grid_h + id_size[1], img_w, 3)).astype(np.uint8)), axis=0)
     for i, tracklet in enumerate(tracklets):
         # First draw tracklet in the bottom
-        assert 'patch' in tracklet.feature.keys(), 'ImagePatchEncoder should be enabled to visualize tracklets'
+        assert 'patch' in tracklet.feature.keys(), 'An ImagePatchEncoder with name `patch` should be enabled to visualize tracklets'
         patch = tracklet.feature_history[-1][1]['patch']
         patch_h, patch_w, _ = patch.shape
         if patch_h > patch_w * 2:

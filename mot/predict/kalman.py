@@ -205,10 +205,10 @@ class KalmanFilter(object):
 
 @PREDICTOR_REGISTRY.register()
 class KalmanPredictor(Predictor):
-    def __init__(self, cfg):
+    def __init__(self, box_type: str = 'xyxy', predict_type: str = 'xywh', **kwargs):
         super(KalmanPredictor).__init__()
-        self.box_type: str = cfg.box_type
-        self.predict_type: str = cfg.predict_type
+        self.box_type: str = box_type
+        self.predict_type: str = predict_type
 
     def convert(self, box: np.ndarray, in_type: str, out_type: str) -> np.ndarray:
         assert in_type in ['xyxy', 'xywh', 'xyah'] and out_type in ['xyxy', 'xywh',

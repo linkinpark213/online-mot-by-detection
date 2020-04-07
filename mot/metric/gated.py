@@ -1,17 +1,18 @@
 import numpy as np
 from typing import List, Dict, Union
 
+from mot.utils import Config
 from mot.structures import Tracklet
 from .metric import Metric, METRIC_REGISTRY, build_metric
 
 
 @METRIC_REGISTRY.register()
 class GatedMetric(Metric):
-    def __init__(self, cfg):
-        self.original_metric = build_metric(cfg.metric)
-        self.threshold = cfg.threshold
+    def __init__(self, metric: Config, threshold: float, **kwargs):
+        self.original_metric = build_metric(metric)
+        self.threshold = threshold
         self.encoding = self.original_metric.encoding + '_gated'
-        super(GatedMetric, self).__init__(None)
+        super(GatedMetric, self).__init__(encoding='', **kwargs)
 
     def affinity_matrix(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Union[
         np.ndarray, List[List[float]]]:

@@ -17,12 +17,12 @@ from .encode import Encoder, ENCODER_REGISTRY
 
 @ENCODER_REGISTRY.register()
 class PCBEncoder(Encoder):
-    def __init__(self, cfg):
+    def __init__(self, model_path: str, name: str = 'pcb', **kwargs):
         super(PCBEncoder).__init__()
-        self.name = cfg.name if hasattr(cfg, 'name') else 'pcb'
+        self.name = name
         model_structure = PCB(751)
         model = model_structure.convert_to_rpp()
-        save_path = os.path.join(cfg.model_path)
+        save_path = os.path.join(model_path)
         model.load_state_dict(torch.load(save_path))
 
         self.model = PCB_test(model, True)

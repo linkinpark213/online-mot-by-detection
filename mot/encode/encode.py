@@ -11,7 +11,7 @@ ENCODER_REGISTRY = Registry('encoders')
 
 
 class Encoder(metaclass=ABCMeta):
-    def __init__(self, name: str = None):
+    def __init__(self, name: str = None, **kwargs):
         self.name: str = name if name is not None else 'encoding'
 
     def __call__(self, detections: List[Detection], img: np.ndarray) -> List[object]:
@@ -23,4 +23,4 @@ class Encoder(metaclass=ABCMeta):
 
 
 def build_encoder(cfg):
-    return ENCODER_REGISTRY.get(cfg.type)(cfg)
+    return ENCODER_REGISTRY.get(cfg.type)(**(cfg.to_dict()))

@@ -11,13 +11,12 @@ from .detect import Detector, DETECTOR_REGISTRY
 
 @DETECTOR_REGISTRY.register()
 class Detectron(Detector):
-    def __init__(self, cfg):
+    def __init__(self, config: str, checkpoint: str, conf_threshold: float = 0.5, **kwargs):
         super(Detectron).__init__()
         detectron2_cfg = get_cfg()
-        detectron2_cfg.merge_from_file(cfg.config)
-        if cfg.checkpoint is not None:
-            detectron2_cfg.MODEL.WEIGHTS = cfg.checkpoint
-        detectron2_cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = cfg.conf_threshold
+        detectron2_cfg.merge_from_file(config)
+        detectron2_cfg.MODEL.WEIGHTS = checkpoint
+        detectron2_cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = conf_threshold
         self.predictor = DefaultPredictor(detectron2_cfg)
 
     def detect(self, img: np.ndarray) -> List[Detection]:

@@ -2,16 +2,16 @@ import logging
 import numpy as np
 from typing import List, Dict, Union
 
+from mot.utils import Config
 from mot.structures import Tracklet
 from .metric import Metric, METRIC_REGISTRY, build_metric
 
 
 @METRIC_REGISTRY.register()
 class CombinedMetric(Metric):
-    def __init__(self, cfg):
-        self.metrics = [build_metric(metric_cfg) for metric_cfg in cfg.metrics]
-        self.name = cfg.name if hasattr(cfg, 'name') else 'combined'
-        super(CombinedMetric, self).__init__(None)
+    def __init__(self, metrics: List[Config], name: str = 'combined', **kwargs):
+        self.metrics = [build_metric(metric_cfg) for metric_cfg in metrics]
+        super(CombinedMetric, self).__init__(encoding='', name=name, **kwargs)
 
     def affinity_matrix(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Union[
         np.ndarray, List[List[float]]]:

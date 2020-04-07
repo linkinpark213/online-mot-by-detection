@@ -10,12 +10,12 @@ from mot.structures import Detection
 
 @DETECTOR_REGISTRY.register()
 class MMDetector(Detector):
-    def __init__(self, cfg):
+    def __init__(self, config: str, checkpoint: str, conf_threshold: float = 0.5, **kwargs):
         super(MMDetector).__init__()
-        self.conf_thres = cfg.conf_threshold
+        self.conf_thres = conf_threshold
         self.model = init_detector(
-            cfg.config,
-            cfg.checkpoint,
+            config,
+            checkpoint,
             device=torch.device('cuda', 0))
 
     def detect(self, img: np.ndarray) -> List[Detection]:

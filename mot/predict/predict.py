@@ -48,6 +48,6 @@ class Predictor(metaclass=ABCMeta):
 
 def build_predictor(cfg):
     if cfg is not None:
-        return PREDICTOR_REGISTRY.get(cfg.type)(cfg)
+        return PREDICTOR_REGISTRY.get(cfg.type)(**(cfg.to_dict()))
     else:
         return None

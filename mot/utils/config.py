@@ -17,8 +17,9 @@ class Config:
                     v = [Config(item) for item in v]
                 setattr(self, k, v)
 
-    def to_dict(self):
-        return {k: v for k, v in self.__dict__.items() if k[0] != '_' and k not in self.keywords}
+    def to_dict(self, ignore_keywords: bool = False):
+        return {k: v for k, v in self.__dict__.items() if
+                k[0] != '_' and (not ignore_keywords or k not in self.keywords)}
 
 
 def cfg_from_file(f: str) -> Config:

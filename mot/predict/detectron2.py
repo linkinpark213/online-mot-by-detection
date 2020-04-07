@@ -21,12 +21,12 @@ class DetectronRCNNPredictor(Predictor):
     So Cascade R-CNN isn't supported.
     """
 
-    def __init__(self, cfg):
+    def __init__(self, config: str, checkpoint: str, conf_threshold: float = 0.5, **kwargs):
         super(DetectronRCNNPredictor).__init__()
         detectron2_cfg = get_cfg()
-        detectron2_cfg.merge_from_file(cfg.config)
-        if cfg.checkpoint is not None:
-            detectron2_cfg.MODEL.WEIGHTS = cfg.checkpoint
+        detectron2_cfg.merge_from_file(config)
+        if checkpoint is not None:
+            detectron2_cfg.MODEL.WEIGHTS = checkpoint
         self.model = build_model(detectron2_cfg)
         self.model.eval()
 
@@ -37,7 +37,7 @@ class DetectronRCNNPredictor(Predictor):
             [detectron2_cfg.INPUT.MIN_SIZE_TEST, detectron2_cfg.INPUT.MIN_SIZE_TEST], detectron2_cfg.INPUT.MAX_SIZE_TEST
         )
 
-        self.conf_threshold = cfg.conf_threshold
+        self.conf_threshold = conf_threshold
 
     def initiate(self, tracklets: List[Tracklet]) -> None:
         # No need to initiate

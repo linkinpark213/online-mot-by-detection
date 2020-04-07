@@ -1,4 +1,5 @@
 import numpy as np
+from typing import List
 
 import mot.encode
 import mot.metric
@@ -6,6 +7,7 @@ import mot.detect
 import mot.predict
 import mot.associate
 import mot.utils.box
+from mot.utils import Config
 from mot.structures import Tracklet
 from mot.encode import build_encoder
 from mot.detect import build_detector
@@ -16,17 +18,19 @@ from .tracker import Tracker, TRACKER_REGISTRY
 
 @TRACKER_REGISTRY.register()
 class Tracktor(Tracker):
-    def __init__(self, cfg, sigma_active: float = 0.5, lambda_active: float = 0.6, lambda_new: float = 0.3, **kwargs):
-        detector = build_detector(cfg.detector)
-        matcher = build_matcher(cfg.matcher)
-        encoders = [build_encoder(encoder_cfg) for encoder_cfg in cfg.encoders]
-        predictor = build_predictor(cfg.predictor)
+    def __init__(self, detector: Config, matcher: Config, encoders: List[Config], predictor: Config,
+                 sigma_active: float = 0.5, lambda_active: float = 0.6,
+                 lambda_new: float = 0.3, secondary_matcher: Config = None, **kwargs):
+        detector = build_detector(detector)
+        matcher = build_matcher(matcher)
+        encoders = [build_encoder(encoder_cfg) for encoder_cfg in encoders]
+        predictor = build_predictor(predictor)
         self.sigma_active = sigma_active
         self.lambda_active = lambda_active
         self.lambda_new = lambda_new
         self.tracklets_inactive = []
-        if hasattr(cfg, 'secondary_matcher'):
-            self.secondary_matcher = build_matcher(cfg.secondary_matcher)
+        if secondary_matcher is not None:
+            self.secondary_matcher = build_matcher(secondary_matcher)
         super().__init__(detector, encoders, matcher, predictor, **kwargs)
 
     def tick(self, img):

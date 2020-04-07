@@ -1,9 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from typing import List, Dict, Tuple, Union
 
-from mot.metric import Metric, build_metric
-from mot.utils import Registry
 from mot.structures import Tracklet
+from mot.utils import Registry, Config
+from mot.metric import Metric, build_metric
 
 __all__ = ['Matcher', 'MATCHER_REGISTRY', 'build_matcher']
 
@@ -11,11 +11,11 @@ MATCHER_REGISTRY = Registry('matchers')
 
 
 class Matcher(metaclass=ABCMeta):
-    def __init__(self, cfg):
-        if cfg is not None:
+    def __init__(self, metric: Config = None, threshold: float = 0, **kwargs):
+        if metric is not None:
             # In cascade matcher, no metric is needed
-            self.metric = build_metric(cfg.metric)
-            self.sigma = cfg.threshold
+            self.metric = build_metric(metric)
+        self.sigma = threshold
 
     def __call__(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
         return self.data_association(tracklets, detection_features)
@@ -38,4 +38,4 @@ class Matcher(metaclass=ABCMeta):
 
 
 def build_matcher(cfg):
-    return MATCHER_REGISTRY.get(cfg.type)(cfg)
+    return MATCHER_REGISTRY.get(cfg.type)(**(cfg.to_dict()))

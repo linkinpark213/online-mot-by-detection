@@ -12,11 +12,10 @@ class IoUMetric(Metric):
     An affinity metric that only considers the IoU of tracklets' box and detected box.
     """
 
-    def __init__(self, cfg):
-        cfg.encoding = 'box'
-        self.encoding = 'box'
-        self.use_prediction = cfg.use_prediction if hasattr(cfg, 'use_prediction') else False
-        super(IoUMetric, self).__init__(cfg)
+    def __init__(self, encoding='box', use_prediction=False, **kwargs):
+        self.encoding = encoding
+        self.use_prediction = use_prediction
+        super(IoUMetric, self).__init__(encoding, **kwargs)
 
     def affinity_matrix(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Union[
         np.ndarray, List[List[float]]]:

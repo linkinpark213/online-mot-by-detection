@@ -18,13 +18,12 @@ from .encode import Encoder, ENCODER_REGISTRY
 
 @ENCODER_REGISTRY.register()
 class DGNetEncoder(Encoder):
-    def __init__(self, cfg):
+    def __init__(self, model_path: str, name: str, **kwargs):
         super(DGNetEncoder).__init__()
-        self.name = cfg.name
+        self.name = name
 
         self.model = ft_netAB(751, norm=False, stride=1, pool='max')
-        save_path = os.path.join(cfg.model_path, 'id_00100000.pt')
-        state_dict = torch.load(save_path)
+        state_dict = torch.load(model_path)
         self.model.load_state_dict(state_dict['a'], strict=False)
         self.model.classifier1.classifier = nn.Sequential()
         self.model.classifier2.classifier = nn.Sequential()

@@ -20,13 +20,13 @@ class MMTwoStagePredictor(Predictor):
     So Cascade R-CNN isn't supported.
     """
 
-    def __init__(self, cfg):
+    def __init__(self, config: str, checkpoint: str, conf_threshold: float = 0.5, **kwargs):
         super(MMTwoStagePredictor).__init__()
         self.model = init_detector(
-            cfg.config,
-            cfg.checkpoint,
+            config,
+            checkpoint,
             device=torch.device('cuda', 0))
-        self.conf_thres = cfg.conf_threshold
+        self.conf_thres = conf_threshold
 
     def initiate(self, tracklets: List[Tracklet]) -> None:
         # No need to initiate

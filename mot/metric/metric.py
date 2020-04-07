@@ -13,14 +13,11 @@ METRIC_REGISTRY = Registry('metrics')
 
 
 class Metric(metaclass=ABCMeta):
-    def __init__(self, cfg) -> None:
-        if cfg is not None:
-            self.history = 1
-            if hasattr(cfg, 'history'):
-                assert cfg.history > 0, 'At least one step backward (last frame) in history consideration'
-                self.history = cfg.history
-            self.encoding = cfg.encoding
-            self.name = cfg.name if hasattr(cfg, 'name') else cfg.encoding
+    def __init__(self, encoding: str, history: int = 1, name: str = '', **kwargs) -> None:
+        assert history > 0, 'At least one step backward (last frame) in history consideration'
+        self.history = history
+        self.encoding = encoding
+        self.name = name if name != '' else self.encoding
 
     def __call__(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Union[np.ndarray, List[List[int]]]:
         return self.affinity_matrix(tracklets, detection_features)
@@ -85,4 +82,4 @@ class Metric(metaclass=ABCMeta):
 
 
 def build_metric(cfg):
-    return METRIC_REGISTRY.get(cfg.type)(cfg)
+    return METRIC_REGISTRY.get(cfg.type)(**(cfg.to_dict()))

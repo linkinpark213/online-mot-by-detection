@@ -199,5 +199,5 @@ class Tracker:
                     count += 1
 
 
-def build_tracker(cfg, **kwargs):
-    return TRACKER_REGISTRY.get(cfg.type)(cfg, **kwargs)
+def build_tracker(cfg):
+    return TRACKER_REGISTRY.get(cfg.type)(**(cfg.to_dict(ignore_keywords=False)))

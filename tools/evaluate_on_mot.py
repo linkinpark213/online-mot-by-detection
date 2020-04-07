@@ -25,10 +25,10 @@ def evaluate_mot_online(tracker: Tracker, mot_subset_path: str, output_path: str
 
         # Replace detector with MOT public detection
         del tracker.detector
-        tracker.detector = MOTPublicDetector(Config(dict(
+        tracker.detector = MOTPublicDetector(
             det_file_path=os.path.join(mot_subset_path, sequence, 'det', 'det.txt'),
             conf_threshold=0.5,
-        )))
+        )
 
         while True:
             ret, frame = capture.read()
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     logger.setLevel(logging.INFO)
 
     cfg = cfg_from_file(args.tracker_config)
-    kwargs = cfg.to_dict()
+    kwargs = cfg.to_dict(ignore_keywords=True)
 
     tracker = build_tracker(cfg.tracker)
 

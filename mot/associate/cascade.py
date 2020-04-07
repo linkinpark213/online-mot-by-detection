@@ -1,14 +1,15 @@
 from typing import List, Dict, Tuple
 
+from mot.utils import Config
 from mot.structures import Tracklet
 from .matcher import Matcher, MATCHER_REGISTRY, build_matcher
 
 
 @MATCHER_REGISTRY.register()
 class CascadeMatcher(Matcher):
-    def __init__(self, cfg):
-        super().__init__(None)
-        self.matchers = [build_matcher(matcher) for matcher in cfg.matchers]
+    def __init__(self, matchers: List[Config], **kwargs):
+        super().__init__(metric=None, **kwargs)
+        self.matchers = [build_matcher(matcher) for matcher in matchers]
 
     def data_association(self, tracklets: List, detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
         all_row_ind = []

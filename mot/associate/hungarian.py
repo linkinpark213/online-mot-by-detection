@@ -7,8 +7,8 @@ from .matcher import Matcher, MATCHER_REGISTRY
 
 @MATCHER_REGISTRY.register()
 class HungarianMatcher(Matcher):
-    def __init__(self, cfg):
-        super().__init__(cfg)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def data_association(self, tracklets: List, detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
         similarity_matrix = self.metric(tracklets, detection_features)
