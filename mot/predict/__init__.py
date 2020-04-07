@@ -7,4 +7,5 @@ if importlib.util.find_spec('detectron2'):
     from .detectron2 import DetectronRCNNPredictor
 if importlib.util.find_spec('mmdet'):
     from .mmdetection import MMTwoStagePredictor
-from .pysot import SiamRPNPredictor
+if importlib.util.find_spec('pysot'):
+    from .pysot import SiamRPNPredictor

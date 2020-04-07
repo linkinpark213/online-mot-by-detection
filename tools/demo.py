@@ -94,8 +94,8 @@ if __name__ == '__main__':
         logger.addHandler(handler)
 
     cfg = cfg_from_file(args.tracker_config)
-    kwargs = cfg.to_dict()
+    kwargs = cfg.to_dict(ignore_keywords=True)
 
-    tracker = build_tracker(cfg.tracker, **kwargs)
+    tracker = build_tracker(cfg.tracker)
 
     run_demo(tracker, args, **kwargs)
