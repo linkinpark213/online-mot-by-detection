@@ -37,8 +37,6 @@ class Metric(metaclass=ABCMeta):
         Returns:
             A np array of shape (m, n) and a list of detection features.
         """
-        start_time = time.time()
-
         matrix = np.zeros([len(tracklets), len(detection_features)])
 
         for i in range(len(tracklets)):
@@ -50,9 +48,6 @@ class Metric(metaclass=ABCMeta):
                 matrix[i][j] = self.history_fusing(affinities)
 
         self._log_affinity_matrix(matrix, tracklets, self.name)
-
-        end_time = time.time()
-        print('metric time = {:.2f}ms'.format((end_time - start_time) * 1000))
         return matrix
 
     @abstractmethod

@@ -1,33 +1,18 @@
-import time
 import logging
 import numpy as np
 from typing import List, Dict, Union
 
-from mot.utils import Registry
 from mot.encode import Encoder
 from mot.detect import Detector
 from mot.associate import Matcher
 from mot.predict import Predictor
 from mot.structures import Tracklet
+from mot.utils import Registry, Timer
 from mot.structures import Detection, Prediction
 
 __all__ = ['Tracker', 'TRACKER_REGISTRY', 'build_tracker']
 
 TRACKER_REGISTRY = Registry('trackers')
-
-
-def timer(name: str):
-    def decorator(func):
-        def wrapper(*args, **kw):
-            start_time = time.time()
-            ret = func(*args, **kw)
-            time_spent = time.time() - start_time
-            logging.getLogger('MOT').info('{}: {:.2f}ms'.format(name, time_spent * 1000))
-            return ret
-
-        return wrapper
-
-    return decorator
 
 
 class Tracker:
@@ -87,21 +72,19 @@ class Tracker:
         # Tracklet Update
         self.update(row_ind, col_ind, detections, features)
 
-        # Log before updating
-        self.logger.info('Frame #{}: {} dets, {} matched, {} target left'.format(self.frame_num,
-                                                                                 len(detections),
-                                                                                 len(row_ind),
-                                                                                 len(self.tracklets_active)))
+        # Log status
+        self.log(frame_num=self.frame_num, dets=len(detections), matches=len(row_ind),
+                 targets=len(self.tracklets_active))
 
-    @timer('det')
+    @Timer.timer('det')
     def detect(self, img: np.ndarray):
         return self.detector(img)
 
-    @timer('assoc')
+    @Timer.timer('assoc')
     def match(self, tracklets: List[Tracklet], detection_features: List[Dict]):
         return self.matcher(tracklets, detection_features)
 
-    @timer('enc')
+    @Timer.timer('enc')
     def encode(self, detections: List[Union[Detection, Prediction]], img: np.ndarray) -> List[Dict]:
         """
         Encode detections using all encoders.
@@ -120,7 +103,7 @@ class Tracker:
                 features[i][encoder.name] = _features[i]
         return features
 
-    @timer('pred')
+    @Timer.timer('pred')
     def predict(self, img: np.ndarray) -> None:
         """
         Predict target positions in the incoming frame.
@@ -202,6 +185,19 @@ class Tracker:
                 self.tracklets_finished.append(tracklet)
         else:
             del tracklet
+
+    def log(self, frame_num: int, dets: int, matches: int, targets: int):
+        logstr = 'Frame #{}: {} dets, {} matches, {} targets left. '.format(frame_num,
+                                                                            dets,
+                                                                            matches,
+                                                                            targets)
+        if len(Timer.times.keys()) > 0:
+            total_time = sum(Timer.times.values())
+            logstr += 'Time spent: {:.2f}ms ({:.2f} fps) | '.format(total_time, 1000 / total_time)
+            for k in Timer.times.keys():
+                logstr += '{}: {:.2f}ms | '.format(k, Timer.times[k])
+            logstr += ')'
+        self.logger.info(logstr)
 
 
 def build_tracker(cfg):
