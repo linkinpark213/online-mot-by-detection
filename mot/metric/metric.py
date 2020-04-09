@@ -1,8 +1,9 @@
 import cv2
+import time
 import logging
 import numpy as np
-from typing import List, Dict, Union
 from abc import ABCMeta, abstractmethod
+from typing import List, Dict, Union, Callable
 
 from mot.utils import Registry
 from mot.structures import Tracklet
@@ -13,9 +14,11 @@ METRIC_REGISTRY = Registry('metrics')
 
 
 class Metric(metaclass=ABCMeta):
-    def __init__(self, encoding: str, history: int = 1, name: str = '', **kwargs) -> None:
+    def __init__(self, encoding: str, history: int = 1, history_fusing: Callable = lambda x: sum(x) / len(x),
+                 name: str = '', **kwargs) -> None:
         assert history > 0, 'At least one step backward (last frame) in history consideration'
         self.history = history
+        self.history_fusing = history_fusing
         self.encoding = encoding
         self.name = name if name != '' else self.encoding
 
@@ -34,18 +37,26 @@ class Metric(metaclass=ABCMeta):
         Returns:
             A np array of shape (m, n) and a list of detection features.
         """
+        start_time = time.time()
+
         matrix = np.zeros([len(tracklets), len(detection_features)])
+
         for i in range(len(tracklets)):
             for j in range(len(detection_features)):
-                affinities = []
-                for k in range(min(self.history, len(tracklets[i].feature_history))):
-                    affinities.append(self.similarity(tracklets[i].feature_history[-k - 1][1], detection_features[j]))
-                matrix[i][j] = sum(affinities) / len(affinities)
+                tracklet_encoding = np.stack([tracklets[i].feature_history[-k - 1][1][self.encoding] for k in
+                                              range(min(self.history, len(tracklets[i].feature_history)))])
+
+                affinities = self.similarity(tracklet_encoding, detection_features[j][self.encoding])
+                matrix[i][j] = self.history_fusing(affinities)
+
         self._log_affinity_matrix(matrix, tracklets, self.name)
+
+        end_time = time.time()
+        print('metric time = {:.2f}ms'.format((end_time - start_time) * 1000))
         return matrix
 
     @abstractmethod
-    def similarity(self, tracklet_feature: Dict, detection_feature: Dict) -> float:
+    def similarity(self, tracklet_encoding: np.ndarray, detection_encoding: np.ndarray) -> Union[float, np.ndarray]:
         pass
 
     def _log_affinity_matrix(self, matrix, tracklets, metric_name):

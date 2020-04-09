@@ -27,6 +27,7 @@ tracker = dict(
                                 type='CosineMetric',
                                 encoding='dgnet',
                                 history=30,
+                                history_fusing=max,
                             ),
                             threshold=0.9,
                         ),
@@ -58,4 +59,3 @@ draw_predictions = True
 draw_masks = False
 draw_skeletons = False
 draw_association = False
-

@@ -1,4 +1,4 @@
-import logging
+import time
 import numpy as np
 from typing import List, Dict, Union
 
@@ -32,7 +32,7 @@ class CombinedMetric(Metric):
 
         return matrix
 
-    def similarity(self, tracklet_feature: Dict, detection_feature: Dict) -> float:
+    def similarity(self, tracklet_encoding: np.ndarray, detection_encoding: np.ndarray) -> Union[float, np.ndarray]:
         return 0.0
 
     def combine(self, scores):

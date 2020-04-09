@@ -109,6 +109,6 @@ class DGNetEncoder(Encoder):
             ff[:, 0:512] = self.normlize(ff[:, 0:512])
             ff[:, 512:1024] = self.normlize(ff[:, 512:1024])
             ff[:, 512:1024] = ff[:, 512:1024] * 0.7
-            return torch.cat((features, ff), 0)
+            return torch.cat((features, ff), 0).numpy()
         else:
-            return torch.zeros(1)
+            return torch.zeros(1).numpy()

@@ -30,6 +30,6 @@ class IoUMetric(Metric):
         self._log_affinity_matrix(matrix, tracklets, self.encoding)
         return matrix
 
-    def similarity(self, tracklet_feature: Dict, detection_feature: Dict) -> float:
+    def similarity(self, tracklet_encoding: np.ndarray, detection_encoding: np.ndarray) -> Union[float, np.ndarray]:
         # To make this class not abstract
         return 0.0

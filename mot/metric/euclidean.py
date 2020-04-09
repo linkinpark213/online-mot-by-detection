@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-from typing import Dict
+from typing import Union
 
 from .metric import Metric, METRIC_REGISTRY
 
@@ -14,10 +14,5 @@ class EuclideanMetric(Metric):
     def __init__(self, **kwargs):
         super(EuclideanMetric, self).__init__(**kwargs)
 
-    def similarity(self, tracklet_feature: Dict, detection_feature: Dict):
-        return 1 - self.distance(tracklet_feature, detection_feature)
-
-    def distance(self, tracklet_feature, detection_feature):
-        a = tracklet_feature[self.name]
-        b = detection_feature[self.name]
-        return np.square(np.linalg.norm(a - b))
+    def similarity(self, tracklet_encoding: np.ndarray, detection_encoding: np.ndarray) -> Union[float, np.ndarray]:
+        return 1 - np.square(np.linalg.norm(tracklet_encoding - detection_encoding))
