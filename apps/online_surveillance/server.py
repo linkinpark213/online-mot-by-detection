@@ -1,74 +1,86 @@
-import json
 import base64
+import logging
 import argparse
+import datetime
 import mot.utils
-import threading
-import socketserver
+from influxdb import InfluxDBClient
 
-from mot.tracker import build_tracker
 from mot.utils import cfg_from_file
+from mot.tracker import build_tracker
+from utils.format import snapshot_to_points
 
 
-class ThreadedTCPHandler(socketserver.BaseRequestHandler):
-    def handle(self):
-        message = self.request.recv(1024)
-        message = json.loads(message)
-        print('Received message %r' % message)
-
-        current_thread = threading.current_thread()
-        ret, frame = self.server.capture.read()
-        if not ret:
-            response = [{'status': 'Error fetching stream!'}]
-            return
-
-        tracker.tick(frame)
-
-        frame = base64.b64encode(frame)
-
-        response = [{'thread': current_thread.name, 'frame': str(frame)[2:-1]}]
-        response = json.dumps(response)
-
-        print('Sending length: {}'.format(response.__len__()))
-
-        self.request.sendall(bytearray(response, encoding='utf-8'))
-
-
-class ThreadedTCPServer(socketserver.TCPServer, socketserver.ThreadingMixIn):
-    def __init__(self, address, handler, tracker, capture):
+class CameraServer:
+    def __init__(self, tracker, capture, db_client):
         self.tracker = tracker
         self.capture = capture
-        super(ThreadedTCPServer, self).__init__(address, handler)
+        self.db_client = db_client
 
+    def run_forever(self):
+        timestamp = datetime.datetime.utcnow().isoformat("T") + "Z"
+        self.db_client.write_points([{
+            'time': timestamp,
+            'measurement': 'event',
+            'tags': {
+                'time': timestamp,
+            },
+            'fields': {
+                'value': 'start'
+            }
+        }])
 
-def run_demo(tracker, args, **kwargs):
-    while True:
-        ret, frame = capture.read()
-        if not ret:
-            break
-        tracker.tick(frame)
+        try:
+            while True:
+                ret, frame = self.capture.read()
+                if not ret:
+                    logging.error('Error fetching stream!')
+                    break
 
-    tracker.terminate()
+                tracker.tick(frame)
+
+                timestamp = datetime.datetime.utcnow().isoformat("T") + "Z"
+                points = snapshot_to_points(tracker, timestamp)
+                self.db_client.write_points(points)
+                self.db_client.write_points([{
+                    'time': timestamp,
+                    'measurement': 'frame',
+                    'tags': {
+                        'time': timestamp,
+                    },
+                    'fields': {
+                        'value': str(base64.b64encode(frame))[2:-1],
+                    },
+                }])
+                logging.info(timestamp + ' Saving {} points'.format(len(points) + 1))
+        finally:
+            self.db_client.write_points([{
+                'time': timestamp,
+                'measurement': 'event',
+                'tags': {
+                    'time': timestamp,
+                },
+                'fields': {
+                    'value': 'stop'
+                }
+            }])
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('tracker_config', default='configs/deepsort.py')
-    parser.add_argument('--port', type=int, default=44213, help='Server port')
+    parser.add_argument('--port', type=int, default=8086, help='InfluxDB port')
     args = parser.parse_args()
 
     cfg = cfg_from_file(args.tracker_config)
-    kwargs = cfg.to_dict()
+    kwargs = cfg.to_dict(ignore_keywords=True)
 
-    tracker = build_tracker(cfg.tracker, **kwargs)
+    tracker = build_tracker(cfg.tracker)
     capture = mot.utils.get_capture('0')
+    db_client = InfluxDBClient(host='localhost',
+                               port=args.port,
+                               username='root',
+                               password='root',
+                               database='motreid')
 
-    socketserver.TCPServer.allow_reuse_address = True
-    server = ThreadedTCPServer(('', args.port), ThreadedTCPHandler, tracker, capture)
-    ip, port = server.server_address
-
-    server_thread = threading.Thread(target=server.serve_forever)
-    server_thread.daemon = True
-    server_thread.start()
-    print('Listening at {}:{}'.format(ip, port))
-
-    server.serve_forever()
+    server = CameraServer(tracker, capture, db_client)
+    server.run_forever()
