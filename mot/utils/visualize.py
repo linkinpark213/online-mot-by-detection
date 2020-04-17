@@ -203,7 +203,7 @@ def _draw_target_skeleton(image: np.ndarray, keypoints: Union[List[List[float]],
 def _draw_association(image: np.ndarray, tracklets: List[Tracklet]) -> np.ndarray:
     img_h, img_w, _ = image.shape
     grid_w = img_w // max(40, len(tracklets))
-    grid_h = grid_w * 2
+    grid_h = (img_w // 40) * 2
     id_size, baseline = cv2.getTextSize('0', cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
     image = np.concatenate((image, np.zeros((grid_h + id_size[1], img_w, 3)).astype(np.uint8)), axis=0)
     for i, tracklet in enumerate(tracklets):

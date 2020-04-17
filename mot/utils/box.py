@@ -1,12 +1,17 @@
 import numpy as np
+from typing import Union
 
 
-def iou(a, b):
+def iou(a: np.ndarray, b: np.ndarray) -> Union[float, np.ndarray]:
     """
-    Calculate the IoU (Intersection over Union) between one box and N boxes
-    :param a: A list of 4 float numbers or a numpy array. The one box.
-    :param b: A list of N lists or N np.ndarrays of 4 float numbers, or a 2D numpy array of shape (N, 4). The other boxes for IoU comparison.
-    :return: The IoU between box `a` and box(es) `b`. If there is only one box in `b`, only one float number will be returned.
+    Calculate the IoU (Intersection over Union) between one box and N boxes.
+
+    Args:
+        a: An np.ndarray of 4 float numbers or a numpy array. The one box.
+        b: An np.ndarray of N lists or N np.ndarrays of 4 float numbers, or a 2D numpy array of shape (N, 4). The other boxes for IoU comparison.
+
+    Returns:
+        iou: A floating number or an 1D numpy array. The IoU between box `a` and box(es) `b`.
     """
     a = np.array(a)
     b = np.array(b)

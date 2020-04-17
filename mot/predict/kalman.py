@@ -28,16 +28,14 @@ class KalmanFilter(object):
     for i in range(ndim):
         _motion_mat[i, ndim + i] = dt
     _update_mat = np.eye(ndim, 2 * ndim)
-    # Motion and observation uncertainty are chosen relative to the current
-    # state estimate. These weights control the amount of uncertainty in
-    # the model. This is a bit hacky.
-    _std_weight_position = 1. / 20
-    _std_weight_velocity = 1. / 160
 
-    def __init__(self, measurement):
-        self.mean, self.covariance = self.initiate(measurement)
+    def __init__(self, weight_position: float, weight_velocity: float):
+        # Motion and observation uncertainty are chosen relative to the current
+        # state estimate. These weights control the amount of uncertainty in
+        # the model. This is a bit hacky.
+        self._std_weight_position = weight_position
+        self._std_weight_velocity = weight_velocity
 
-    @classmethod
     def initiate(self, measurement):
         """Create track from unassociated measurement.
         Parameters
@@ -68,7 +66,6 @@ class KalmanFilter(object):
         covariance = np.diag(np.square(std))
         return mean, covariance
 
-    @classmethod
     def predict(self, mean, covariance):
         """Run Kalman filter prediction step.
         Parameters
@@ -103,7 +100,6 @@ class KalmanFilter(object):
 
         return mean, covariance
 
-    @classmethod
     def project(self, mean, covariance):
         """Project state distribution to measurement space.
         Parameters
@@ -130,7 +126,6 @@ class KalmanFilter(object):
             self._update_mat, covariance, self._update_mat.T))
         return mean, covariance + innovation_cov
 
-    @classmethod
     def update(self, mean, covariance, measurement):
         """Run Kalman filter correction step.
         Parameters
@@ -205,10 +200,12 @@ class KalmanFilter(object):
 
 @PREDICTOR_REGISTRY.register()
 class KalmanPredictor(Predictor):
-    def __init__(self, box_type: str = 'xyxy', predict_type: str = 'xywh', **kwargs):
+    def __init__(self, box_type: str = 'xyxy', predict_type: str = 'xywh', weight_position: float = 1. / 20,
+                 weight_velocity: float = 1. / 160, **kwargs):
         super(KalmanPredictor).__init__()
         self.box_type: str = box_type
         self.predict_type: str = predict_type
+        self.kalman_filter = KalmanFilter(weight_position, weight_velocity)
 
     def convert(self, box: np.ndarray, in_type: str, out_type: str) -> np.ndarray:
         assert in_type in ['xyxy', 'xywh', 'xyah'] and out_type in ['xyxy', 'xywh',
@@ -218,18 +215,19 @@ class KalmanPredictor(Predictor):
     def initiate(self, tracklets: List[Tracklet]) -> None:
         for tracklet in tracklets:
             measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
-            tracklet.mean, tracklet.covariance = KalmanFilter.initiate(measurement)
+            tracklet.mean, tracklet.covariance = self.kalman_filter.initiate(measurement)
 
     def update(self, tracklets: List[Tracklet]) -> None:
         for tracklet in tracklets:
             measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
-            tracklet.mean, tracklet.covariance = KalmanFilter.update(tracklet.mean, tracklet.covariance, measurement)
+            tracklet.mean, tracklet.covariance = self.kalman_filter.update(tracklet.mean, tracklet.covariance,
+                                                                           measurement)
 
     def predict(self, tracklets: List[Tracklet], img: np.ndarray) -> List[Prediction]:
         self.update(tracklets)
         predictions = []
         for tracklet in tracklets:
-            tracklet.mean, tracklet.covariance = KalmanFilter.predict(tracklet.mean, tracklet.covariance)
+            tracklet.mean, tracklet.covariance = self.kalman_filter.predict(tracklet.mean, tracklet.covariance)
             tracklet.prediction = Prediction(self.convert(tracklet.mean, self.predict_type, 'xyxy'), 0)
             predictions.append(tracklet.prediction)
         return predictions

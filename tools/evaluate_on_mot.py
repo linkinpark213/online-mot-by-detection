@@ -27,7 +27,7 @@ def evaluate_mot_online(tracker: Tracker, mot_subset_path: str, output_path: str
         del tracker.detector
         tracker.detector = MOTPublicDetector(
             det_file_path=os.path.join(mot_subset_path, sequence, 'det', 'det.txt'),
-            conf_threshold=0.5,
+            conf_threshold=args.det_conf_thresh,
         )
 
         while True:
@@ -71,6 +71,8 @@ if __name__ == '__main__':
     parser.add_argument('tracker_config', default='configs/deepsort.py')
     parser.add_argument('--mot-subset-path', required=True,
                         help='Path to the test video file or directory of test images.')
+    parser.add_argument('--det-conf-thresh', required=False, type=float, default=0.5,
+                        help='Confidence threshold of detections')
     parser.add_argument('--output-path', required=True,
                         help='Path to the output tracking result file.')
     parser.add_argument('--save-video', default='', required=False,
