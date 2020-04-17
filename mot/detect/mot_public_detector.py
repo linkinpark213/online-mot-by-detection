@@ -16,7 +16,7 @@ class MOTPublicDetector(Detector):
         self.detections[:, 3] = self.detections[:, 3] + self.detections[:, 1]
         self.detections[:, 4] = self.detections[:, 4] + self.detections[:, 2]
         self.detections = self.detections.astype(np.float32)
-        self.detections = self.detections[np.where(self.detections[:, 5] > conf_threshold)]
+        self.detections = self.detections[np.where(self.detections[:, 5] >= conf_threshold)]
 
     def detect(self, img: np.ndarray) -> List[Detection]:
         self.frame_id += 1

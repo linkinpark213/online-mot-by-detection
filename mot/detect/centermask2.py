@@ -1,18 +1,18 @@
 import torch
-import detectron2
+import centermask
 import numpy as np
 from typing import List
-from detectron2.config import get_cfg
+from centermask.config import get_cfg
 from detectron2.engine import DefaultPredictor
 
-from mot.structures import Detection
 from .detect import Detector, DETECTOR_REGISTRY
+from mot.structures import Detection
 
 
 @DETECTOR_REGISTRY.register()
-class Detectron(Detector):
+class CenterMaskDetector(Detector):
     def __init__(self, config: str, checkpoint: str, conf_threshold: float = 0.5, **kwargs):
-        super(Detectron).__init__()
+        super(CenterMaskDetector, self).__init__()
         detectron2_cfg = get_cfg()
         detectron2_cfg.merge_from_file(config)
         detectron2_cfg.MODEL.WEIGHTS = checkpoint
