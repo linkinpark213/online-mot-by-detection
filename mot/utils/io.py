@@ -1,5 +1,6 @@
 import os
 import cv2
+import logging
 
 __all__ = ['get_capture', 'get_result_writer', 'get_video_writer']
 
@@ -56,6 +57,10 @@ def get_capture(demo_path):
 
 def get_video_writer(save_video_path, width, height):
     if save_video_path != '':
+        save_video_dir = os.path.dirname(os.path.abspath(save_video_path))
+        if not os.path.isdir(save_video_dir):
+            logging.getLogger('MOT').warning('Video saving path {} doens\'t exist. Creating...')
+            os.makedirs(save_video_dir)
         return cv2.VideoWriter(save_video_path, cv2.VideoWriter_fourcc(*'mp4v'), 30, (int(width), int(height)))
     else:
         return DummyWriter()
@@ -63,6 +68,10 @@ def get_video_writer(save_video_path, width, height):
 
 def get_result_writer(save_result_path):
     if save_result_path != '':
+        save_result_dir = os.path.dirname(os.path.abspath(save_result_path))
+        if not os.path.isdir(save_result_dir):
+            logging.getLogger('MOT').warning('Result saving path {} doens\'t exist. Creating...')
+            os.makedirs(save_result_dir)
         return open(save_result_path, 'w+')
     else:
         return DummyWriter()
