@@ -15,12 +15,16 @@ class GreedyMatcher(Matcher):
 
     def data_association(self, tracklets: List, detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
         similarity_matrix = self.metric(tracklets, detection_features)
+        flattened = np.reshape(similarity_matrix, (-1))
+        inds = list(reversed(np.argsort(flattened)))
+
         row_ind = []
         col_ind = []
-        for i in range(similarity_matrix.shape[0]):
-            if len(similarity_matrix[i]) > 0:
-                j = np.argmax(similarity_matrix[i])
-                if similarity_matrix[i, j] > self.sigma and j not in col_ind:
-                    row_ind.append(i)
-                    col_ind.append(j)
+        for ind in inds:
+            if flattened[ind] < self.sigma:
+                break
+            row, col = ind // len(detection_features), ind % len(detection_features)
+            if row not in row_ind and col not in col_ind:
+                row_ind.append(row)
+                col_ind.append(col)
         return row_ind, col_ind
