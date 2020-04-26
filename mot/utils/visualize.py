@@ -235,7 +235,7 @@ def _draw_association(image: np.ndarray, tracklets: List[Tracklet]) -> np.ndarra
 
 def snapshot_from_tracker(frame: np.ndarray, tracker, confirmed_only: bool = True, detected_only: bool = True,
                           draw_centers: bool = False, draw_predictions: bool = False, draw_masks: bool = False,
-                          draw_skeletons: bool = True, draw_association: bool = True, **kwargs) -> np.ndarray:
+                          draw_skeletons: bool = False, draw_association: bool = False, **kwargs) -> np.ndarray:
     """
     Visualize a frame with boxes (and skeletons) of all tracked targets.
 
