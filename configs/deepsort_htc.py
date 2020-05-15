@@ -2,8 +2,8 @@ tracker = dict(
     type='TrackingByDetection',
     detector=dict(
         type='MMDetector',
-        config='/home/linkinpark213/Source/mmdetection/configs/htc/htc_dconv_c3-c5_mstrain_400_1400_x101_64x4d_fpn_20e.py',
-        checkpoint='https://s3.ap-northeast-2.amazonaws.com/open-mmlab/mmdetection/models/htc/htc_dconv_c3-c5_mstrain_400_1400_x101_64x4d_fpn_20e_20190408-0e50669c.pth',
+        config='/home/linkinpark213/Source/mmdetection/configs/htc/htc_x101_64x4d_fpn_dconv_c3-c5_mstrain_400_1400_16x1_20e_coco.py',
+        checkpoint='https://open-mmlab.s3.ap-northeast-2.amazonaws.com/mmdetection/v2.0/htc/htc_x101_64x4d_fpn_dconv_c3-c5_mstrain_400_1400_16x1_20e_coco/htc_x101_64x4d_fpn_dconv_c3-c5_mstrain_400_1400_16x1_20e_coco_20200312-946fd751.pth',
         conf_threshold=0.3,
     ),
     encoders=[

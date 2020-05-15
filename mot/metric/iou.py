@@ -20,7 +20,7 @@ class IoUMetric(Metric):
     def affinity_matrix(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Union[
         np.ndarray, List[List[float]]]:
         if len(detection_features) == 0:
-            return np.array([])
+            return np.array([[-1]])
         matrix = np.zeros([len(tracklets), len(detection_features)])
         det_boxes = np.stack([feature[self.encoding] for feature in detection_features])
         for i in range(len(tracklets)):

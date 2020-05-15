@@ -29,10 +29,10 @@ class MMDetector(Detector):
             mask_result = [mask_result[i] for i in indices]
             if mask_result != []:
                 # If mask result is empty, decode() will raise error
-                mask_result = decode(mask_result).astype(np.bool)
+                # mask_result = decode(mask_result).astype(np.bool)
                 return [Detection(box_result[i][:4],
                                   box_result[i][4],
-                                  mask_result[:, :, i])
+                                  mask_result[i])
                         for i in range(len(box_result))]
 
             return [Detection(box_result[i][:4],
