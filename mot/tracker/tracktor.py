@@ -44,13 +44,13 @@ class Tracktor(Tracker):
         self.predict(img)
 
         # Detection
-        detections = self.detector(img)
+        detections = self.detect(img)
 
         # Encoding
-        features = [{'box': detections[i].box} for i in range(len(detections))]
+        features = self.encode(detections, img)
 
         # Data Association
-        row_ind, col_ind = self.matcher(self.tracklets_active, features)
+        row_ind, col_ind = self.match(self.tracklets_active, features)
 
         self.log_step_1(self.tracklets_active, detections, row_ind, col_ind)
 

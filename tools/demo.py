@@ -6,7 +6,6 @@ from pycocotools import mask as cocomask
 
 import mot.utils
 from mot.tracker import build_tracker
-from mot.utils import cfg_from_file
 
 
 def snapshot_to_mot(tracker, time_lived_threshold=1, ttl_threshold=3, detected_only=True, mots=False):
@@ -16,12 +15,14 @@ def snapshot_to_mot(tracker, time_lived_threshold=1, ttl_threshold=3, detected_o
                 tracklet.is_detected() or not detected_only):
             if not mots:
                 box = tracklet.last_detection.box
-                data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, -1, -1, -1, -1\n'.format(tracker.frame_num,
-                                                                                              tracklet.id,
-                                                                                              box[0],
-                                                                                              box[1],
-                                                                                              box[2] - box[0],
-                                                                                              box[3] - box[1])
+                score = tracklet.last_detection.score
+                data += '{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, -1, -1, -1\n'.format(tracker.frame_num,
+                                                                                                  tracklet.id,
+                                                                                                  box[0],
+                                                                                                  box[1],
+                                                                                                  box[2] - box[0],
+                                                                                                  box[3] - box[1],
+                                                                                                  score)
             else:
                 box = tracklet.last_detection.box
                 score = tracklet.last_detection.score
@@ -118,7 +119,7 @@ if __name__ == '__main__':
         handler = logging.FileHandler(args.save_log)
         logger.addHandler(handler)
 
-    cfg = cfg_from_file(args.tracker_config)
+    cfg = mot.utils.cfg_from_file(args.tracker_config)
     kwargs = cfg.to_dict(ignore_keywords=True)
 
     tracker = build_tracker(cfg.tracker)

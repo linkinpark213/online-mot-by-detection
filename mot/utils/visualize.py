@@ -69,8 +69,8 @@ __all__ = ['snapshot_from_tracker', 'snapshot_from_results', 'snapshot_from_dete
 
 
 def _draw_targets(image: np.ndarray, tracklets: List[Tracklet], confirmed_only: bool = True, detected_only: bool = True,
-                  draw_centers: bool = False, draw_predictions: bool = False, draw_masks: bool = True,
-                  draw_skeletons: bool = True) -> np.ndarray:
+                  draw_centers: bool = False, draw_predictions: bool = False, draw_trajectory: bool = True,
+                  draw_masks: bool = True, draw_skeletons: bool = True) -> np.ndarray:
     """
     Draw the boxes of targets.
 
@@ -81,6 +81,7 @@ def _draw_targets(image: np.ndarray, tracklets: List[Tracklet], confirmed_only: 
         detected_only: A boolean value. Set to True to only disable visualizing targets that are only predicted.
         draw_centers: A boolean value. Set to True to visualize center points of targets.
         draw_predictions: A boolean value. Set to True to visualize predictions of targets too, if it's available.
+        draw_trajectory: A boolean value. Set to True to visualize trajectories o targets.
         draw_masks: A boolean value. Set to True to visualize target masks, if it's available.
         draw_skeletons: A boolean value. Set to True to visualize target body keypoints, if it's available.
 
@@ -94,6 +95,8 @@ def _draw_targets(image: np.ndarray, tracklets: List[Tracklet], confirmed_only: 
 
             image = _draw_target_box(image, tracklet.last_detection.box, tracklet.id, draw_centers)
 
+            if draw_trajectory:
+                image = _draw_target_trajectory(image, tracklet)
             if draw_masks:
                 image = _draw_target_mask(image, tracklet.last_detection.mask, tracklet.id)
             if draw_skeletons and hasattr(tracklet.last_detection, 'keypoints'):
@@ -161,6 +164,39 @@ def _draw_target_prediction(image: np.ndarray, box: Union[List[float], np.ndarra
     return image
 
 
+def _draw_target_trajectory(image: np.ndarray, tracklet: Tracklet, mix_exponential: float = 0.95,
+                            block_radius: int = 4, max_steps: int = 300) -> np.ndarray:
+    """
+    Draw the trajectory of a tracked target according to its old detections.
+
+    Args:
+        image: A 3D numpy array with shape (h, w, 3). The video frame.
+        tracklet: A Tracklet object with the arrtibute 'detection_history'.
+        mix_exponential: A floating number. The percentage that the color of trajectory points fade as time goes by.
+        block_radius: An integer. Size of the target trajectory points will be block_size * 2 + 1.
+        max_steps: An integer. The max length of any trajectory visualized.
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with the trajectory drawn.
+    """
+    mix_factor = 1
+    br = block_radius
+    for i, (frame_id, detection) in enumerate(reversed(tracklet.detection_history)):
+        box = [int(_) for _ in detection.box]
+        y, x = box[3], (box[0] + box[2]) // 2
+        color = _colors[int(tracklet.id) % _colors.__len__()]
+
+        for c in range(3):
+            image[y - br: y + br + 1, x - br: x + br + 1, c] = image[y - br: y + br + 1, x - br:x + br + 1, c] * (
+                    1 - mix_factor) + color[c] * mix_factor
+        mix_factor = mix_factor * mix_exponential
+
+        if i > max_steps:
+            break
+
+    return image
+
+
 def _draw_target_mask(image: np.ndarray, mask: np.ndarray, id: int) -> np.ndarray:
     """
     Draw the skeleton for a tracked target.
@@ -201,6 +237,15 @@ def _draw_target_skeleton(image: np.ndarray, keypoints: Union[List[List[float]],
 
 
 def _draw_association(image: np.ndarray, tracklets: List[Tracklet]) -> np.ndarray:
+    """
+    Draw tracklets at the bottom and link them to their current bounding boxes.
+    Args:
+        image: A 3D numpy array with shape (h, w, 3). The video frame.
+        tracklets: A list of Tracklet objects. The tracklets to visualize.
+
+    Returns:
+        A 3D numpy array with shape (h + 2 * w // 40, w, 3). The video frame with target patches drawn.
+    """
     img_h, img_w, _ = image.shape
     grid_w = img_w // max(40, len(tracklets))
     grid_h = (img_w // 40) * 2

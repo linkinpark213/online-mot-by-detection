@@ -31,7 +31,7 @@ class Detectron(Detector):
             scores = scores[np.where(pred_classes == 0)]
             boxes = boxes[np.where(scores >= self.conf_threshold)]
             scores = scores[np.where(scores >= self.conf_threshold)]
-            detections = [Detection(pred_boxes[i], scores[i]) for i in range(len(boxes))]
+            detections = [Detection(boxes[i], scores[i]) for i in range(len(boxes))]
             if hasattr(raw_results, 'pred_masks'):
                 pred_masks = raw_results.pred_masks.detach().cpu().numpy()
                 for i, detection in enumerate(detections):

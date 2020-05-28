@@ -77,11 +77,11 @@ class DetectronRCNNPredictor(Predictor):
         del box_features
 
         raw_outputs = FastRCNNOutputs(
-            self.model.roi_heads.box2box_transform,
+            self.model.roi_heads.box_predictor.box2box_transform,
             pred_class_logits,
             pred_proposal_deltas,
             proposals,
-            self.model.roi_heads.smooth_l1_beta,
+            self.model.roi_heads.box_predictor.smooth_l1_beta,
         )
 
         # Convert raw outputs to predicted boxes and scores
