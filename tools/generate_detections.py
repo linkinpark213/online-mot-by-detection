@@ -41,7 +41,8 @@ class Detectron(Detector):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('tracker_config', default='configs/bdd100k.py')
+    parser.add_argument('detector_config',
+                        default='configs/detector/detectron2/bdd100k_faster_rcnn_x_101_32x8d_fpn_2x_crop.py')
     parser.add_argument('seqs_path', default='0',
                         help='Directory of the directories of test sequences. Leave it blank to use webcam.')
     parser.add_argument('results_path', default='',
@@ -56,9 +57,9 @@ if __name__ == '__main__':
     kwargs = cfg.to_dict(ignore_keywords=True)
 
     print('Initiating detector')
-    detector = Detectron(cfg.tracker.detector.config,
-                         cfg.tracker.detector.checkpoint,
-                         cfg.tracker.detector.conf_threshold)
+    detector = Detectron(cfg.config,
+                         cfg.checkpoint,
+                         cfg.conf_threshold)
 
     for seq in os.listdir(args.seqs_path):
         demo_path = os.path.join(args.seqs_path, seq)
