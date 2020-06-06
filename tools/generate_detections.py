@@ -43,17 +43,17 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('detector_config',
                         default='configs/detector/detectron2/bdd100k_faster_rcnn_x_101_32x8d_fpn_2x_crop.py')
-    parser.add_argument('seqs_path', default='0',
-                        help='Directory of the directories of test sequences. Leave it blank to use webcam.')
-    parser.add_argument('results_path', default='',
-                        help='Directory of store the output tracking result files. Leave it blank to disable.')
+    parser.add_argument('seq_path', default='0',
+                        help='Directory of the test sequence. Leave it blank to use webcam.')
+    parser.add_argument('result_path', default='',
+                        help='Directory of store the output tracking result file. Leave it blank to disable.')
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     args = parse_args()
 
-    cfg = mot.utils.cfg_from_file(args.tracker_config)
+    cfg = mot.utils.cfg_from_file(args.detector_config)
     kwargs = cfg.to_dict(ignore_keywords=True)
 
     print('Initiating detector')
@@ -61,32 +61,33 @@ if __name__ == '__main__':
                          cfg.checkpoint,
                          cfg.conf_threshold)
 
-    for seq in os.listdir(args.seqs_path):
-        demo_path = os.path.join(args.seqs_path, seq)
-        capture = mot.utils.get_capture(demo_path)
+    seq = os.path.dirname(args.seq_path)
+    capture = mot.utils.get_capture(args.seq_path)
+    dirpath = os.path.abspath(os.path.dirname(args.result_path))
+    if not os.path.isdir(dirpath):
+        os.makedirs(dirpath)
 
-        save_result = os.path.join(args.results_path, seq + '.txt')
-        result_file = open(save_result, 'w+')
+    result_file = open(args.result_path, 'w+')
 
-        frame_id = 0
-        while True:
-            ret, frame = capture.read()
-            if not ret:
-                break
+    frame_id = 0
+    while True:
+        ret, frame = capture.read()
+        if not ret:
+            break
 
-            frame_id += 1
-            detections = detector(frame)
-            print('Frame #{} - {} object(s) detected'.format(frame_id, len(detections)))
-            for detection in detections:
-                x, y, w, h = detection.box
-                result_file.write('{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, -1, -1, -1\n'.format(
-                    frame_id,
-                    detection.class_id,
-                    x,
-                    y,
-                    w,
-                    h,
-                    detection.score
-                ))
+        frame_id += 1
+        detections = detector(frame)
+        print('Frame #{} - {} object(s) detected'.format(frame_id, len(detections)))
+        for detection in detections:
+            x, y, w, h = detection.box
+            result_file.write('{:d}, {:d}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, {:.2f}, -1, -1, -1\n'.format(
+                frame_id,
+                detection.class_id,
+                x,
+                y,
+                w,
+                h,
+                detection.score
+            ))
 
-        result_file.close()
+    result_file.close()

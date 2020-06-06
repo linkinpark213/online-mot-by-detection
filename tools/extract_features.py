@@ -28,18 +28,39 @@ def sample_detections(tracks: np.ndarray, target_id: int, sample_rate: float, sc
     return np.stack(detections, axis=0)
 
 
-def filter_features(features: np.ndarray, affinity_threshold:float=0.9) -> List[int]:
+def filter_features(features: np.ndarray, max_cluster_distance: float) -> List[int]:
     M = np.eye(len(features))
     for i in range(len(features)):
         for j in range(i + 1, len(features)):
-            M[i][j] = np.dot(features[i], features[j]) / (
+            M[i][j] = 1 - np.dot(features[i], features[j]) / (
                     (np.linalg.norm(features[i]) * np.linalg.norm(features[j])) + 1e-16)
+
+    # print('Similarity matrix')
+    # for line in M:
+    #     print(line)
 
     iu = np.triu_indices(len(features), 1, len(features))
     M = M[iu]
     linkage = sch.linkage(M, method='average', metric='cosine')
-    clusterIDs = sch.fcluster(linkage, affinity_threshold, )
-    return list(range(len(features)))
+    clusterIDs = sch.fcluster(linkage, max_cluster_distance, 'distance')
+    unique_clusterIDs = np.unique(clusterIDs)
+    global_inds = np.array(list(range(len(features))))
+    saved_inds = []
+
+    # print('cluster IDs:', clusterIDs)
+
+    for clusterID in unique_clusterIDs:
+        cluster_features = features[np.where(clusterIDs == clusterID)]
+        cluster_inds = global_inds[np.where(clusterIDs == clusterID)]
+        if len(cluster_features) > 1:
+            best_ind = cluster_inds[np.argmax(cluster_features[:, 6])]
+            saved_inds.append(best_ind)
+        else:
+            saved_inds.append(cluster_inds[0])
+
+    print('Reducing {} features to {}'.format(len(features), len(saved_inds)))
+
+    return saved_inds
 
 
 if __name__ == '__main__':
@@ -52,6 +73,8 @@ if __name__ == '__main__':
                         help='Sample rate for detections')
     parser.add_argument('--score-threshold', type=float, required=False, default=0.8,
                         help='Minimum score of a qualified detection')
+    parser.add_argument('--cluster-threshold', type=float, required=False, default=0.001,
+                        help='Minimum similarity for clustering')
     args = parser.parse_args()
 
     assert os.path.isfile(args.encoder_config), 'Path to encoder config file \'{}\' is invalid'.format(
@@ -80,6 +103,8 @@ if __name__ == '__main__':
                 features.append(feature)
             features = np.stack(features, axis=0)
             features = np.concatenate((detections, features), axis=1)  # shape=(N, 1024 + 10)
+            if len(features) > 1:
+                features = features[filter_features(features, max_cluster_distance=args.cluster_threshold)]
             np.save(feature_filepath, features)
             print('Saving {} data to {}'.format(features.shape, feature_filepath))
         else:

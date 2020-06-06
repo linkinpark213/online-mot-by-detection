@@ -7,7 +7,7 @@ def iou(a: np.ndarray, b: np.ndarray) -> Union[float, np.ndarray]:
     Calculate the IoU (Intersection over Union) between one box and N boxes.
 
     Args:
-        a: An np.ndarray of 4 float numbers or a numpy array. The one box.
+        a: An np.ndarray of 4 float numbers or a numpy array. The one box in (l, t, r, b) format.
         b: An np.ndarray of N lists or N np.ndarrays of 4 float numbers, or a 2D numpy array of shape (N, 4). The other boxes for IoU comparison.
 
     Returns:
@@ -38,6 +38,32 @@ def iou(a: np.ndarray, b: np.ndarray) -> Union[float, np.ndarray]:
     iou[intersection == 0] = 0
 
     return iou[0] if ret_dim == 1 else iou
+
+
+def expand(box: np.ndarray, margin: float = 0.0) -> np.ndarray:
+    """
+    Expand a box by a margin factor.
+
+    Args:
+        box: An np.ndarray of shaoe (4,) or (N, 4). The box(es) in (l, t, r, b) format.
+        margin: A floating number indicating the ratio between expanded margin of each edge and the box'es w/h.
+
+    Returns:
+        An np.ndarray with the same shape as input box. The expanded box(es).
+    """
+    assert len(box.shape) == 1 or len(box.shape) == 2, 'Expected 1-dimensional or 2-dimensional input `box`'
+    assert margin >= 0.0, 'Expected a margin value > 0'
+    expanded = box.copy()
+    if len(expanded.shape) == 2:
+        expanded = expanded.T
+    w, h = expanded[2] - expanded[0], expanded[3] - expanded[1]
+    expanded[0] -= w * margin
+    expanded[1] -= h * margin
+    expanded[2] += w * margin
+    expanded[3] += h * margin
+    if len(expanded.shape) == 2:
+        expanded = expanded.T
+    return expanded
 
 
 def xyxy2xywh(box):
@@ -79,3 +105,41 @@ def xywh2xyah(box):
     measurement = box.copy()[:4]
     measurement[2] = measurement[2] / measurement[3]
     return measurement
+
+
+def xyxy2xtwh(box):
+    measurement = box.copy()[:4]
+    measurement[0] = (measurement[0] + measurement[2]) / 2
+    measurement[2] = (measurement[2] - measurement[0]) * 2
+    measurement[3] = measurement[3] - measurement[1]
+    return measurement
+
+
+def xywh2xtwh(box):
+    measurement = box.copy()[:4]
+    measurement[1] = measurement[1] - measurement[3] / 2
+    return measurement
+
+
+def xyah2xtwh(box):
+    measurement = xyah2xywh(box)
+    return xywh2xtwh(measurement)
+
+
+def xtwh2xyxy(box):
+    measurement = box.copy()[:4]
+    measurement[0] = measurement[0] - measurement[2] / 2
+    measurement[2] = measurement[0] + measurement[2]
+    measurement[3] = measurement[1] + measurement[3]
+    return measurement
+
+
+def xtwh2xywh(box):
+    measurement = box.copy()[:4]
+    measurement[1] = measurement[1] + measurement[3] / 2
+    return measurement
+
+
+def xtwh2xyah(box):
+    measurement = xtwh2xywh(box)
+    return xywh2xyah(measurement)

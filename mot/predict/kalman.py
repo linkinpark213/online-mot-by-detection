@@ -200,7 +200,7 @@ class KalmanFilter(object):
 
 @PREDICTOR_REGISTRY.register()
 class KalmanPredictor(Predictor):
-    def __init__(self, box_type: str = 'xyxy', predict_type: str = 'xywh', weight_position: float = 1. / 20,
+    def __init__(self, box_type: str = 'xyxy', predict_type: str = 'xtwh', weight_position: float = 1. / 20,
                  weight_velocity: float = 1. / 160, **kwargs):
         super(KalmanPredictor).__init__()
         self.box_type: str = box_type
@@ -208,8 +208,8 @@ class KalmanPredictor(Predictor):
         self.kalman_filter = KalmanFilter(weight_position, weight_velocity)
 
     def convert(self, box: np.ndarray, in_type: str, out_type: str) -> np.ndarray:
-        assert in_type in ['xyxy', 'xywh', 'xyah'] and out_type in ['xyxy', 'xywh',
-                                                                    'xyah'], "Unknown box representation"
+        assert in_type in ['xyxy', 'xywh', 'xyah', 'xtwh'] and \
+               out_type in ['xyxy', 'xywh', 'xyah', 'xtwh'], "Unknown box representation"
         return getattr(mot.utils.box, in_type + '2' + out_type)(box)
 
     def initiate(self, tracklets: List[Tracklet]) -> None:

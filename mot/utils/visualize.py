@@ -314,15 +314,18 @@ def snapshot_from_results(frame: np.ndarray, boxes: np.ndarray, frame_num: int =
     Args:
         frame: A 3D numpy array with shape (h, w, 3). The video frame.
         boxes: A 2D numpy array with shape (b, 6+). The boxes in the tracker output file.
-            6 = 1 (Frame number) + 1 (ID) + 4 (x1, y1, x2, y2)
+            6 = 1 (Frame number) + 1 (ID) + 4 (l, t, w, h)
         frame_num: An integer. The current frame number. (Default -1 means unavailable)
 
     Returns:
         A 3D numpy array with shape (h, w, 3). The video frame with all targets drawn.
     """
-    for box in boxes:
+    xyxy = boxes.copy()
+    xyxy[:, 4] = xyxy[:, 2] + xyxy[:, 4]
+    xyxy[:, 5] = xyxy[:, 3] + xyxy[:, 5]
+    for box in xyxy:
         frame = _draw_target_box(frame, box[2:6], box[1])
-    if frame >= 0:
+    if frame_num >= 0:
         frame = _draw_frame_num(frame, frame_num)
     return frame
 

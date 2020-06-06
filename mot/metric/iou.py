@@ -12,9 +12,10 @@ class IoUMetric(Metric):
     An affinity metric that only considers the IoU of tracklets' box and detected box.
     """
 
-    def __init__(self, encoding='box', use_prediction=False, **kwargs):
+    def __init__(self, encoding='box', use_prediction=False, expand_margin: float = 0.0, **kwargs):
         self.encoding = encoding
         self.use_prediction = use_prediction
+        self.expand_margin = expand_margin
         super(IoUMetric, self).__init__(encoding, **kwargs)
 
     def affinity_matrix(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Union[
@@ -24,10 +25,13 @@ class IoUMetric(Metric):
         matrix = np.zeros([len(tracklets), len(detection_features)])
         det_boxes = np.stack([feature[self.encoding] for feature in detection_features])
         for i in range(len(tracklets)):
-            if self.use_prediction:
-                matrix[i] = mot.utils.box.iou(tracklets[i].prediction.box, det_boxes)
-            else:
-                matrix[i] = mot.utils.box.iou(tracklets[i].last_detection.box, det_boxes)
+            a = tracklets[i].prediction.box if self.use_prediction else tracklets[i].last_detection.box
+            b = det_boxes
+            if self.expand_margin != 0.0:
+                a = mot.utils.box.expand(a, self.expand_margin)
+                b = mot.utils.box.expand(b, self.expand_margin)
+
+            matrix[i] = mot.utils.box.iou(a, b)
 
         self._log_affinity_matrix(matrix, tracklets, self.encoding)
         return matrix

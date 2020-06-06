@@ -12,7 +12,7 @@ class GatedMetric(Metric):
         self.original_metric = build_metric(metric)
         self.threshold = threshold
         self.encoding = self.original_metric.encoding + '_gated'
-        super(GatedMetric, self).__init__(encoding='', **kwargs)
+        super(GatedMetric, self).__init__(encoding=self.encoding, **kwargs)
 
     def affinity_matrix(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Union[
         np.ndarray, List[List[float]]]:

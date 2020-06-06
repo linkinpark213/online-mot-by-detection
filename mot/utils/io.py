@@ -55,13 +55,13 @@ def get_capture(demo_path):
             raise AssertionError('Parameter "demo_path" is not a file or directory.')
 
 
-def get_video_writer(save_video_path, width, height):
+def get_video_writer(save_video_path, width, height, fps: int = 30):
     if save_video_path != '':
         save_video_dir = os.path.dirname(os.path.abspath(save_video_path))
         if not os.path.isdir(save_video_dir):
             logging.getLogger('MOT').warning('Video saving path {} doens\'t exist. Creating...')
             os.makedirs(save_video_dir)
-        return cv2.VideoWriter(save_video_path, cv2.VideoWriter_fourcc(*'mp4v'), 30, (int(width), int(height)))
+        return cv2.VideoWriter(save_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (int(width), int(height)))
     else:
         return DummyWriter()
 

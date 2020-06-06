@@ -41,10 +41,9 @@ class Metric(metaclass=ABCMeta):
 
         for i in range(len(tracklets)):
             for j in range(len(detection_features)):
-                tracklet_encoding = np.stack([tracklets[i].feature_history[-k - 1][1][self.encoding] for k in
-                                              range(min(self.history, len(tracklets[i].feature_history)))])
-
-                affinities = self.similarity(tracklet_encoding, detection_features[j][self.encoding])
+                affinities = [self.similarity(feature[self.encoding], detection_features[j][self.encoding]) for
+                              _, feature in [tracklets[i].feature_history[-k - 1] for k in
+                                             range(min(self.history, len(tracklets[i].feature_history)))]]
                 matrix[i][j] = self.history_fusing(affinities)
 
         self._log_affinity_matrix(matrix, tracklets, self.name)

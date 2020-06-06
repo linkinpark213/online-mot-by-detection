@@ -10,9 +10,18 @@ from mot.structures import Tracklet
 from mot.utils import Registry, Timer
 from mot.structures import Detection, Prediction
 
-__all__ = ['Tracker', 'TRACKER_REGISTRY', 'build_tracker']
+__all__ = ['Tracker', 'TrackerState', 'TRACKER_REGISTRY', 'build_tracker']
 
 TRACKER_REGISTRY = Registry('trackers')
+
+
+class TrackerState:
+    def __init__(self):
+        self.max_id = 0
+        self.tracklets_active = []
+        self.tracklets_finished = []
+        self.frame_num = 0
+        self.frame = None
 
 
 class Tracker:
@@ -35,17 +44,59 @@ class Tracker:
         self.max_detection_history: int = max_detection_history
         self.min_time_lived: int = min_time_lived
         self.keep_finished_tracks: bool = keep_finished_tracks
-        self.max_id: int = 1
-        self.tracklets_active: List[Tracklet] = []
-        self.tracklets_finished: List[Tracklet] = []
-        self.frame_num: int = 0
+        # self.max_id: int = 1
+        # self.tracklets_active: List[Tracklet] = []
+        # self.tracklets_finished: List[Tracklet] = []
+        # self.frame_num: int = 0
         self.logger: logging.Logger = logging.getLogger('MOT')
+        # self.frame: Union[np.ndarray, None] = None
+        self.state: TrackerState = TrackerState()
 
     def clear(self) -> None:
         self.max_id = 1
         self.tracklets_active = []
         self.tracklets_finished = []
         self.frame_num = 0
+
+    @property
+    def tracklets_active(self):
+        return self.state.tracklets_active
+
+    @tracklets_active.setter
+    def tracklets_active(self, value):
+        self.state.tracklets_active = value
+
+    @property
+    def tracklets_finished(self):
+        return self.state.tracklets_finished
+
+    @tracklets_finished.setter
+    def tracklets_finished(self, value):
+        self.state.tracklets_finished = value
+
+    @property
+    def max_id(self):
+        return self.state.max_id
+
+    @max_id.setter
+    def max_id(self, value):
+        self.state.max_id = value
+
+    @property
+    def frame_num(self):
+        return self.state.frame_num
+
+    @frame_num.setter
+    def frame_num(self, value):
+        self.state.frame_num = value
+
+    @property
+    def frame(self):
+        return self.state.frame
+
+    @frame.setter
+    def frame(self, value):
+        self.state.frame = value
 
     def tick(self, img: np.ndarray):
         """
@@ -56,6 +107,7 @@ class Tracker:
             img: A 3D numpy array with shape (H, W, 3). The new frame in the sequence.
         """
         self.frame_num += 1
+        self.frame = img
 
         # Prediction
         self.predict(img)
