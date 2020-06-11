@@ -149,7 +149,7 @@ class MCTracker:
                 ) > self.max_local_overlap:
                     return self.INF
 
-        features1 = [tracklet.feature['dgnet'] for (_, _), tracklet in identity1.tracklets.items()]
-        features2 = [tracklet.feature['dgnet'] for (_, _), tracklet in identity2.tracklets.items()]
+        features1 = [tracklet.feature['openreid'] for (_, _), tracklet in identity1.tracklets.items()]
+        features2 = [tracklet.feature['openreid'] for (_, _), tracklet in identity2.tracklets.items()]
         return max(
             [max([self._cosine_distance(feature1, feature2) for feature2 in features2]) for feature1 in features1])
