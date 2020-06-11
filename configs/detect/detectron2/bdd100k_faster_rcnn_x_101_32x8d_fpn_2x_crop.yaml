@@ -1,0 +1,16 @@
+_BASE_: "/home/linkinpark213/Source/detectron2/configs/Base-RCNN-FPN.yaml"
+MODEL:
+  MASK_ON: False
+  WEIGHTS: "/home/linkinpark213/Source/online-mot-by-detection/models/detect/detectron2/bdd100k_faster_rcnn_x_101_32x8d_fpn_2x_crop.pth"
+  PIXEL_STD: [57.375, 57.120, 58.395]
+  RESNETS:
+    STRIDE_IN_1X1: False  # this is a C2 model
+    NUM_GROUPS: 32
+    WIDTH_PER_GROUP: 8
+    DEPTH: 101
+  ROI_HEADS:
+    NUM_CLASSES: 10
+    NMS_THRESH_TEST: 0.2
+SOLVER:
+  STEPS: (210000, 250000)
+  MAX_ITER: 270000

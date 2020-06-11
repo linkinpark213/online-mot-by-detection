@@ -15,7 +15,7 @@ class Matcher(metaclass=ABCMeta):
         if metric is not None:
             # In cascade matcher, no metric is needed
             self.metric = build_metric(metric)
-        self.sigma = threshold
+        self.threshold = threshold
 
     def __call__(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
         return self.data_association(tracklets, detection_features)

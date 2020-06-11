@@ -11,13 +11,15 @@ from .detect import Detector, DETECTOR_REGISTRY
 
 @DETECTOR_REGISTRY.register()
 class Detectron(Detector):
-    def __init__(self, config: str, checkpoint: str, conf_threshold: float = 0.5, **kwargs):
+    def __init__(self, config: str, checkpoint: str, conf_threshold: float = 0.5, hw_ratio_threshold: float = -1,
+                 **kwargs):
         super(Detectron).__init__()
         detectron2_cfg = get_cfg()
         detectron2_cfg.merge_from_file(config)
         detectron2_cfg.MODEL.WEIGHTS = checkpoint
         detectron2_cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = conf_threshold
         self.conf_threshold = conf_threshold
+        self.hw_ratio_threshold = hw_ratio_threshold
         self.predictor = DefaultPredictor(detectron2_cfg)
 
     def detect(self, img: np.ndarray) -> List[Detection]:
@@ -31,7 +33,11 @@ class Detectron(Detector):
             scores = scores[np.where(pred_classes == 0)]
             boxes = boxes[np.where(scores >= self.conf_threshold)]
             scores = scores[np.where(scores >= self.conf_threshold)]
-            detections = [Detection(boxes[i], scores[i]) for i in range(len(boxes))]
+            if self.hw_ratio_threshold > 0:
+                inds = np.where((boxes[:, 3] - boxes[:, 1]) / (boxes[:, 2] - boxes[:, 0]) > self.hw_ratio_threshold)[0]
+            else:
+                inds = list(range(len(boxes)))
+            detections = [Detection(boxes[i], scores[i]) for i in inds]
             if hasattr(raw_results, 'pred_masks'):
                 pred_masks = raw_results.pred_masks.detach().cpu().numpy()
                 for i, detection in enumerate(detections):

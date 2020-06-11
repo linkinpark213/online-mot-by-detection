@@ -1,13 +1,11 @@
 tracker = dict(
     type='Tracktor',
     detector=dict(
-        include='./detector/mmdetection/faster_rcnn_x101_64x4d_fpn_1x_coco.py'
+        include='./detect/mmdetection/faster_rcnn_x101_64x4d_fpn_1x_coco.py'
     ),
     encoders=[
         dict(
-            type='DGNetEncoder',
-            name='dgnet',
-            model_path='mot/encode/DGNet/id_00100000.pt',
+            include='./encode/dgnet.py'
         )
     ],
     matcher=dict(
@@ -32,7 +30,7 @@ tracker = dict(
         threshold=0.7,
     ),
     predictor=dict(
-        include='./predictor/mmdetection/faster_rcnn_x101_64x4d_fpn_1x.py'
+        include='./predict/mmdetection/faster_rcnn_x101_64x4d_fpn_1x.py'
     ),
 )
 sigma_active = 0.5

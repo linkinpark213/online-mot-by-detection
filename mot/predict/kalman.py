@@ -208,6 +208,9 @@ class KalmanPredictor(Predictor):
         self.kalman_filter = KalmanFilter(weight_position, weight_velocity)
 
     def convert(self, box: np.ndarray, in_type: str, out_type: str) -> np.ndarray:
+        if in_type == out_type:
+            # No need to convert
+            return box
         assert in_type in ['xyxy', 'xywh', 'xyah', 'xtwh'] and \
                out_type in ['xyxy', 'xywh', 'xyah', 'xtwh'], "Unknown box representation"
         return getattr(mot.utils.box, in_type + '2' + out_type)(box)
@@ -219,7 +222,14 @@ class KalmanPredictor(Predictor):
 
     def update(self, tracklets: List[Tracklet]) -> None:
         for tracklet in tracklets:
-            measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
+            if tracklet.is_detected():
+                measurement = self.convert(tracklet.last_detection.box, self.box_type, self.predict_type)
+            else:
+                # Keep box size and only update top point position
+                det_box = self.convert(tracklet.last_detection.box, self.box_type, 'xtwh')
+                pred_box = self.convert(tracklet.prediction.box, self.box_type, 'xtwh')
+                fused_box = np.array([pred_box[0], pred_box[1], det_box[2], det_box[3]])
+                measurement = self.convert(fused_box, 'xtwh', self.predict_type)
             tracklet.mean, tracklet.covariance = self.kalman_filter.update(tracklet.mean, tracklet.covariance,
                                                                            measurement)
 

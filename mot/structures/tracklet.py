@@ -5,10 +5,8 @@ from mot.structures import Detection, Prediction
 
 
 class Tracklet:
-    min_time_lived = 1
-
     def __init__(self, id: int, frame_id: int, detection: Detection, feature: Dict, max_ttl: int = 30,
-                 max_feature_history: int = 30, max_detection_history: int = 3000) -> None:
+                 max_feature_history: int = 30, max_detection_history: int = 3000, min_time_lived: int = 1) -> None:
         # Tracklet ID number, usually starts from 1. Shouldn't be modified during online tracking.
         self.id: int = id
         # Box coordinate of the last target position with (left, top, right, bottom).
@@ -33,6 +31,8 @@ class Tracklet:
         self.prediction: Union[None, Prediction] = None
         # Whether the target was just detected or not.
         self.detected: bool = True
+        # The minimum time lived for a target to be confirmed.
+        self.min_time_lived = min_time_lived
 
     def predict(self) -> np.ndarray:
         if self.prediction is not None:

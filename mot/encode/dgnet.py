@@ -1,14 +1,12 @@
 import os
 import cv2
 import torch
+import logging
 import numpy as np
 import torch.nn as nn
-from typing import List
-import torch.optim as optim
-from .PCB.loss import TripletLoss
 from torch.autograd import Variable
-from torch.optim import lr_scheduler
-import torchvision.transforms as transforms
+from typing import List, Tuple, Union
+import torchvision.transforms as T
 
 from .DGNet.reIDmodel import ft_net, ft_netAB, ft_net_dense, PCB, PCB_test
 
@@ -18,7 +16,7 @@ from .encode import Encoder, ENCODER_REGISTRY
 
 @ENCODER_REGISTRY.register()
 class DGNetEncoder(Encoder):
-    def __init__(self, model_path: str, name: str, **kwargs):
+    def __init__(self, model_path: str, name: str, input_size: Tuple[int] = (128, 256), **kwargs):
         super(DGNetEncoder).__init__()
         self.name = name
 
@@ -28,10 +26,10 @@ class DGNetEncoder(Encoder):
         self.model.classifier1.classifier = nn.Sequential()
         self.model.classifier2.classifier = nn.Sequential()
         self.model = self.model.eval().cuda()
-        self.size = (64, 128)
-        self.norm = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        self.size = input_size
+        self.transform = T.Compose([
+            T.ToTensor(),
+            T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         """
         # settings
@@ -72,7 +70,7 @@ class DGNetEncoder(Encoder):
         def _resize(im, size):
             return cv2.resize(im.astype(np.float32) / 255., size)
 
-        im_batch = torch.cat([self.norm(_resize(im, self.size)).unsqueeze(0) for im in im_crops], dim=0).float()
+        im_batch = torch.cat([self.transform(_resize(im, self.size)).unsqueeze(0) for im in im_crops], dim=0).float()
         return im_batch
 
     def normlize(self, f):
@@ -92,13 +90,13 @@ class DGNetEncoder(Encoder):
             else:
                 all_crops.append(np.ones((10, 10, 3)).astype(np.float32) * 255)
         if len(detections) != 0:
-            img = self._preprocess(all_crops)
-            n, c, h, w = img.shape
+            im_batch = self._preprocess(all_crops)
+            n, c, h, w = im_batch.shape
             ff = torch.FloatTensor(n, 1024).zero_()
             for i in range(2):
                 if (i == 1):
-                    img = self.fliplr(img)
-                input_img = Variable(img.cuda())
+                    im_batch = self.fliplr(im_batch)
+                input_img = Variable(im_batch.cuda())
                 f, x = self.model(input_img)
                 x[0] = self.normlize(x[0])
                 x[1] = self.normlize(x[1])
@@ -111,4 +109,4 @@ class DGNetEncoder(Encoder):
             ff[:, 512:1024] = ff[:, 512:1024] * 0.7
             return torch.cat((features, ff), 0).numpy()
         else:
-            return torch.zeros(1).numpy()
+            return []

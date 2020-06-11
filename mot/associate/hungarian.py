@@ -13,7 +13,7 @@ class HungarianMatcher(Matcher):
     def data_association(self, tracklets: List, detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
         similarity_matrix = self.metric(tracklets, detection_features)
         row_ind, col_ind = scipy.optimize.linear_sum_assignment(1 - similarity_matrix)
-        valid_inds = [similarity_matrix[row_ind[i], col_ind[i]] > self.sigma for i in range(len(row_ind))]
+        valid_inds = [similarity_matrix[row_ind[i], col_ind[i]] > self.threshold for i in range(len(row_ind))]
         row_ind = row_ind[valid_inds]
         col_ind = col_ind[valid_inds]
         return row_ind, col_ind

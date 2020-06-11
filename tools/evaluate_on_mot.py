@@ -35,7 +35,7 @@ def evaluate_mot_online(tracker: Tracker, mot_subset_path: str, output_path: str
             if not ret:
                 break
             tracker.tick(frame)
-            image = snapshot_from_tracker(frame, tracker, **kwargs)
+            image = snapshot_from_tracker(tracker, **kwargs)
 
             # Write to video if demanded.
             video_writer.write(image)

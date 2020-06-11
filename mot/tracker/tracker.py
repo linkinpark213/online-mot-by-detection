@@ -211,7 +211,8 @@ class Tracker:
             if i not in col_ind:
                 new_tracklet = Tracklet(0, self.frame_num, detections[i], detection_features[i], max_ttl=self.max_ttl,
                                         max_feature_history=self.max_feature_history,
-                                        max_detection_history=self.max_detection_history)
+                                        max_detection_history=self.max_detection_history,
+                                        min_time_lived=self.min_time_lived)
                 new_tracklets.append(new_tracklet)
                 self.add_tracklet(new_tracklet)
             if self.predictor is not None:

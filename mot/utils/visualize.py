@@ -278,14 +278,13 @@ def _draw_association(image: np.ndarray, tracklets: List[Tracklet]) -> np.ndarra
     return image
 
 
-def snapshot_from_tracker(frame: np.ndarray, tracker, confirmed_only: bool = True, detected_only: bool = True,
-                          draw_centers: bool = False, draw_predictions: bool = False, draw_masks: bool = False,
-                          draw_skeletons: bool = False, draw_association: bool = False, **kwargs) -> np.ndarray:
+def snapshot_from_tracker(tracker, confirmed_only: bool = True, detected_only: bool = True, draw_centers: bool = False,
+                          draw_predictions: bool = False, draw_masks: bool = False, draw_skeletons: bool = False,
+                          draw_association: bool = False, draw_frame_num: bool = True, **kwargs) -> np.ndarray:
     """
     Visualize a frame with boxes (and skeletons) of all tracked targets.
 
     Args:
-        frame: A 3D numpy array with shape (h, w, 3). The video frame.
         tracker: A Tracker object, of which the active tracklets are to be visualized.
         confirmed_only: A boolean value. Set to True to only visualize targets that are confirmed.
         detected_only: A boolean value. Set to True to only disable visualizing targets that are only predicted.
@@ -294,14 +293,16 @@ def snapshot_from_tracker(frame: np.ndarray, tracker, confirmed_only: bool = Tru
         draw_masks: A boolean value. Set to True to visualize target masks, if it's available.
         draw_skeletons: A boolean value. Set to True to visualize target body keypoints, if it's available.
         draw_association: A boolean value. Set to True to visualize active tracklets and their connections with detections in the frame.
+        draw_frame_num: A boolean value. Set to True to visualize current frame number.
 
     Returns:
         A 3D numpy array with shape (h, w, 3). The video frame with all targets and frame number drawn.
     """
-    image = _draw_targets(frame, tracker.tracklets_active,
+    image = _draw_targets(tracker.frame, tracker.tracklets_active,
                           confirmed_only=confirmed_only, detected_only=detected_only, draw_centers=draw_centers,
                           draw_predictions=draw_predictions, draw_masks=draw_masks, draw_skeletons=draw_skeletons)
-    image = _draw_frame_num(image, tracker.frame_num)
+    if draw_frame_num:
+        image = _draw_frame_num(image, tracker.frame_num)
     if draw_association:
         image = _draw_association(image, tracker.tracklets_active)
     return image

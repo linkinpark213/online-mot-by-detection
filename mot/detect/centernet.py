@@ -10,7 +10,8 @@ from .detect import Detector, DETECTOR_REGISTRY
 @DETECTOR_REGISTRY.register()
 class CenterNetDetector(Detector):
 
-    def __init__(self, src_path: str, checkpoint: str, arch: str, conf_threshold: float = 0.5, **kwargs):
+    def __init__(self, src_path: str, checkpoint: str, arch: str, conf_threshold: float = 0.5,
+                 hw_ratio_threshold: float = -1, **kwargs):
         super(Detector).__init__()
         # Add CenterNet `src` and `src/lib` path to system path
         self.CENTERNET_PATH = src_path
@@ -33,7 +34,7 @@ class CenterNetDetector(Detector):
 
             box_result = box_result[box_result[:, 4] > self.opt.conf_thresh, :]
 
-            return [Detection(box_result[i][:4], box_result[i][4], None) for i in range(len(box_result))]
+            return [Detection(box_result[i][:4], box_result[i][4], mask=None) for i in range(len(box_result))]
 
         else:
             return []

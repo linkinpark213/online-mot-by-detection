@@ -42,7 +42,7 @@ class Detectron(Detector):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('detector_config',
-                        default='configs/detector/detectron2/bdd100k_faster_rcnn_x_101_32x8d_fpn_2x_crop.py')
+                        default='configs/detect/detectron2/bdd100k_faster_rcnn_x_101_32x8d_fpn_2x_crop.py')
     parser.add_argument('seq_path', default='0',
                         help='Directory of the test sequence. Leave it blank to use webcam.')
     parser.add_argument('result_path', default='',

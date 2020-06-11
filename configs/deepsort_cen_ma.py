@@ -1,11 +1,11 @@
 tracker = dict(
     type='TrackingByDetection',
     detector=dict(
-        include='./detector/centermask/centermask_V_99_sSE_FPN_ms_3x.py'
+        include='./detect/centermask/centermask_V_99_sSE_FPN_ms_3x.py'
     ),
     encoders=[
         dict(
-            include='./encoder/dgnet.py'
+            include='./encode/dgnet.py'
         )
     ],
     matcher=dict(
@@ -34,11 +34,7 @@ tracker = dict(
             )],
     ),
     predictor=dict(
-        type='KalmanPredictor',
-        box_type='xyxy',
-        predict_type='xywh',
-        weight_position=1. / 40,
-        weight_velocity=1. / 320
+        include='./predict/kalman/kalman_xtwh.py'
     ),
     max_ttl=30,
 )

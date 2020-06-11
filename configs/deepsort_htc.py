@@ -1,13 +1,11 @@
 tracker = dict(
     type='TrackingByDetection',
     detector=dict(
-        include='./detector/mmdetection/htc_x101_64x4d_fpn_dconv_c3-c5_mstrain_400_1400_16x1_20e_coco.py'
+        include='./detect/mmdetection/htc_x101_64x4d_fpn_dconv_c3-c5_mstrain_400_1400_16x1_20e_coco.py'
     ),
     encoders=[
         dict(
-            type='DGNetEncoder',
-            name='dgnet',
-            model_path='mot/encode/DGNet/id_00100000.pt',
+            include='./encode/dgnet.py'
         ),
         dict(
             type='ImagePatchEncoder',
@@ -49,9 +47,7 @@ tracker = dict(
             )],
     ),
     predictor=dict(
-        type='KalmanPredictor',
-        box_type='xyxy',
-        predict_type='xywh',
+        include='./predict/kalman/kalman_xtwh.py'
     ),
 )
 confirmed_only = True

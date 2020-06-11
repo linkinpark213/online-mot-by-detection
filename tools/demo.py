@@ -16,7 +16,7 @@ def run_demo(tracker, args, **kwargs):
         if not ret:
             break
         tracker.tick(frame)
-        image = mot.utils.snapshot_from_tracker(frame, tracker, **kwargs)
+        image = mot.utils.snapshot_from_tracker(tracker, **kwargs)
 
         # Write to video if demanded. Video size may change because of extra contents visualized.
         if tracker.frame_num == 1:

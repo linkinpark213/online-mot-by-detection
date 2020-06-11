@@ -31,7 +31,7 @@ class Registry(object):
 
     def __repr__(self):
         s = self.__class__.__name__ + ' ' + self._name + '( '
-        for key, value in self._contents:
+        for key, value in self._contents.items():
             s += '\t' + key + ' => ' + value
         s += ')'
         return s

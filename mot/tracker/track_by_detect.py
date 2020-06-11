@@ -11,7 +11,8 @@ from .tracker import Tracker, TRACKER_REGISTRY
 @TRACKER_REGISTRY.register()
 class TrackingByDetection(Tracker):
     def __init__(self, detector: Config, matcher: Config, encoders: List[Config], predictor: Config, **kwargs):
-        detector = build_detector(detector)
+        # Allow detector to be None
+        detector = build_detector(detector) if detector is not None else None
         matcher = build_matcher(matcher)
         encoders = [build_encoder(encoder_cfg) for encoder_cfg in encoders]
         predictor = build_predictor(predictor)

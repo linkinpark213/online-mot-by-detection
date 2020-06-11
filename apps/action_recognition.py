@@ -73,7 +73,7 @@ def track_and_recognize(tracker, recognizer, args):
         if not ret:
             break
         tracker.tick(frame)
-        frame = mot.utils.snapshot_from_tracker(frame, tracker)
+        frame = mot.utils.snapshot_from_tracker(tracker)
 
         # Perform action recognition each second
         for tracklet in tracker.tracklets_active:
