@@ -10,8 +10,7 @@ from .detect import Detector, DETECTOR_REGISTRY
 @DETECTOR_REGISTRY.register()
 class CenterNetDetector(Detector):
 
-    def __init__(self, src_path: str, checkpoint: str, arch: str, conf_threshold: float = 0.5,
-                 hw_ratio_threshold: float = -1, **kwargs):
+    def __init__(self, src_path: str, checkpoint: str, arch: str, conf_threshold: float = 0.5, **kwargs):
         super(Detector).__init__()
         # Add CenterNet `src` and `src/lib` path to system path
         self.CENTERNET_PATH = src_path
@@ -28,13 +27,16 @@ class CenterNetDetector(Detector):
 
     def detect(self, img: np.ndarray) -> List[Detection]:
         box_result = self.detector.run(img)['results']
-        box_result = box_result[1]
+        detections = []
+        for class_id in box_result.keys():
+            class_result = box_result[class_id]
 
-        if (box_result[:, 4] > self.opt.vis_thresh).any():
+            if (class_result[:, 4] > self.opt.vis_thresh).any():
+                class_result = class_result[class_result[:, 4] > self.opt.conf_thresh, :]
 
-            box_result = box_result[box_result[:, 4] > self.opt.conf_thresh, :]
+                # CenterNet id uses 1-based indexing
+                detections.extend(
+                    [Detection(result[:4], result[4], class_id=class_id - 1, mask=None) for result in class_result]
+                )
 
-            return [Detection(box_result[i][:4], box_result[i][4], mask=None) for i in range(len(box_result))]
-
-        else:
-            return []
+        return detections

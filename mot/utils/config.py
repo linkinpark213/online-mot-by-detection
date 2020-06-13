@@ -6,7 +6,8 @@ from importlib import import_module
 
 
 class Config:
-    keywords = ['tracker', 'detector', 'encoders', 'metric', 'matcher', 'predictor', 'secondary_matcher']
+    keywords = ['tracker', 'detector', 'encoders', 'metric', 'matcher', 'predictor', 'detection_filters',
+                'secondary_matcher']
 
     def __init__(self, d: Dict, filepath: str):
         if d is not None:

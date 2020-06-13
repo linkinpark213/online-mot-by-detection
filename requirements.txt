@@ -4,3 +4,4 @@ matplotlib
 terminaltables
 mmcv
 pycocotools
+scikit-learn

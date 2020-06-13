@@ -33,6 +33,8 @@ class Tracklet:
         self.detected: bool = True
         # The minimum time lived for a target to be confirmed.
         self.min_time_lived = min_time_lived
+        # Whether the tracklet has been killed or not.
+        self.finished = False
 
     def predict(self) -> np.ndarray:
         if self.prediction is not None:
@@ -65,3 +67,6 @@ class Tracklet:
 
     def is_detected(self):
         return self.detected
+
+    def is_finished(self):
+        return self.finished

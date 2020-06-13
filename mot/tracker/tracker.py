@@ -1,3 +1,4 @@
+import time
 import logging
 import numpy as np
 from typing import List, Dict, Union, Tuple
@@ -8,6 +9,7 @@ from mot.associate import Matcher
 from mot.predict import Predictor
 from mot.structures import Tracklet
 from mot.utils import Registry, Timer
+from mot.filter import DetectionFilter
 from mot.structures import Detection, Prediction
 
 __all__ = ['Tracker', 'TrackerState', 'TRACKER_REGISTRY', 'build_tracker']
@@ -17,11 +19,12 @@ TRACKER_REGISTRY = Registry('trackers')
 
 class TrackerState:
     def __init__(self):
-        self.max_id = 0
-        self.tracklets_active = []
-        self.tracklets_finished = []
-        self.frame_num = 0
-        self.frame = None
+        self.max_id: int = 0
+        self.tracklets_active: List[Tracklet] = []
+        self.tracklets_finished: List[Tracklet] = []
+        self.frame_num: int = 0
+        self.frame: Union[None, np.ndarray] = None
+        self.timestamp: float = 0
 
 
 class Tracker:
@@ -29,6 +32,7 @@ class Tracker:
                  encoders: List[Encoder],
                  matcher: Matcher,
                  predictor: Predictor = None,
+                 detection_filters: List[DetectionFilter] = None,
                  max_ttl: int = 30,
                  max_feature_history: int = 30,
                  max_detection_history: int = 3000,
@@ -39,17 +43,13 @@ class Tracker:
         self.encoders: List[Encoder] = encoders
         self.matcher: Matcher = matcher
         self.predictor: Predictor = predictor
+        self.detection_filters = detection_filters
         self.max_ttl: int = max_ttl
         self.max_feature_history: int = max_feature_history
         self.max_detection_history: int = max_detection_history
         self.min_time_lived: int = min_time_lived
         self.keep_finished_tracks: bool = keep_finished_tracks
-        # self.max_id: int = 1
-        # self.tracklets_active: List[Tracklet] = []
-        # self.tracklets_finished: List[Tracklet] = []
-        # self.frame_num: int = 0
         self.logger: logging.Logger = logging.getLogger('MOT')
-        # self.frame: Union[np.ndarray, None] = None
         self.state: TrackerState = TrackerState()
 
     def clear(self) -> None:
@@ -98,6 +98,14 @@ class Tracker:
     def frame(self, value):
         self.state.frame = value
 
+    @property
+    def timestamp(self):
+        return self.state.timestamp
+
+    @timestamp.setter
+    def timestamp(self, value):
+        self.state.timestamp = value
+
     def tick(self, img: np.ndarray):
         """
         Detect, encode and match, following the tracking-by-detection paradigm.
@@ -108,6 +116,7 @@ class Tracker:
         """
         self.frame_num += 1
         self.frame = img
+        self.timestamp = time.time()
 
         # Prediction
         self.predict(img)
@@ -130,7 +139,12 @@ class Tracker:
 
     @Timer.timer('det')
     def detect(self, img: np.ndarray) -> List[Detection]:
-        return self.detector(img)
+        detections = self.detector(img)
+        if self.detection_filters is not None:
+            for filter in self.detection_filters:
+                temp = len(detections)
+                detections = filter(detections)
+        return detections
 
     @Timer.timer('assoc')
     def match(self, tracklets: List[Tracklet], detection_features: List[Dict]) -> Tuple[List[int], List[int]]:
