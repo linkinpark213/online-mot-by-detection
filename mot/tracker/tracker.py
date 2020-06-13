@@ -142,7 +142,6 @@ class Tracker:
         detections = self.detector(img)
         if self.detection_filters is not None:
             for filter in self.detection_filters:
-                temp = len(detections)
                 detections = filter(detections)
         return detections
 

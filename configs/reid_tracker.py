@@ -1,9 +1,9 @@
 tracker = dict(
     type='TrackingByDetection',
     detector=dict(
-        # include='./detect/centernet/ctdet_coco_dlav0_1x.py',
+        include='./detect/centernet/ctdet_coco_dlav0_1x.py',
         # include='./detect/detectron2/bdd100k_faster_rcnn_x_101_32x8d_fpn_2x_crop.py',
-        include='./detect/mmdetection/faster_rcnn_x101_64x4d_fpn_1x_coco.py',
+        # include='./detect/mmdetection/faster_rcnn_x101_64x4d_fpn_1x_coco.py',
         conf_threshold=0.9,
         hw_ratio_threshold=2,
     ),
@@ -13,8 +13,8 @@ tracker = dict(
             class_ids=(0,),
         ),
         dict(
-            type='HWRatioFilter',
-            hw_ratio_threshold=2,
+            type='WHRatioFilter',
+            filtering=lambda x: x < 0.5,
         )
     ],
     encoders=[

@@ -1,3 +1,3 @@
 from .filter import DetectionFilter, build_detection_filter
-from .hwratio import HWRatioFilter
+from .whratio import WHRatioFilter
 from .clsid import ClassIDFilter
