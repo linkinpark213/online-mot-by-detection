@@ -93,7 +93,8 @@ def _draw_targets(image: np.ndarray, tracklets: List[Tracklet], confirmed_only: 
             if draw_predictions and tracklet.prediction is not None:
                 image = _draw_target_prediction(image, tracklet.prediction.box)
 
-            image = _draw_target_box(image, tracklet.last_detection.box, tracklet.id, draw_centers)
+            image = _draw_target_box(image, tracklet.last_detection.box, tracklet.id, globalID=tracklet.globalID,
+                                     draw_center=draw_centers)
 
             if draw_trajectory:
                 image = _draw_target_trajectory(image, tracklet)
@@ -119,8 +120,8 @@ def _draw_frame_num(image: np.ndarray, frame_num: int) -> np.ndarray:
     return image
 
 
-def _draw_target_box(image: np.ndarray, box: Union[List[float], np.ndarray], id: int,
-                     draw_center: bool = False) -> np.ndarray:
+def _draw_target_box(image: np.ndarray, box: Union[List[float], np.ndarray], id: int, globalID: int = -1,
+                     draw_center: bool = False, ) -> np.ndarray:
     """
     Draw the box with an ID tag for a tracked target.
 
@@ -128,6 +129,7 @@ def _draw_target_box(image: np.ndarray, box: Union[List[float], np.ndarray], id:
         image: A 3D numpy array with shape (h, w, 3). The video frame.
         box: A list or numpy array of 4 float numbers. The box of a tracked target in (x1, y1, x2, y2).
         id: An integer. The id of the tracked target.
+        globalID: An integer. The global id of the tracked target. -1 means the global id is unavailable.
         draw_center: Set to true to draw a red dot at the target center.
 
     Returns:
@@ -140,8 +142,17 @@ def _draw_target_box(image: np.ndarray, box: Union[List[float], np.ndarray], id:
     image = cv2.rectangle(image, (int(box[0]), int(box[1])),
                           (int(box[0] + id_size[0] + 4), int(box[1] + id_size[1]) + 10),
                           _colors[int(id) % _colors.__len__()], thickness=-1)
-    image = cv2.putText(image, id_string, (int(box[0] + 2), int(box[1]) + id_size[1] + 4),
+    image = cv2.putText(image, id_string, (int(box[0] + 2), int(box[1] + id_size[1] + 4)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), thickness=2)
+    if globalID >= 0:
+        id_string = '{:d}'.format(globalID)
+        id_size, baseline = cv2.getTextSize(id_string, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
+        image = cv2.rectangle(image, (int(box[2] - id_size[0] - 4), int(box[3] - id_size[1] - 10)),
+                              (int(box[2]), int(box[3])),
+                              _colors[int(id) % _colors.__len__()], thickness=-1)
+        image = cv2.putText(image, id_string, (int(box[2] - id_size[0] - 2), int(box[3] - 4)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), thickness=2)
+
     if draw_center:
         image = cv2.circle(image, (int((box[0] + box[2]) / 2), int((box[1] + box[3]) / 2)), radius=10,
                            color=(0, 0, 255), thickness=-1)

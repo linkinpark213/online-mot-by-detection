@@ -56,6 +56,6 @@ class OpenReIDEncoder(Encoder):
             im_batch = self._preprocess(all_crops)
             input_img = Variable(im_batch.cuda())
             outputs = extract_cnn_feature(self.model, input_img)
-            return outputs
+            return outputs.detach().numpy()
         else:
             return []

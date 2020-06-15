@@ -76,7 +76,7 @@ if __name__ == '__main__':
         logger.setLevel(logging.INFO)
 
     if args.save_log != '':
-        handler = logging.FileHandler(args.save_log)
+        handler = logging.FileHandler(args.save_log, mode='w+')
         logger.addHandler(handler)
 
     cfg = mot.utils.cfg_from_file(args.tracker_config)

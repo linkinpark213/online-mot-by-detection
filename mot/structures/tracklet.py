@@ -6,9 +6,12 @@ from mot.structures import Detection, Prediction
 
 class Tracklet:
     def __init__(self, id: int, frame_id: int, detection: Detection, feature: Dict, max_ttl: int = 30,
-                 max_feature_history: int = 30, max_detection_history: int = 3000, min_time_lived: int = 1) -> None:
+                 max_feature_history: int = 30, max_detection_history: int = 3000, min_time_lived: int = 1,
+                 globalID: int = -1) -> None:
         # Tracklet ID number, usually starts from 1. Shouldn't be modified during online tracking.
         self.id: int = id
+        # Tracklet global ID number in multi-camera tracking.
+        self.globalID = globalID
         # Box coordinate of the last target position with (left, top, right, bottom).
         self.last_detection: Detection = detection
         # An array storing past features. Only keeping `max_history` frames.

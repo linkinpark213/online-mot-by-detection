@@ -1,43 +1,27 @@
 import base64
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from mot.tracker import Tracker
 
 
-def snapshot_to_points(tracker: Tracker, timestamp:str) -> List[Dict]:
-    points = []
+def snapshot_to_dicts(tracker: Tracker, timestamp: float) -> Tuple[List[Dict], List[Dict]]:
+    detections = []
+    features = []
     for tracklet in tracker.tracklets_active:
-        points.append({
+        detections.append({
             'time': timestamp,
-            'measurement': 'box',
-            'tags': {
-                'id': str(tracklet.id),
-            },
-            'fields': {
-                'l': tracklet.last_detection.box[0],
-                't': tracklet.last_detection.box[1],
-                'r': tracklet.last_detection.box[2],
-                'b': tracklet.last_detection.box[3],
+            'tracklet_id': tracklet.id,
+            'box': {
+                'l': float(tracklet.last_detection.box[0]),
+                't': float(tracklet.last_detection.box[1]),
+                'r': float(tracklet.last_detection.box[2]),
+                'b': float(tracklet.last_detection.box[3]),
             },
         })
-        points.append({
+        features.append({
             'time': timestamp,
-            'measurement': 'image',
-            'tags': {
-                'id': str(tracklet.id),
-            },
-            'fields': {
-                'value': str(base64.b64encode(tracklet.feature['patch']))[2:-1],
-            },
+            'tracklet_id': tracklet.id,
+            'image': str(base64.b64encode(tracklet.feature['patch']))[2:-1],
+            'feature': tracklet.feature['dgnet'].tolist(),
         })
-        points.append({
-            'time': timestamp,
-            'measurement': 'feature',
-            'tags': {
-                'id': str(tracklet.id),
-            },
-            'fields': {
-                'value': tracklet.feature['dgnet'],
-            },
-        })
-    return points
+    return detections, features

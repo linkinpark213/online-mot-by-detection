@@ -13,6 +13,10 @@ tracker = dict(
             class_ids=(0,),
         ),
         dict(
+            type='SizeFilter',
+            filtering=lambda w, h: w > 64 and h > 128
+        ),
+        dict(
             type='WHRatioFilter',
             filtering=lambda x: x < 0.5,
         )
@@ -21,6 +25,9 @@ tracker = dict(
         dict(
             include='./encode/openreid.py'
         ),
+        dict(
+            include='./encode/patch.py'
+        )
     ],
     matcher=dict(
         type='GreedyMatcher',
@@ -34,6 +41,7 @@ tracker = dict(
             ),
             threshold=0.75,
         ),
+        threshold=0.75,
     ),
     predictor=None,
     max_ttl=120,

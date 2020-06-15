@@ -18,7 +18,7 @@ def run_demo(mtracker, args, **kwargs):
     mc_result_writer = open(os.path.join(args.save_result, 'out_mc.txt'), 'w+')
     for capID, capture in captures.items():
         video_writers[capID] = mot.utils.get_video_writer(os.path.join(args.save_video, 'out_{}.mp4'.format(capID)),
-                                                          1920, 1080)
+                                                          1920, 1080, fps=60)
         result_writers[capID] = mot.utils.get_result_writer(os.path.join(args.save_result, 'out_{}.txt').format(capID))
 
     while True:
@@ -74,6 +74,12 @@ if __name__ == '__main__':
         8: get_capture('/mnt/nasbi/no-backups/datasets/object_tracking/DukeMTMC/images_tiny/camera8'),
     }
 
-    mtracker = MCTracker(cfg.tracker, captures)
+    mtracker = MCTracker(cfg.tracker,
+                         captures,
+                         cluster_freq=60,
+                         max_ttl=6000,
+                         max_local_overlap=10,
+                         max_reid_distance=0.25,
+                         n_feature_samples=8)
 
     run_demo(mtracker, args)

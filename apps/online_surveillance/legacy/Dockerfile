@@ -32,8 +32,6 @@ RUN wget https://repos.influxdata.com/influxdb.key && \
         echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list && \
         apt-get update && \
         apt-get install influxdb
-
-
 # Start InfluxDB service
 RUN sudo service influxdb start
 
@@ -56,11 +54,12 @@ RUN git clone https://github.com/cocodataset/cocoapi.git && \
         MPLLOCALFREETYPE=1 python setup.py install && \
         cd ..
 # Install Detectron2
+WORKDIR /app
+ENV FORCE_CUDA="1"
+ENV TORCH_CUDA_ARCH_LIST="Kepler;Kepler+Tesla;Maxwell;Maxwell+Tegra;Pascal;Volta;Turing"
 RUN pip install --user 'git+https://github.com/facebookresearch/fvcore' && \
-        git clone https://github.com/facebookresearch/detectron2 && \
-        cd detectron2 && \
-        FORCE_CUDA="1" pip install --user -e . && \
-        cd ..
+        git clone https://github.com/facebookresearch/detectron2 detectron2_repo && \
+        pip install --user -e detectron2_repo
 
 # Install InfluxDB-Python
 RUN pip install influxdb

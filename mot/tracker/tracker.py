@@ -184,6 +184,7 @@ class Tracker:
         if self.predictor is not None:
             self.predictor(self.tracklets_active, img)
 
+    @Timer.timer('upd')
     def update(self, row_ind: List[int], col_ind: List[int], detections: List[Detection],
                detection_features: List[Dict]) -> None:
         """
@@ -251,6 +252,7 @@ class Tracker:
 
     def kill_tracklet(self, tracklet: Tracklet) -> None:
         self.tracklets_active.remove(tracklet)
+        tracklet.finished = True
         if self.keep_finished_tracks:
             if tracklet.time_lived >= self.min_time_lived:
                 self.tracklets_finished.append(tracklet)
