@@ -92,16 +92,15 @@ def _draw_targets(image: np.ndarray, tracklets: List[Tracklet], confirmed_only: 
         if (tracklet.is_confirmed() or not confirmed_only) and (tracklet.is_detected() or not detected_only):
             if draw_predictions and tracklet.prediction is not None:
                 image = _draw_target_prediction(image, tracklet.prediction.box)
-
-            image = _draw_target_box(image, tracklet.last_detection.box, tracklet.id, globalID=tracklet.globalID,
-                                     draw_center=draw_centers)
-
             if draw_trajectory:
                 image = _draw_target_trajectory(image, tracklet)
             if draw_masks:
                 image = _draw_target_mask(image, tracklet.last_detection.mask, tracklet.id)
             if draw_skeletons and hasattr(tracklet.last_detection, 'keypoints'):
                 image = _draw_target_skeleton(image, tracklet.last_detection.keypoints, tracklet.id)
+            # Box over everything!
+            image = _draw_target_box(image, tracklet.last_detection.box, tracklet.id, globalID=tracklet.globalID,
+                                     draw_center=draw_centers)
     return image
 
 

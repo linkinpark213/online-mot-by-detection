@@ -1,6 +1,3 @@
-[submodule "mot/encode/FastReID"]
-	path = mot/encode/FastReID
-	url = https://github.com/JDAI-CV/fast-reid
 [submodule "mot/encode/DGNet"]
 	path = mot/encode/DGNet
 	url = https://github.com/NVlabs/DG-Net

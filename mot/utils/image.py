@@ -3,7 +3,8 @@ import numpy as np
 from typing import Union, Tuple, List
 
 
-def crop(img: np.ndarray, x_c: float, y_c: float, window_size: Union[int, Tuple, List], resize_to: tuple = None):
+def crop(img: np.ndarray, x_c: float, y_c: float, window_size: Union[int, Tuple, List], resize_to: tuple = None,
+         borderType: int = cv2.BORDER_REPLICATE):
     x_base = 0
     y_base = 0
     padded_img = img
@@ -24,15 +25,15 @@ def crop(img: np.ndarray, x_c: float, y_c: float, window_size: Union[int, Tuple,
         half_width = max(half_height, int(half_width * (resize_to[1] / resize_to[0])))
 
     if x_c < half_width:
-        padded_img = cv2.copyMakeBorder(padded_img, 0, 0, half_width, 0, borderType=cv2.BORDER_REFLECT)
+        padded_img = cv2.copyMakeBorder(padded_img, 0, 0, half_width, 0, borderType=borderType)
         x_base = half_width
     if x_c > img.shape[1] - half_width:
-        padded_img = cv2.copyMakeBorder(padded_img, 0, 0, 0, half_width, borderType=cv2.BORDER_REFLECT)
+        padded_img = cv2.copyMakeBorder(padded_img, 0, 0, 0, half_width, borderType=borderType)
     if y_c < half_height:
-        padded_img = cv2.copyMakeBorder(padded_img, half_height, 0, 0, 0, borderType=cv2.BORDER_REFLECT)
+        padded_img = cv2.copyMakeBorder(padded_img, half_height, 0, 0, 0, borderType=borderType)
         y_base = half_height
     if y_c > img.shape[0] - half_height:
-        padded_img = cv2.copyMakeBorder(padded_img, 0, half_height, 0, 0, borderType=cv2.BORDER_REFLECT)
+        padded_img = cv2.copyMakeBorder(padded_img, 0, half_height, 0, 0, borderType=borderType)
 
     patch = padded_img[int(y_base + y_c - half_height): int(y_base + y_c + half_height),
             int(x_base + x_c - half_width): int(x_base + x_c + half_width), :]

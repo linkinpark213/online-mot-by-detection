@@ -6,6 +6,7 @@ import numpy as np
 import scipy.io as sio
 from typing import List
 import scipy.cluster.hierarchy as sch
+from scipy.spatial.distance import pdist
 
 from mot.utils import cfg_from_file
 from mot.encode import build_encoder
@@ -14,13 +15,6 @@ from mot.structures import Detection
 
 def sample_detections(tracks: np.ndarray, target_id: int, sample_rate: float) -> np.ndarray:
     all_detections = tracks[np.where(tracks[:, 1] == target_id)]
-    # inds = np.where(all_detections[:, 6] >= score_threshold)[0]
-    # if not inds.any():
-    #     print('Target {} has no confident detections. Fetching most confident detection with a score of {}'.format(
-    #         target_id, all_detections[:, 6].max()))
-    #     return [all_detections[np.argmax(all_detections[:, 6])]]
-    #
-    # all_detections = all_detections[inds]
     detections = []
     for detection in all_detections:
         if sample_rate > random.random():
@@ -32,11 +26,7 @@ def sample_detections(tracks: np.ndarray, target_id: int, sample_rate: float) ->
 
 
 def filter_features(features: np.ndarray, max_cluster_distance: float) -> List[int]:
-    M = 1 - (np.matmul(features, features.T) / np.square(np.linalg.norm(features, ord=2, axis=1, keepdims=True)).repeat(
-        len(features), axis=1))
-
-    iu = np.triu_indices(len(features), 1, len(features))
-    M = M[iu]
+    M = pdist(features, metric='cosine')
 
     print('Min distance = ', M.min())
     print('Max distance = ', M.max())

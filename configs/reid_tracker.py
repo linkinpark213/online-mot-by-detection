@@ -39,12 +39,13 @@ tracker = dict(
                 history=60,
                 history_fusing=lambda x: sum(x) / len(x),
             ),
-            threshold=0.75,
+            threshold=0.65,
         ),
-        threshold=0.75,
+        threshold=0.65,
     ),
     predictor=None,
     max_ttl=120,
     min_time_lived=10,
     keep_finished_tracks=True,
+    max_feature_history = 120
 )

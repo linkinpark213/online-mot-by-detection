@@ -1,13 +1,14 @@
 import numpy as np
 from typing import List, Dict, Tuple, Union
 
+from mot.utils.hcc import hierarchical_cluster
 from mot.structures import Detection, Prediction
 
 
 class Tracklet:
     def __init__(self, id: int, frame_id: int, detection: Detection, feature: Dict, max_ttl: int = 30,
                  max_feature_history: int = 30, max_detection_history: int = 3000, min_time_lived: int = 1,
-                 globalID: int = -1) -> None:
+                 globalID: int = -1, cluster_frequency: int = 30, n_feature_samples: int = 8) -> None:
         # Tracklet ID number, usually starts from 1. Shouldn't be modified during online tracking.
         self.id: int = id
         # Tracklet global ID number in multi-camera tracking.
@@ -38,6 +39,16 @@ class Tracklet:
         self.min_time_lived = min_time_lived
         # Whether the tracklet has been killed or not.
         self.finished = False
+        # Starting frame num
+        self.start_frame_num: int = frame_id
+        # Latest active frame num
+        self.last_active_frame_num: int = frame_id
+        # Frequency for feature clustering
+        self.cluster_frequency: int = cluster_frequency
+        # Number of feature samples
+        self.n_feature_samples: int = n_feature_samples
+        # All sample features
+        self.sample_features: Union[np.ndarray, None] = None
 
     def predict(self) -> np.ndarray:
         if self.prediction is not None:
@@ -49,15 +60,33 @@ class Tracklet:
         self.detected = True
         self.last_detection = detection
         self.feature = feature
+        self.last_active_frame_num = frame_id
         if len(self.feature_history) >= self.max_feature_history:
             self.feature_history.pop(0)
         if len(self.detection_history) >= self.max_detection_history:
             self.detection_history.pop(0)
         self.detection_history.append((frame_id, detection))
         self.feature_history.append((frame_id, feature))
+        if frame_id % self.cluster_frequency == 0:
+            self.update_sample_features()
         if self.ttl < self.max_ttl:
             self.ttl += 1
         self.time_lived += 1
+
+    def update_sample_features(self):
+        all_features = np.stack([feature['openreid'] for (i, feature) in self.feature_history], axis=0)
+        all_features = np.vstack(
+            (self.sample_features, all_features)) if self.sample_features is not None else all_features
+        M = 1 - np.matmul(all_features, all_features.T)
+        M = np.clip(M, 0, 1)
+        clusterIDs = hierarchical_cluster(M, t=self.n_feature_samples, linkage_method='average', criterion='maxclust')
+        sample_features = []
+        for clusterID in np.unique(clusterIDs):
+            inds = np.where(clusterIDs == clusterID)[0]
+            rand_ind = int(np.random.choice(inds))
+            sample_features.append(all_features[rand_ind])
+
+        self.sample_features = np.stack(sample_features)
 
     def fade(self):
         self.detected = False
@@ -73,3 +102,7 @@ class Tracklet:
 
     def is_finished(self):
         return self.finished
+
+    def time_overlap(self, other):
+        return max(0, min(self.last_active_frame_num, other.last_active_frame_num) - max(self.start_frame_num,
+                                                                                         other.start_frame_num))

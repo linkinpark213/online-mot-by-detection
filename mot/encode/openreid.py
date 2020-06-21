@@ -20,7 +20,7 @@ __all__ = ['OpenReIDEncoder']
 
 @ENCODER_REGISTRY.register()
 class OpenReIDEncoder(Encoder):
-    def __init__(self, checkpoint_path: str, model_name: str, arch: str = 'resnet50',
+    def __init__(self, model_name: str, checkpoint_path: str, arch: str = 'resnet50',
                  img_size: Tuple[int, int] = (128, 256), norm: bool = False, **kwargs):
         super().__init__(**kwargs)
 
@@ -45,6 +45,7 @@ class OpenReIDEncoder(Encoder):
     def encode(self, detections: List[Detection], full_img: np.ndarray) -> List[object]:
         if len(detections) > 0:
             all_crops = []
+            full_img = cv2.cvtColor(full_img, cv2.COLOR_BGR2RGB)
             for detection in detections:
                 box = detection.box
                 crop = full_img[int(box[1]):int(box[3]), int(box[0]):int(box[2])]
