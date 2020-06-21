@@ -1,4 +1,5 @@
 import cv2
+import datetime
 import numpy as np
 from typing import List, Union
 
@@ -116,6 +117,21 @@ def _draw_frame_num(image: np.ndarray, frame_num: int) -> np.ndarray:
         A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
     """
     cv2.putText(image, '{}'.format(frame_num), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), thickness=2)
+    return image
+
+
+def _draw_current_time(image: np.ndarray) -> np.ndarray:
+    """
+    Draw the local time at the top-left corner of the frame.
+
+    Args:
+        image: A 3D numpy array with shape (h, w, 3). The video frame.
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with the current local time drawn.
+    """
+    current_time = str(datetime.datetime.now())
+    cv2.putText(image, current_time, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), thickness=1)
     return image
 
 
@@ -290,7 +306,8 @@ def _draw_association(image: np.ndarray, tracklets: List[Tracklet]) -> np.ndarra
 
 def snapshot_from_tracker(tracker, confirmed_only: bool = True, detected_only: bool = True, draw_centers: bool = False,
                           draw_predictions: bool = False, draw_masks: bool = False, draw_skeletons: bool = False,
-                          draw_association: bool = False, draw_frame_num: bool = True, **kwargs) -> np.ndarray:
+                          draw_association: bool = False, draw_frame_num: bool = True, draw_current_time: bool = False,
+                          **kwargs) -> np.ndarray:
     """
     Visualize a frame with boxes (and skeletons) of all tracked targets.
 
@@ -304,6 +321,7 @@ def snapshot_from_tracker(tracker, confirmed_only: bool = True, detected_only: b
         draw_skeletons: A boolean value. Set to True to visualize target body keypoints, if it's available.
         draw_association: A boolean value. Set to True to visualize active tracklets and their connections with detections in the frame.
         draw_frame_num: A boolean value. Set to True to visualize current frame number.
+        draw_current_time: A boolean value. Set to True to visualize current time.
 
     Returns:
         A 3D numpy array with shape (h, w, 3). The video frame with all targets and frame number drawn.
@@ -313,6 +331,8 @@ def snapshot_from_tracker(tracker, confirmed_only: bool = True, detected_only: b
                           draw_predictions=draw_predictions, draw_masks=draw_masks, draw_skeletons=draw_skeletons)
     if draw_frame_num:
         image = _draw_frame_num(image, tracker.frame_num)
+    if draw_current_time:
+        image = _draw_current_time(image)
     if draw_association:
         image = _draw_association(image, tracker.tracklets_active)
     return image
