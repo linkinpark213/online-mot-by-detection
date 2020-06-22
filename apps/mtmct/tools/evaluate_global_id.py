@@ -61,7 +61,7 @@ def load_data(args):
         local_2_global[(camID, localID)] = globalID
 
     trainData = sio.loadmat(args.gt_path)['trainData']
-    logging.info('All train data shape: {}'.format(trainData.shape))
+    logging.info('All data shape: {}'.format(trainData.shape))
 
     gts = []
     for cam in args.cams:
@@ -81,7 +81,7 @@ def load_data(args):
     gts[:, 5] = gts[:, 5] + gts[:, 3]
     gts[:, 6] = gts[:, 6] + gts[:, 4]
 
-    logging.info('Valid train data shape: {}'.format(gts.shape))
+    logging.info('Valid data shape: {}'.format(gts.shape))
     logging.info('Number of ground truth IDs: {}'.format(len(np.unique(gts[:, 1]))))
 
     cross_cam_ids = set()
@@ -124,6 +124,7 @@ def evaluate(args, gts: np.ndarray, local_results: Dict[int, np.ndarray], local_
                             association[gt_id][(cam, frame_id)] = local_2_global[(cam, local_pred_id)]
                         else:
                             logging.debug('Local ID #{} in cam #{} not in global results'.format(local_pred_id, cam))
+                            print(len(np.where(local_results[cam][:, 1] == local_pred_id)[0]))
 
                     # FN
                     for ind in (set(range(len(frame_gt))) - set(row_inds)):
@@ -147,24 +148,32 @@ def evaluate(args, gts: np.ndarray, local_results: Dict[int, np.ndarray], local_
 
     TR, FR = 0, 0
     for gt_id in association.keys():
+        associated_items = association[gt_id].items()
+        associated_items = sorted(associated_items, key=lambda x: x[0][1])
+
         related_cams = set()
         all_matched_pred_ids = []
-        for (cam, frame_id), pred_id in association[gt_id].items():
-            related_cams.add(cam)
-            if len(all_matched_pred_ids) > 0 and pred_id not in all_matched_pred_ids:
-                logging.debug('FR: GT #{} ({}) unrecognized at c{}, f{}, but has predicted ID #{}'.format(gt_id,
-                                                                                                          all_matched_pred_ids[
-                                                                                                              0],
-                                                                                                          cam,
-                                                                                                          frame_id,
-                                                                                                          pred_id))
-                all_matched_pred_ids.append(pred_id)
+        for (cam, frame_id), pred_id in associated_items:
+            if cam not in related_cams and len(all_matched_pred_ids) > 0:
+                if pred_id not in all_matched_pred_ids:
+                    logging.debug('FR: GT #{} ({}) unrecognized at c{}, f{}, but has predicted ID #{}'.format(gt_id,
+                                                                                                              all_matched_pred_ids[
+                                                                                                                  0],
+                                                                                                              cam,
+                                                                                                              frame_id,
+                                                                                                              pred_id))
+                    all_matched_pred_ids.append(pred_id)
+                    FR += 1
+                else:
+                    TR += 1
             elif len(all_matched_pred_ids) == 0:
                 all_matched_pred_ids.append(pred_id)
 
-        if len(related_cams) > 1:
-            FR += len(all_matched_pred_ids) - 1
-            TR += len(related_cams) - 1
+            related_cams.add(cam)
+
+        # if len(related_cams) > 1:
+        #     FR += len(all_matched_pred_ids) - 1
+        #     TR += len(related_cams) - 1
 
     logging.info('FN = {}, FP = {}'.format(len(FN), len(FP)))
     logging.info('Failed recognitions = {}'.format(FR))
@@ -172,7 +181,7 @@ def evaluate(args, gts: np.ndarray, local_results: Dict[int, np.ndarray], local_
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
 
     args = parse_args()
 
