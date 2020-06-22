@@ -28,3 +28,5 @@ tracker = dict(
     min_time_lived=10,
     keep_finished_tracks=True,
 )
+draw_frame_num = False
+draw_current_time = True
