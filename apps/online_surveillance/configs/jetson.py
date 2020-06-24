@@ -1,5 +1,5 @@
 tracker = dict(
-    type='TrackingByDetection',
+    type='MultiThreadTracker',
     detector=dict(
         include='../configs/trt_ctdet_coco_dlav0_1x.py',
         conf_threshold=0.9,
@@ -7,7 +7,7 @@ tracker = dict(
     ),
     encoders=[
         dict(
-            include='../configs/trt_dgnet.py'
+            include='./trt_openreid_r50.py'
         ),
     ],
     matcher=dict(
@@ -16,11 +16,11 @@ tracker = dict(
             type='GatedMetric',
             metric=dict(
                 type='CosineMetric',
-                encoding='box',
+                encoding='openreid',
                 history=60,
                 history_fusing=lambda x: sum(x) / len(x),
             ),
-            threshold=0.8,
+            threshold=0.6,
         ),
     ),
     predictor=None,

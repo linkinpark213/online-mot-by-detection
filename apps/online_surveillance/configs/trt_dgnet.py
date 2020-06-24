@@ -1,5 +1,0 @@
-type = 'TRTDGNetEncoder'
-name = 'dgnet'
-prototxt_path = '/home/ubilab/Source/online-mot-by-detection/apps/online_surveillance/models/DGNet_r50/ResNet.prototxt'
-model_path = '/home/ubilab/Source/online-mot-by-detection/apps/online_surveillance/models/DGNet_r50/ResNet.caffemodel'
-engine_path = '/home/ubilab/Source/online-mot-by-detection/apps/online_surveillance/models/DGNet_r50/ResNet.engine'

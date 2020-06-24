@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import tensorrt as trt
 import pycuda.driver as cuda
-from pycuda import autoinit
 from typing import List, Tuple
 from numpy.lib.stride_tricks import as_strided
 
@@ -37,19 +36,19 @@ class _CaffeModel(object):
                 for ind_out in range(len(model_info.output_name)):
                     print(model_info.output_name[ind_out])
                     network.mark_output(model_tensors.find(model_info.output_name[ind_out]))
-                print("Building TensorRT engine. This may take a few minutes.")
+                print("=> Building TensorRT engine. This may take a few minutes.")
                 return builder.build_cuda_engine(network)
 
         try:
             with open(self.model_info.engine_file, "rb") as f, trt.Runtime(TRT_LOGGER) as runtime:
-                print('-------------------load engine-------------------')
+                print('=> Loading CUDA engine for detector')
                 return runtime.deserialize_cuda_engine(f.read())
         except:
             # Fallback to building an engine if the engine cannot be loaded for any reason.
             engine = _build_engine_caffe(self.model_info)
             with open(self.model_info.engine_file, "wb") as f:
                 f.write(engine.serialize())
-                print('-------------------save engine-------------------')
+                print('=> Saved CUDA engine for detector')
             return engine
 
     # allocate buffers
@@ -59,7 +58,7 @@ class _CaffeModel(object):
         d_output = []
         h_input = cuda.pagelocked_empty(trt.volume(engine.get_binding_shape(0)),
                                         dtype=trt.nptype(self.model_info.data_type))
-        # h_input = cuda.pagelocked_empty(trt.volume(engine.get_binding_shape(0)), dtype=trt.nptype(trt.float32))
+
         for ind_out in range(len(self.model_info.output_name)):
             h_output_temp = cuda.pagelocked_empty(trt.volume(engine.get_binding_shape(ind_out + 1)),
                                                   dtype=trt.nptype(self.model_info.data_type))
@@ -70,6 +69,7 @@ class _CaffeModel(object):
         for ind_out in range(len(self.model_info.output_name)):
             d_output_temp = cuda.mem_alloc(h_output[ind_out].nbytes)
             d_output.append(d_output_temp)
+
         # Create a stream in which to copy inputs/outputs and run inference.
         stream = cuda.Stream()
 
@@ -117,22 +117,22 @@ class _DetectionModel(object):
         std = np.array(self.std, dtype=np.float32).reshape(1, 1, 3)
         inp_image = ((frame_resize / 255. - mean) / std)
         frame_nor = inp_image.transpose([2, 0, 1]).astype(trt.nptype(self.data_type)).ravel()
-        # print(frame_nor.shape)
-        # print(type(frame_nor))
         np.copyto(pagelocked_buffer, frame_nor)
 
     def do_inference(self, context, h_input, d_input, h_output, d_output, stream):
         # Transfer input data to the GPU.
         cuda.memcpy_htod_async(d_input, h_input, stream)
+
         # Run inference.
         bindings = [int(d_input)]
         for ind_out in range(len(d_output)):
             bindings.append(int(d_output[ind_out]))
         context.execute_async(bindings=bindings, stream_handle=stream.handle)
-        # Transfer predictions back from the GPU.
 
+        # Transfer predictions back from the GPU.
         for ind_out in range(len(d_output)):
             cuda.memcpy_dtoh_async(h_output[ind_out], d_output[ind_out], stream)
+
         # Synchronize the stream
         stream.synchronize()
 
@@ -305,7 +305,6 @@ class TRTCenterNetDetector(Detector):
 
     def detect(self, img: np.ndarray) -> List[Detection]:
         h, w, _ = img.shape
-        # img = self.pad_and_resize(img)
 
         self.model.process_det_frame(frame=img, pagelocked_buffer=self.h_input)
 
@@ -313,6 +312,5 @@ class TRTCenterNetDetector(Detector):
 
         raw_output = self.model.postprocess_detection(self.h_output, img)
         boxes = raw_output[1][np.where(raw_output[1][:, 4] > self.conf_threshold)]
-        # boxes[:, :4] = boxes[:, :4] * (max(h, w) / 512)
 
         return [Detection(box[:4], box[4]) for box in boxes]

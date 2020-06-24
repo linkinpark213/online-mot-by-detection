@@ -3,8 +3,6 @@ import datetime
 import numpy as np
 from typing import List, Union
 
-from mot.structures import Tracklet
-
 _colors = [(47, 47, 211),
            (74, 195, 139),
            (34, 87, 255),
@@ -69,7 +67,7 @@ _keypoint_connections = [
 __all__ = ['snapshot_from_tracker', 'snapshot_from_results', 'snapshot_from_detection']
 
 
-def _draw_targets(image: np.ndarray, tracklets: List[Tracklet], confirmed_only: bool = True, detected_only: bool = True,
+def _draw_targets(image: np.ndarray, tracklets: List, confirmed_only: bool = True, detected_only: bool = True,
                   draw_centers: bool = False, draw_predictions: bool = False, draw_trajectory: bool = True,
                   draw_masks: bool = True, draw_skeletons: bool = True) -> np.ndarray:
     """
@@ -190,7 +188,7 @@ def _draw_target_prediction(image: np.ndarray, box: Union[List[float], np.ndarra
     return image
 
 
-def _draw_target_trajectory(image: np.ndarray, tracklet: Tracklet, mix_exponential: float = 0.95,
+def _draw_target_trajectory(image: np.ndarray, tracklet, mix_exponential: float = 0.95,
                             block_radius: int = 4, max_steps: int = 300) -> np.ndarray:
     """
     Draw the trajectory of a tracked target according to its old detections.
@@ -262,7 +260,7 @@ def _draw_target_skeleton(image: np.ndarray, keypoints: Union[List[List[float]],
     return image
 
 
-def _draw_association(image: np.ndarray, tracklets: List[Tracklet]) -> np.ndarray:
+def _draw_association(image: np.ndarray, tracklets: List) -> np.ndarray:
     """
     Draw tracklets at the bottom and link them to their current bounding boxes.
     Args:

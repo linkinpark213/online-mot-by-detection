@@ -9,11 +9,12 @@ class Config:
     keywords = ['tracker', 'detector', 'encoders', 'metric', 'matcher', 'predictor', 'detection_filters',
                 'secondary_matcher']
 
-    def __init__(self, d: Dict, filepath: str):
+    def __init__(self, d: Dict, filepath: str = ''):
+        dirpath = os.getcwd() if filepath == '' else os.path.dirname(os.path.abspath(filepath))
         if d is not None:
             for k, v in d.items():
                 if k == 'include':
-                    d_ = cfg_from_file(os.path.join(os.path.dirname(os.path.abspath(filepath)), v))
+                    d_ = cfg_from_file(os.path.join(dirpath, v))
                     for k_, v_ in d_.__dict__.items():
                         setattr(self, k_, v_)
                 else:
@@ -21,7 +22,7 @@ class Config:
                         if 'type' in v:
                             v = Config(v, filepath)
                         elif 'include' in v:
-                            v = cfg_from_file(os.path.join(os.path.dirname(os.path.abspath(filepath)), v['include']))
+                            v = cfg_from_file(os.path.join(dirpath, v['include']))
                         else:
                             raise ValueError('Expected \'type\' or \'include\' in a config dict')
                     if type(v) is list:
@@ -34,10 +35,11 @@ class Config:
 
 
 def cfg_from_file(f: str) -> Config:
-    shutil.copy(os.path.abspath(os.path.expanduser(f)), '_temp_config.py')
+    shutil.copy(os.path.abspath(os.path.expanduser(f)), os.path.join(os.getcwd(), '_temp_config.py'))
     module = import_module('_temp_config')
     cfg_dict = {
         k: v for k, v in module.__dict__.items()
     }
     del sys.modules['_temp_config']
+    os.remove(os.path.join(os.getcwd(), '_temp_config.py'))
     return Config(cfg_dict, f)

@@ -3,16 +3,15 @@ import cv2
 import logging
 import argparse
 
-from mot.detect import MOTPublicDetector
-from mot.tracker import build_tracker, Tracker
+from mot.tracker import build_tracker
 from mot.utils import get_capture, get_video_writer, get_result_writer, snapshot_from_tracker, cfg_from_file, Config
 
 
-def evaluate_mot_online(tracker: Tracker, mot_subset_path: str, output_path: str = 'results',
+def evaluate_mot_online(tracker_config: Config, mot_subset_path: str, output_path: str = 'results',
                         output_video_path: str = 'videos', **kwargs):
     if not os.path.isdir(output_path):
         os.mkdir(output_path)
-    if not os.path.isdir(output_video_path):
+    if output_video_path != '' and not os.path.isdir(output_video_path):
         os.mkdir(output_video_path)
 
     for sequence in sorted(os.listdir(mot_subset_path)):
@@ -24,11 +23,11 @@ def evaluate_mot_online(tracker: Tracker, mot_subset_path: str, output_path: str
         result_writer = get_result_writer(os.path.join(output_path, sequence + '.txt'))
 
         # Replace detector with MOT public detection
-        del tracker.detector
-        tracker.detector = MOTPublicDetector(
-            det_file_path=os.path.join(mot_subset_path, sequence, 'det', 'det.txt'),
-            conf_threshold=args.det_conf_thresh,
-        )
+        tracker_config.detector = Config(dict(type='MOTPublicDetector',
+                                              det_file_path=os.path.join(mot_subset_path, sequence, 'det', 'det.txt'),
+                                              conf_threshold=args.det_conf_thresh), '')
+        print('Initializing detector-less tracker')
+        tracker = build_tracker(tracker_config)
 
         while True:
             ret, frame = capture.read()
@@ -88,7 +87,5 @@ if __name__ == '__main__':
     cfg = cfg_from_file(args.tracker_config)
     kwargs = cfg.to_dict(ignore_keywords=True)
 
-    tracker = build_tracker(cfg.tracker)
-
-    evaluate_mot_online(tracker, args.mot_subset_path, output_path=args.output_path, output_video_path=args.save_video,
-                        **kwargs)
+    evaluate_mot_online(cfg.tracker, args.mot_subset_path, output_path=args.output_path,
+                        output_video_path=args.save_video, **kwargs)

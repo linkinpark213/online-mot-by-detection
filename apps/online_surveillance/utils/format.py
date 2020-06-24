@@ -22,6 +22,6 @@ def snapshot_to_dicts(tracker: Tracker, timestamp: float) -> Tuple[List[Dict], L
             'time': timestamp,
             'tracklet_id': tracklet.id,
             'image': str(base64.b64encode(tracklet.feature['patch']))[2:-1],
-            'feature': tracklet.feature['dgnet'].tolist(),
+            'feature': tracklet.feature['openreid'].tolist(),
         })
     return detections, features
