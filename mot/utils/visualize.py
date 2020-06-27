@@ -103,33 +103,51 @@ def _draw_targets(image: np.ndarray, tracklets: List, confirmed_only: bool = Tru
     return image
 
 
-def _draw_frame_num(image: np.ndarray, frame_num: int) -> np.ndarray:
+def _draw_frame_num(image: np.ndarray, frame_num: int, inverse_color: bool = True) -> np.ndarray:
     """
     Draw the frame number at the top-left corner of the frame.
 
     Args:
         image: A 3D numpy array with shape (h, w, 3). The video frame.
         frame_num: Frame number.
+        inverse_color: A boolean value. If True, use black/white colors for better visibility; else use yellow color.
 
     Returns:
         A 3D numpy array with shape (h, w, 3). The video frame with its frame number drawn.
     """
-    cv2.putText(image, '{}'.format(frame_num), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), thickness=2)
+    if inverse_color:
+        blank = np.zeros(image.shape[:2], dtype=np.uint8)
+        blank = cv2.putText(blank, '{}'.format(frame_num), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, 255, thickness=2)
+        inds = np.where(blank != 0)
+        colors = np.sum(image[inds], axis=1)
+        colors = (0.5 + (255 - colors) / 255.).astype(np.int) * 255
+        image[inds] = np.stack([colors, colors, colors], axis=1)
+    else:
+        cv2.putText(image, '{}'.format(frame_num), (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), thickness=2)
     return image
 
 
-def _draw_current_time(image: np.ndarray) -> np.ndarray:
+def _draw_current_time(image: np.ndarray, inverse_color: bool = True) -> np.ndarray:
     """
     Draw the local time at the top-left corner of the frame.
 
     Args:
         image: A 3D numpy array with shape (h, w, 3). The video frame.
+        inverse_color: A boolean value. If True, use black/white colors for better visibility; else use yellow color.
 
     Returns:
         A 3D numpy array with shape (h, w, 3). The video frame with the current local time drawn.
     """
     current_time = str(datetime.datetime.now())
-    cv2.putText(image, current_time, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), thickness=1)
+    if inverse_color:
+        blank = np.zeros(image.shape[:2], dtype=np.uint8)
+        blank = cv2.putText(blank, current_time, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, 255, thickness=2)
+        inds = np.where(blank != 0)
+        colors = np.sum(image[inds], axis=1)
+        colors = (0.5 + (255 - colors) / 255.).astype(np.int) * 255
+        image[inds] = np.stack([colors, colors, colors], axis=1)
+    else:
+        cv2.putText(image, current_time, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), thickness=1)
     return image
 
 

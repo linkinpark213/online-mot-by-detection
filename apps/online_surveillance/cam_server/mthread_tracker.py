@@ -5,7 +5,7 @@ from typing import List
 import pycuda.driver as cuda
 from threading import Thread, Lock
 
-from mot.utils.config import Config
+from mot.utils import Timer, Config
 from mot.encode import build_encoder
 from mot.detect import build_detector
 from mot.associate import build_matcher
@@ -32,11 +32,8 @@ class DetectorThread(Thread):
             if self.config is not None:
                 detector = build_detector(self.config)
                 while self.running:
-                    print('Detector waiting for lock')
                     if self.lock.acquire(timeout=500):
-                        print('Detector working')
                         self.tracker.latest_detections = detector.detect(self.tracker.frame)
-                        self.tracker.latest_features = [{} for i in range(len(self.tracker.latest_detections))]
                         self.next_lock.release()
         except Exception as e:
             traceback.print_exc()
@@ -56,9 +53,7 @@ class EncoderThread(Thread):
     def run(self) -> None:
         encoder = build_encoder(self.config)
         while self.running:
-            print('Encoder {} waiting for lock'.format(encoder.name))
             if self.lock.acquire(timeout=500):
-                print('Encoder {} working'.format(encoder.name))
                 features = encoder(self.tracker.latest_detections, self.tracker.frame)
                 for i, feature in enumerate(features):
                     self.tracker.latest_features[i][encoder.name] = feature
@@ -69,14 +64,16 @@ class EncoderThread(Thread):
 class MultiThreadTracker(Tracker):
     def __init__(self, detector: Config, matcher: Config, encoders: List[Config], predictor: Config, **kwargs):
         self.detect_lock = Lock()
+        self.filter_lock = Lock()
         self.encode_lock = Lock()
         self.after_locks = [Lock() for _ in encoders]
         self.detect_lock.acquire()
+        self.filter_lock.acquire()
         self.encode_lock.acquire()
         for lock in self.after_locks:
             lock.acquire()
 
-        self.detector_thread = DetectorThread(detector, self, self.detect_lock, self.encode_lock)
+        self.detector_thread = DetectorThread(detector, self, self.detect_lock, self.filter_lock)
 
         self.encoder_threads = [EncoderThread(encoders[i], self, self.encode_lock, self.after_locks[i]) for i in
                                 range(len(encoders))]
@@ -95,6 +92,7 @@ class MultiThreadTracker(Tracker):
         for thread in self.encoder_threads:
             thread.start()
 
+    @Timer.timer('all')
     def tick(self, img: np.ndarray):
         """
         Detect, encode and match, following the tracking-by-detection paradigm.
@@ -110,11 +108,16 @@ class MultiThreadTracker(Tracker):
         # Prediction
         self.predict(img)
 
-        print('Released detect lock')
         # Detection and encoding
         self.detect_lock.release()
 
-        print('Waiting for after locks')
+        # Filtering
+        self.filter_lock.acquire(timeout=1000)
+        for filter in self.detection_filters:
+            self.latest_detections = filter(self.latest_detections)
+        self.latest_features = [{} for i in range(len(self.latest_detections))]
+        self.encode_lock.release()
+
         # Wait for detection and encoding to finish
         for lock in self.after_locks:
             lock.acquire()

@@ -1,13 +1,19 @@
 tracker = dict(
     type='MultiThreadTracker',
     detector=dict(
-        include='../configs/trt_ctdet_coco_dlav0_1x.py',
+        include='./detect/trt_ctdet_coco_dlav0_1x.py',
         conf_threshold=0.9,
         hw_ratio_threshold=2,
     ),
+    detection_filters=[
+        dict(
+            type='WHRatioFilter',
+            filtering=lambda x: x < 0.5,
+        )
+    ],
     encoders=[
         dict(
-            include='./trt_openreid_r50.py'
+            include='./encode/trt_openreid_r50.py'
         ),
     ],
     matcher=dict(
@@ -17,7 +23,7 @@ tracker = dict(
             metric=dict(
                 type='CosineMetric',
                 encoding='openreid',
-                history=60,
+                history=10,
                 history_fusing=lambda x: sum(x) / len(x),
             ),
             threshold=0.6,
@@ -28,5 +34,5 @@ tracker = dict(
     min_time_lived=10,
     keep_finished_tracks=True,
 )
-draw_frame_num = False
+draw_frame_num = True
 draw_current_time = True
