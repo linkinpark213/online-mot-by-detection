@@ -26,7 +26,7 @@ class CenterNetDetector(Detector):
         self.detector = detector_factory[self.opt.task](self.opt)
 
     def detect(self, img: np.ndarray) -> List[Detection]:
-        box_result = self.detector.run(img)['results']
+        box_result = self.detector.simulate(img)['results']
         detections = []
         for class_id in box_result.keys():
             class_result = box_result[class_id]

@@ -15,10 +15,9 @@ def _sample_tracklet_features(tracklet: Tracklet, n_feature_samples: int):
     p = np.array([detection.score for _, detection in recent_detections])
 
     all_recent_features = np.stack([feature[1]['openreid'] for feature in tracklet.feature_history])
-    M = 1 - np.matmul(all_recent_features, all_recent_features.T)
-    M = np.clip(M, 0, 1)
 
-    clusterIDs = hierarchical_cluster(M, n_feature_samples, linkage_method='average', criterion='maxclust')
+    clusterIDs = hierarchical_cluster(all_recent_features, n_feature_samples, linkage_method='average',
+                                      criterion='maxclust')
     tracklet_features = []
     for clusterID in np.unique(clusterIDs):
         inds = np.where(clusterIDs == clusterID)[0]
@@ -53,7 +52,7 @@ class Identity:
 
     def merge(self, others: List):
         for other in others:
-            for k, v in other.tracklets.items():
+            for k, v in other.tracklet_dict.items():
                 self.tracklets[k] = v
                 self.end_time = max(self.end_time, v.detection_history[-1][0])
         return self
@@ -223,7 +222,7 @@ class MCTracker:
                     dists = []
                     for j, (globalID, identity) in enumerate(self.identity_pool.items()):
                         dists.append(np.average(1 - np.matmul(tracklet_features, identity.features.T).reshape(-1)))
-                        for key, other in identity.tracklets.items():
+                        for key, other in identity.tracklet_dict.items():
                             # No long overlap allowed
                             if tracklet.time_overlap(other) > self.max_local_overlap:
                                 dists[-1] = 1

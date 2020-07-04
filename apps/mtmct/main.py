@@ -43,7 +43,7 @@ def run_demo(mtracker, args, **kwargs):
         # Save results for each frame, both single-camera and multi-camera.
         cleared_identities = mtracker.clear_inactive_identities()
         for globalID, identity in cleared_identities:
-            for (camID, localID), tracklet in identity.tracklets.items():
+            for (camID, localID), tracklet in identity.tracklet_dict.items():
                 mc_result_writer.write('{} {} {}\n'.format(globalID, camID, localID))
 
         views = []
@@ -62,7 +62,7 @@ def run_demo(mtracker, args, **kwargs):
     # Save results when terminating.
     mtracker.terminate()
     for globalID, identity in mtracker.identity_pool.items():
-        for (camID, localID), tracklet in identity.tracklets.items():
+        for (camID, localID), tracklet in identity.tracklet_dict.items():
             mc_result_writer.write('{} {} {}\n'.format(globalID, camID, localID))
 
     for camID, _ in result_writers.items():

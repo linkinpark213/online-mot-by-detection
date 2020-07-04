@@ -2,13 +2,12 @@ tracker = dict(
     type='MultiThreadTracker',
     detector=dict(
         include='./detect/trt_ctdet_coco_dlav0_1x.py',
-        conf_threshold=0.9,
-        hw_ratio_threshold=2,
+        conf_threshold=0.8,
     ),
     detection_filters=[
         dict(
             type='WHRatioFilter',
-            filtering=lambda x: x < 0.5,
+            filtering=lambda x: x < 1,
         )
     ],
     encoders=[
@@ -33,6 +32,7 @@ tracker = dict(
     max_ttl=120,
     min_time_lived=10,
     keep_finished_tracks=True,
+    central_address='163.221.68.100:5558',
 )
 draw_frame_num = True
 draw_current_time = True

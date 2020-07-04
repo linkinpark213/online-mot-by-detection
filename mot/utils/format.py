@@ -2,10 +2,10 @@ import numpy as np
 from pycocotools import mask as cocomask
 
 
-def snapshot_to_mot(tracker, time_lived_threshold=1, ttl_threshold=3, detected_only=True, mots=False):
+def snapshot_to_mot(tracker, min_time_lived=1, min_ttl=3, detected_only=True, mots=False):
     data = ''
     for tracklet in tracker.tracklets_active:
-        if tracklet.time_lived >= time_lived_threshold and tracklet.ttl >= ttl_threshold and (
+        if tracklet.time_lived >= min_time_lived and tracklet.ttl >= min_ttl and (
                 tracklet.is_detected() or not detected_only):
             if not mots:
                 box = tracklet.last_detection.box

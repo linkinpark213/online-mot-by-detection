@@ -115,7 +115,7 @@ class Tracker:
             img: A 3D numpy array with shape (H, W, 3). The new frame in the sequence.
         """
         self.frame_num += 1
-        self.frame = img
+        self.frame = img.copy()
         self.timestamp = time.time()
 
         # Prediction

@@ -77,9 +77,7 @@ class Tracklet:
         all_features = np.stack([feature['openreid'] for (i, feature) in self.feature_history], axis=0)
         all_features = np.vstack(
             (self.sample_features, all_features)) if self.sample_features is not None else all_features
-        M = 1 - np.matmul(all_features, all_features.T)
-        M = np.clip(M, 0, 1)
-        clusterIDs = hierarchical_cluster(M, t=self.n_feature_samples, linkage_method='average', criterion='maxclust')
+        clusterIDs = hierarchical_cluster(all_features, t=self.n_feature_samples, linkage_method='average', criterion='maxclust')
         sample_features = []
         for clusterID in np.unique(clusterIDs):
             inds = np.where(clusterIDs == clusterID)[0]
