@@ -1,3 +1,4 @@
+import os
 import cv2
 import logging
 import argparse
@@ -76,7 +77,12 @@ if __name__ == '__main__':
         logger.setLevel(logging.INFO)
 
     if args.save_log != '':
+        save_log_dir = os.path.dirname(args.save_log)
+        if not os.path.isdir(save_log_dir):
+            logging.warning('Result saving path {} doens\'t exist. Creating...')
+            os.makedirs(save_log_dir)
         handler = logging.FileHandler(args.save_log, mode='w+')
+        handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
 
     cfg = mot.utils.cfg_from_file(args.tracker_config)

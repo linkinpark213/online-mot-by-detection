@@ -38,9 +38,10 @@ export PYTHONPATH=/path/to/online-mot-by-detection:$PYTHONPATH
 #### (Optional) If you use CenterNet detector
 You'll need to replace the DCNv2 in `third_party/CenterNet/src/lib/models/networks` with the new version with support for PyTorch 1.0+:
 ```
-rm third_party/CenterNet/src/lib/models/networks/DCNv2
+rm -rf third_party/CenterNet/src/lib/models/networks/DCNv2
 mv third_party/DCNv2 third_party/CenterNet/src/lib/models/networks/DCNv2
-sh third_party/CenterNet/src/lib/models/networks/make.sh
+cd third_party/CenterNet/src/lib/models/networks/DCNv2
+./make.sh
 ```
 
 ### Download weights for components
@@ -56,3 +57,4 @@ MMDetection will automatically download the weight files needed but you'll have 
 ```
 python tools/demo.py configs/deepsort.py --demo_path /path/to/any/video
 ```
+ 

@@ -7,8 +7,14 @@ import argparse
 import mot.utils
 from mot.tracker import build_tracker
 
-from encode import TRTOpenReIDEncoder
-from detect import TRTCenterNetDetector
+from importlib import util as imputil
+
+if imputil.find_spec('tensorrt') and imputil.find_spec('torch2trt'):
+    from encode import TRTOpenReIDEncoder
+    from detect import TRTCenterNetDetector
+else:
+    logging.warning('TensorRT and torch2trt not found. TensorRT models unavailable.')
+
 from tracker import MultiThreadTracker
 from apps.online_surveillance.utils.io import SCTOutputWriter
 

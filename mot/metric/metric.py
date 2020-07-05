@@ -65,7 +65,7 @@ class Metric(metaclass=ABCMeta):
         for index, line in enumerate(matrix):
             text = '| {} \t| '.format(tracklets[index].id)
             for i in line:
-                text += '{:.3f}\t| '.format(i)
+                text += '{:.3f}\t| '.format(i) if i != 0 else '  -  \t| '
             logger.debug(text)
         logger.debug('==============================')
 
