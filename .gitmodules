@@ -1,6 +1,0 @@
-[submodule "mot/encode/DGNet"]
-	path = mot/encode/DGNet
-	url = https://github.com/NVlabs/DG-Net
-[submodule "mot/encode/OpenReID"]
-	path = mot/encode/OpenReID
-	url = https://github.com/hou-yz/open-reid-tracking
