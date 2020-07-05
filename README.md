@@ -23,14 +23,32 @@ Note: This project is developed on Ubuntu 18.04 with Python 3.7 and NVIDIA GTX 1
 However, a Linux environment or GPU support is not indispensable.
 
 ## Get Started
+### Clone the repo
+```
+git clone git@github.com:linkinpark213/online-mot-by-detection.git --recurse-submodules
+```
+
 ### Installation
 With all requirements installed, you only need to add the code directory to your PYTHONPATH. 
 Edit the line below and run in your terminal:
 ```
 export PYTHONPATH=/path/to/online-mot-by-detection:$PYTHONPATH
 ```
+
+#### (Optional) If you use CenterNet detector
+You'll need to replace the DCNv2 in `third_party/CenterNet/src/lib/models/networks` with the new version with support for PyTorch 1.0+:
+```
+rm third_party/CenterNet/src/lib/models/networks/DCNv2
+mv third_party/DCNv2 third_party/CenterNet/src/lib/models/networks/DCNv2
+sh third_party/CenterNet/src/lib/models/networks/make.sh
+```
+
+### Download weights for components
+The weights of CenterNet/DGNet/OpenReID that we used are uploaded [here](https://drive.google.com/drive/folders/1Awi_V6gSF6RSGuesMdzr0gSIcn7lR8-E?usp=sharing).
+For pre-trained weights of MMDetection or Detectron2, please refer to their model zoos.
+
 ### Run the demo
-A few examples for building up online multi-object trackers are in the `examples` directory.
+A few example configs for building up online multi-object trackers are in the `configs` directory.
 
 Here is a demo that runs a customized DeepSORT tracker with a MMDetection Faster R-CNN detector, a DG-Net re-ID encoder, a Kalman filter for target motion prediction and a cascaded bipartite matcher based on Hungarian algorithm.
 
@@ -38,7 +56,3 @@ MMDetection will automatically download the weight files needed but you'll have 
 ```
 python tools/demo.py configs/deepsort.py --demo_path /path/to/any/video
 ```
-
-## TODO List
-* Add affinity metric and motion predictor using siamese network.
-* Add offline post-tracking features.

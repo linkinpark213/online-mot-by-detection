@@ -5,3 +5,5 @@ terminaltables
 mmcv
 pycocotools
 scikit-learn
+h5py
+progress

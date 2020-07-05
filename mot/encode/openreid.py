@@ -10,7 +10,7 @@ from torch.autograd import Variable
 from .encode import ENCODER_REGISTRY, Encoder
 from mot.structures import Detection
 
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'OpenReID'))
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../../third_party', 'OpenReID'))
 import reid.models
 from reid.utils.get_loaders import checkpoint_loader
 from reid.feature_extraction.cnn import extract_cnn_feature
