@@ -1,8 +1,8 @@
 tracker = dict(
-    type='SingleThreadTracker',
+    type='MultiThreadTracker',
     detector=dict(
-        include='../../../configs/detect/centernet/ctdet_coco_dlav0_1x.py',
-        conf_threshold=0.9,
+        include='./detect/trt_ctdet_coco_dlav0_1x.py',
+        conf_threshold=0.8,
     ),
     detection_filters=[
         dict(
@@ -11,7 +11,7 @@ tracker = dict(
         ),
         dict(
             type='SizeFilter',
-            filtering=lambda w, h: w > 64 and h > 128
+            filtering=lambda w, h: w > 48 and h > 96
         ),
         dict(
             type='WHRatioFilter',
@@ -20,7 +20,7 @@ tracker = dict(
     ],
     encoders=[
         dict(
-            include='../../../configs/encode/openreid_r50.py'
+            include='./encode/trt_openreid_r50.py'
         ),
     ],
     matcher=dict(
@@ -30,19 +30,18 @@ tracker = dict(
             metric=dict(
                 type='CosineMetric',
                 encoding='openreid',
-                history=60,
+                history=30,
                 history_fusing=lambda x: sum(x) / len(x),
             ),
             threshold=0.65,
         ),
-        threshold=0.65
+        threshold=0.65,
     ),
     predictor=None,
     max_ttl=120,
     min_time_lived=5,
-    keep_finished_tracks=True,
+    keep_finished_tracks=False,
     central_address='163.221.68.100:5558',
-    max_feature_history = 120
 )
 draw_frame_num = True
 draw_current_time = True

@@ -106,6 +106,7 @@ class Tracker:
     def timestamp(self, value):
         self.state.timestamp = value
 
+    @Timer.timer('all')
     def tick(self, img: np.ndarray):
         """
         Detect, encode and match, following the tracking-by-detection paradigm.
@@ -260,16 +261,8 @@ class Tracker:
             del tracklet
 
     def log(self, frame_num: int, dets: int, matches: int, targets: int):
-        logstr = 'Frame #{}: {} dets, {} matches, {} targets left. '.format(frame_num,
-                                                                            dets,
-                                                                            matches,
-                                                                            targets)
-        if len(Timer.times.keys()) > 0:
-            total_time = sum(Timer.times.values())
-            logstr += 'Time spent: {:.2f}ms ({:.2f} fps) | '.format(total_time, 1000 / total_time)
-            for k in Timer.times.keys():
-                logstr += '{}: {:.2f}ms | '.format(k, Timer.times[k])
-            logstr += ')'
+        logstr = 'Frame #{}: {} dets, {} matches, {} targets left. '.format(frame_num, dets, matches, targets)
+        logstr += Timer.logstr()
         self.logger.info(logstr)
 
 

@@ -14,7 +14,6 @@ class LocalTracker(Tracker):
         matcher = build_matcher(matcher)
         predictor = build_predictor(predictor)
         if 'detection_filters' in kwargs.keys():
-            print('Building detection filters')
             kwargs['detection_filters'] = [build_detection_filter(filter_cfg) for filter_cfg in
                                            kwargs['detection_filters']]
         super().__init__(detector, encoders, matcher, predictor, **kwargs)

@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     cfg_dict = load_config(args.config)
 
-    logging.basicConfig(level=logging.INFO,
+    logging.basicConfig(level=logging.DEBUG,
                         format='%(levelname)s:%(name)s: %(asctime)s %(message)s')
 
     mtracker = NetworkMCTracker(**cfg_dict)

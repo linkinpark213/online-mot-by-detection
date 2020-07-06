@@ -16,7 +16,7 @@ if imputil.find_spec('tensorrt') and imputil.find_spec('torch2trt'):
 else:
     logging.warning('TensorRT and torch2trt not found. TensorRT models unavailable.')
 
-from tracker import MultiThreadTracker
+from tracker import MultiThreadTracker, SingleThreadTracker
 from apps.online_surveillance.utils.io import SCTOutputWriter
 
 

@@ -1,7 +1,7 @@
 tracker = dict(
-    type='MultiThreadTracker',
+    type='SingleThreadTracker',
     detector=dict(
-        include='./detect/trt_ctdet_coco_dlav0_1x.py',
+        include='../../../../configs/detect/centernet/ctdet_coco_dlav0_1x.py',
         conf_threshold=0.9,
     ),
     detection_filters=[
@@ -20,7 +20,7 @@ tracker = dict(
     ],
     encoders=[
         dict(
-            include='./encode/trt_openreid_r50.py'
+            include='../../../../configs/encode/openreid_r50.py'
         ),
     ],
     matcher=dict(
@@ -35,13 +35,14 @@ tracker = dict(
             ),
             threshold=0.65,
         ),
-        threshold=0.65,
+        threshold=0.65
     ),
     predictor=None,
     max_ttl=120,
     min_time_lived=5,
-    keep_finished_tracks=True,
+    keep_finished_tracks=False,
     central_address='163.221.68.100:5558',
+    max_feature_history = 120
 )
 draw_frame_num = True
 draw_current_time = True

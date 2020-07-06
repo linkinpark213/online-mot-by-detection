@@ -7,6 +7,8 @@ import numpy as np
 from threading import Thread, Lock
 from typing import List, Tuple, Dict
 
+from mot.utils import Timer
+
 from . import Tracklet, Identity
 
 
@@ -50,8 +52,8 @@ class ListenerThread(Thread):
                                 'Identifier of cam server {} is set to {}'.format(self.tracker_address, identifier))
 
                     data = data[:, 1:]
-                    logging.getLogger('MTMCT').debug(
-                        'Received data shape: {} from cam server {}'.format(data.shape, self.tracker_address))
+                    logging.getLogger('MTMCT').debug('Received data shape: {} from cam server {}'.format(data.shape,
+                                                                                                         self.tracker_address))
                     if self.data_lock.acquire(timeout=500):
                         for line in data:
                             tracklet_id = int(line[1])
@@ -84,7 +86,8 @@ class NetworkMCTracker:
                  max_local_overlap: int = 10,
                  max_reid_distance: float = 0.25,
                  max_cluster_distance: float = 0.1,
-                 n_feature_samples: int = 8):
+                 n_feature_samples: int = 8,
+                 min_query: int = 8):
         # Running state
         self.running: bool = True
         # Port for sending global IDs
@@ -111,6 +114,8 @@ class NetworkMCTracker:
         self.max_cluster_distance = max_cluster_distance
         # Number of feature samples for each tracklet.
         self.n_feature_samples = n_feature_samples
+        # Minimum size of multi-query.
+        self.min_query = min_query
         # Gallery features.
         self.gallery_features = np.zeros((0, 256), dtype=np.float)
         # Corresponding IDs for each line of feature gallery
@@ -119,11 +124,13 @@ class NetworkMCTracker:
         self.logger: logging.Logger = logging.getLogger('MTMCT')
         # Single-camera tracker states
         self.tracklet_dicts: List[Dict[int, Tracklet]] = [dict() for _ in self.single_cam_trackers]
+        # Locks for tracklet dicts
+        self.data_locks: List[Lock] = [Lock() for _ in self.single_cam_trackers]
         # Listener threads
         self.listener_threads = []
 
         for i, stracker in enumerate(self.single_cam_trackers):
-            listener_thread = ListenerThread(i, stracker, Lock(), self.tracklet_dicts[i])
+            listener_thread = ListenerThread(i, stracker, self.data_locks[i], self.tracklet_dicts[i])
             self.listener_threads.append(listener_thread)
             listener_thread.start()
 
@@ -136,32 +143,43 @@ class NetworkMCTracker:
             try:
                 # Update identity pool and gallery with a frequency.
                 if time.time() - self.last_update_time > self.gallery_update_freq:
-                    matches = []
-                    unmatched = []
-                    for camID, tracker_data in enumerate(self.tracklet_dicts):
-                        for localID, tracklet in tracker_data.items():
-                            if tracklet.globalID == -1:
-                                globalID = self.query(tracklet)
-                                if globalID > 0:
-                                    matches.append((camID, localID, globalID))
-                                else:
-                                    unmatched.append((camID, localID))
-
-                    self.update_identity_pool(matches, unmatched)
-                    self.update_gallery()
+                    self.tick()
                     self.last_update_time = time.time()
+                    self.log()
             except:
                 traceback.print_exc()
                 self.terminate()
 
+    @Timer.timer('all')
+    def tick(self):
+        matches = []
+        unmatched = []
+
+        Timer.clear_avg('query')
+        for camID, cam_tracklets in enumerate(self.tracklet_dicts):
+            self.data_locks[camID].acquire()
+            for localID, tracklet in cam_tracklets.items():
+                if tracklet.globalID == -1:
+                    globalID = self.query(tracklet)
+                    if globalID > 0:
+                        matches.append((camID, localID, globalID))
+                    elif len(tracklet.sample_features()) >= self.min_query:
+                        # A tracklet too short is not "unmatched" but "not matched"
+                        unmatched.append((camID, localID))
+            self.data_locks[camID].release()
+
+        self.update_identity_pool(matches, unmatched)
+        self.update_gallery()
+
+    @Timer.timer('idpool_upd')
     def update_identity_pool(self, matches: List[Tuple[int, int, int]], unmatched: List[Tuple[int, int]]):
         for camID, localID, globalID in matches:
             self._update_identity(self.identity_pool[globalID], self.tracklet_dicts[camID][localID])
         for camID, localID in unmatched:
             self._initiate_identity(self.tracklet_dicts[camID][localID])
         self._clear_inactive_identities()
-        self.logger.info('Identity pool updated. Current size = {}'.format(len(self.identity_pool)))
 
+    @Timer.timer('gfpool_upd')
     def update_gallery(self):
         """
         Update identities with new tracklets added, or initiate new identities with single-cam tracklets.
@@ -177,8 +195,6 @@ class NetworkMCTracker:
         if len(gallery_features) > 0:
             self.gallery_features = np.vstack(gallery_features)
             self.gallery_ids = np.array(gallery_ids)
-
-        self.logger.info('Gallery updated. Current size = {}'.format(len(self.gallery_ids)))
 
     def _update_identity(self, identity: Identity, tracklet: Tracklet):
         identity.add_tracklet(tracklet)
@@ -198,25 +214,51 @@ class NetworkMCTracker:
                                                                                         tracklet.camID][
                                                                                         'tracker_port']))
 
+    @Timer.avg_timer('query')
     def query(self, tracklet: Tracklet) -> int:
-        if len(self.identity_pool) > 0:
-            distmat = 1 - np.matmul(tracklet.sample_features(), self.gallery_features.T)
-            indices = np.argsort(distmat, axis=-1)[:, 0]
-            # Filter matches with low similarities
-            indices = indices[np.where(distmat[(np.array(range(len(distmat))), indices)] < self.max_reid_distance)]
-
-            if len(indices) > 0:
-                g_ids = self.gallery_ids[indices]
-                matched_g_id = int(np.argmax(np.bincount(g_ids)))
-
-                # Send matching information to single-cam trackers
-                self.sender_socket.send_string('{} {} {}'.format(self.single_cam_trackers[tracklet.camID]['identifier'],
-                                                                 tracklet.localID, matched_g_id))
-                self.logger.info(
-                    'Tracklet {} in cam {} matched global ID {}'.format(tracklet.localID, tracklet.camID, matched_g_id))
-                return matched_g_id
+        query_features = tracklet.sample_features()
+        if len(self.gallery_ids) <= 0 or len(query_features) < self.min_query:
             return -1
-        return -1
+
+        distmat = 1 - np.matmul(query_features, self.gallery_features.T)
+        indices = np.argsort(distmat, axis=-1)[:, 0]
+
+        # Filter matches with low similarities
+        filtered_inds = np.where(distmat[(np.array(range(len(distmat))), indices)] < self.max_reid_distance)
+        indices = indices[filtered_inds]
+        if len(indices) == 0:
+            return -1
+
+        distance = np.min(distmat[(np.array(range(len(distmat)))[filtered_inds], indices)])
+        g_ids = self.gallery_ids[indices]
+        matched_g_id = int(np.argmax(np.bincount(g_ids)))
+
+        # Filter matches with time overlaps
+        matched_identity = self.identity_pool[matched_g_id]
+        if self._time_overlap(tracklet, matched_identity) > self.max_local_overlap:
+            self.logger.debug(
+                'Tracket {} in cam {} failed to match ID {} due to time overlap'.format(tracklet.localID,
+                                                                                        tracklet.camID,
+                                                                                        matched_g_id))
+            return -1
+
+        # Send matching information to single-cam trackers
+        self.sender_socket.send_string('{} {} {}'.format(self.single_cam_trackers[tracklet.camID]['identifier'],
+                                                         tracklet.localID, matched_g_id))
+        self.logger.info(
+            'Tracklet {} in cam {} matched ID {} with min distance {}'.format(tracklet.localID,
+                                                                              tracklet.camID,
+                                                                              matched_g_id,
+                                                                              distance))
+        return matched_g_id
+
+    def log(self):
+        logstr = '{} features in gallery, {} identities, {} tracklets. '.format(len(self.gallery_ids),
+                                                                                len(self.identity_pool),
+                                                                                sum(len(d) for d in
+                                                                                    self.tracklet_dicts))
+        logstr += Timer.logstr()
+        self.logger.info(logstr)
 
     def _clear_inactive_identities(self):
         """
@@ -239,9 +281,14 @@ class NetworkMCTracker:
         for thread in self.listener_threads:
             thread.running = False
 
-    def _time_overlap(self, period1: Tuple[int, int], period2: Tuple[int, int]):
-        overlap = min(period2[1], period1[1]) - max(period2[0], period1[0])
-        return overlap if overlap > 0 else 0
+    def _time_overlap(self, tracklet: Tracklet, identity: Identity):
+        overlap = 0
+        for _, _tracklet in identity.tracklets.items():
+            if tracklet.camID == _tracklet.camID:
+                overlap += max(min(tracklet.last_active_time, _tracklet.last_active_time) - \
+                               max(tracklet.created_time, _tracklet.created_time),
+                               0)
+        return overlap
 
     def _cosine_distance(self, vector1, vector2):
         return 1 - np.dot(vector1, vector2) / ((np.linalg.norm(vector1) * np.linalg.norm(vector2)) + 1e-16)

@@ -1,4 +1,5 @@
 import os
+import cv2
 import time
 import logging
 import datetime
@@ -56,6 +57,9 @@ def simulate(tracker, args, **kwargs):
         last_frame_time = time.time()
 
         ret, frame = capture.read()
+        if tuple(args.resolution) != (0, 0):
+            assert len(tuple(args.resolution)) == 2, 'Expected 2 integers as input resolution'
+            frame = cv2.resize(frame, tuple(args.resolution))
         if not ret:
             break
         tracker.tick(frame)
@@ -73,6 +77,10 @@ if __name__ == '__main__':
     parser.add_argument('tracker_config', help='Path to tracker config file.')
     parser.add_argument('--capture', type=str, required=True, help='Video capture for real-time tracking simulation.')
     parser.add_argument('--fps', type=int, required=False, default=5, help='Frames per second.')
+    # parser.add_argument('--img-w', type=int, required=False, default=0, help='Expected width of input frames.')
+    # parser.add_argument('--img-h', type=int, required=False, default=0, help='Expected height of input frames.')
+    parser.add_argument('--resolution', type=int, nargs='+', required=False, default=(0, 0),
+                        help='Expected resolution in (W, H)')
     parser.add_argument('--prev-start-time', type=str, required=True,
                         help='Tracking start time for previous video capture. Format: YYYYmmDD-HHMMSS')
     parser.add_argument('--start-time', type=str, required=False, default=0,
