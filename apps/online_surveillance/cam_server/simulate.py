@@ -1,9 +1,9 @@
 import os
-import cv2
 import time
 import logging
 import datetime
 import argparse
+import numpy as np
 
 import mot.utils
 from mot.tracker import build_tracker
@@ -14,6 +14,7 @@ if imputil.find_spec('tensorrt') and imputil.find_spec('torch2trt'):
     from encode import TRTOpenReIDEncoder
     from detect import TRTCenterNetDetector
 else:
+    logging.basicConfig(level=logging.DEBUG)
     logging.warning('TensorRT and torch2trt not found. TensorRT models unavailable.')
 
 from tracker import MultiThreadTracker
@@ -26,27 +27,36 @@ def parse_args(parser):
         args.save_result = 'logs/' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + '.txt'
     if args.save_video == '':
         args.save_video = 'videos/' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + '.mp4'
+    if args.start_time == 0:
+        args.start_time = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
     return args
 
 
-def run(tracker, args, **kwargs):
+def simulate(tracker, args, **kwargs):
     capture = mot.utils.get_capture(args.capture)
-    capture.set(cv2.CAP_PROP_FOCUS, args.focus_length)
 
     writer = SCTOutputWriter(args, tracker.identifier)
 
     logging.getLogger('MOT').info('Writing tracking results to ' + str(args.save_result))
-    logging.getLogger('MOT').info('Writing raw camera video to ' + str(args.save_video)[:-4] + '_raw.mp4')
     logging.getLogger('MOT').info('Writing tracked camera video to ' + str(args.save_video))
-    logging.getLogger('MOT').info('Running single-camera tracking...')
 
+    start_time = time.mktime(time.strptime(args.start_time, '%Y%m%d-%H%M%S'))
+    logging.getLogger('MOT-Simulator').info('Waiting for starting time {}. {} seconds to go'.format(args.start_time,
+                                                                                                    start_time - time.time()))
+    while time.time() < start_time:
+        pass
+
+    logging.getLogger('MOT-Simulator').info('Running real-time single-camera tracking simulation...')
+
+    last_frame_time = time.time()
     while True:
         # To avoid network congestion and image data accumulation
-        time.sleep(0.2)
+        while time.time() - last_frame_time < 1 / args.fps:
+            pass
+        last_frame_time = time.time()
 
         ret, frame = capture.read()
         if not ret:
-            logging.getLogger('MOT').info('Capture ended. Terminating...')
             break
         tracker.tick(frame)
 
@@ -54,22 +64,23 @@ def run(tracker, args, **kwargs):
 
         writer.write(tracker, frame, image)
 
+    logging.getLogger('MOT').info('Capture ended. Terminating...')
     tracker.terminate()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('tracker_config', help='Path to tracker config file.')
-    parser.add_argument('--capture', type=str, default='1', required=False, help='Capture number or video file path.')
-    parser.add_argument('--focus-length', type=int, default=100, required=False, help='Focus length.')
+    parser.add_argument('--capture', type=str, required=True, help='Video capture for real-time tracking simulation.')
+    parser.add_argument('--fps', type=int, required=False, default=5, help='Frames per second.')
+    parser.add_argument('--prev-start-time', type=str, required=True,
+                        help='Tracking start time for previous video capture. Format: YYYYmmDD-HHMMSS')
+    parser.add_argument('--start-time', type=str, required=False, default=0,
+                        help='Tracking start time for simulation. Format: YYYYmmDD-HHMMSS')
     parser.add_argument('--footage-port', type=int, default=5555, required=False,
                         help='TCP Port for streaming. Default: 5555.')
     parser.add_argument('--tracker-port', type=int, default=5556, required=False,
                         help='TCP Port for tracker state. Default: 5556.')
-    parser.add_argument('--listen-port', type=int, default=5557, required=False,
-                        help='TCP Port for listening multi-cam tracker\'s message')
-    parser.add_argument('--central-address', type=str, default='163.221.68.100:5558', required=False,
-                        help='IP:Port of central multi-cam re-identification server')
     parser.add_argument('--save-video', default='', required=False,
                         help='Path to the output video file. Leave it blank to disable.')
     parser.add_argument('--save-result', default='', required=False,
@@ -78,7 +89,7 @@ if __name__ == '__main__':
                         help='Path to save the logs. Leave it blank to disable.')
     args = parse_args(parser)
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
 
     if args.save_log != '':
         save_log_dir = os.path.dirname(args.save_log)
@@ -95,4 +106,4 @@ if __name__ == '__main__':
 
     tracker = build_tracker(cfg.tracker)
 
-    run(tracker, args, **kwargs)
+    simulate(tracker, args, **kwargs)

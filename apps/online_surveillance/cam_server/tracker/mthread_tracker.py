@@ -16,6 +16,8 @@ from mot.predict import build_predictor
 from mot.filter import build_detection_filter
 from mot.tracker import Tracker, TRACKER_REGISTRY
 
+from .tracker import LocalTracker
+
 
 class DetectorThread(Thread):
     def __init__(self, config: Config, tracker: Tracker, lock: Lock, next_lock: Lock):
@@ -96,8 +98,8 @@ class GlobalIDListenerThread(Thread):
 
 
 @TRACKER_REGISTRY.register()
-class MultiThreadTracker(Tracker):
-    def __init__(self, detector: Config, matcher: Config, encoders: List[Config], predictor: Config,
+class MultiThreadTracker(LocalTracker):
+    def __init__(self, detector: Config, encoders: List[Config], matcher: Config, predictor: Config,
                  central_address: str, **kwargs):
         self.detect_lock = Lock()
         self.filter_lock = Lock()
@@ -113,7 +115,6 @@ class MultiThreadTracker(Tracker):
             lock.acquire()
 
         self.detector_thread = DetectorThread(detector, self, self.detect_lock, self.filter_lock)
-
         self.encoder_threads = [EncoderThread(encoders[i], self, self.encode_lock, self.after_locks[i]) for i in
                                 range(len(encoders))]
         self.listener_thread = GlobalIDListenerThread(self, self.tracklets_lock, central_address, self.identifier)
@@ -121,12 +122,7 @@ class MultiThreadTracker(Tracker):
         self.latest_detections = []
         self.latest_features = []
 
-        matcher = build_matcher(matcher)
-        predictor = build_predictor(predictor)
-        if 'detection_filters' in kwargs.keys():
-            kwargs['detection_filters'] = [build_detection_filter(filter_cfg) for filter_cfg in
-                                           kwargs['detection_filters']]
-        super().__init__(None, None, matcher, predictor, **kwargs)
+        super(MultiThreadTracker, self).__init__(None, None, matcher, predictor, **kwargs)
 
         self.detector_thread.start()
         for thread in self.encoder_threads:

@@ -7,9 +7,6 @@
 [submodule "third_party/CenterNet"]
 	path = third_party/CenterNet
 	url = https://github.com/xingyizhou/CenterNet
-[submodule "third_party/PCB"]
-	path = third_party/PCB
-	url = https://github.com/Xiaoccer/ReID-PCB_RPP
 [submodule "third_party/DCNv2"]
 	path = third_party/DCNv2
 	url = https://github.com/CharlesShang/DCNv2

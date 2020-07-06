@@ -1,10 +1,10 @@
 single_cam_trackers = [
-    # {
-    #     'ip': '163.221.68.251',
-    #     'footage_port': '5555',
-    #     'tracker_port': '5556',
-    #     'listen_port': '5557'
-    # },
+    {
+        'ip': '163.221.102.47',
+        'footage_port': '5555',
+        'tracker_port': '5556',
+        'listen_port': '5557'
+    },
     {
         'ip': '163.221.68.252',
         'footage_port': '5555',
