@@ -87,6 +87,8 @@ if __name__ == '__main__':
             os.makedirs(save_log_dir)
         handler = logging.FileHandler(args.save_log, mode='w+')
         handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(levelname)s:%(name)s: %(asctime)s %(message)s')
+        handler.setFormatter(formatter)
         logger = logging.getLogger('MOT')
         logger.addHandler(handler)
 

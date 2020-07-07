@@ -1,22 +1,23 @@
 import os
 import sys
 import numpy as np
+import os.path as osp
 from typing import List
 
 from mot.structures import Detection
 from .detect import Detector, DETECTOR_REGISTRY
-
-sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '../../third_party', 'CenterNet', 'src'))
-sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), '../../third_party', 'CenterNet', 'src',
-                                'lib'))
-from detectors.detector_factory import detector_factory
-from opts import opts
 
 
 @DETECTOR_REGISTRY.register()
 class CenterNetDetector(Detector):
 
     def __init__(self, checkpoint: str, arch: str, conf_threshold: float = 0.5, **kwargs):
+
+        sys.path.insert(0, osp.join(osp.abspath(osp.dirname(__file__)), '../../third_party', 'CenterNet', 'src'))
+        sys.path.insert(0, osp.join(osp.abspath(osp.dirname(__file__)), '../../third_party', 'CenterNet', 'src', 'lib'))
+        from detectors.detector_factory import detector_factory
+        from opts import opts
+
         super(Detector).__init__()
         # Add CenterNet `src` and `src/lib` path to system path
         self.opt = opts().init('{} --load_model {} --arch {}'.format('ctdet', checkpoint, arch).split(' '))

@@ -16,11 +16,10 @@ This repository is still under construction.
 * [CenterNet](https://github.com/xingyizhou/CenterNet) (optional)
 * [PySOT](https://github.com/STVIR/pysot) (optional)
 
-Note: This repository doesn't include any object detector implementations but provides interfaces for Detectron2 and mmdetection.
-You can install either or both of them in your environment.
+Note: This repository doesn't include any object detector implementations but provides interfaces for Detectron2, MMdetection, darknet and CenterNet.
+You can install any of them in your environment.
 
-Note: This project is developed on Ubuntu 18.04 with Python 3.7 and NVIDIA GTX 1080Ti. 
-However, a Linux environment or GPU support is not indispensable.
+Note: This project is developed on Ubuntu 18.04 with Python 3.7 and NVIDIA GTX 1080Ti.
 
 ## Get Started
 ### Clone the repo
@@ -34,6 +33,9 @@ Edit the line below and run in your terminal:
 ```
 export PYTHONPATH=/path/to/online-mot-by-detection:$PYTHONPATH
 ```
+
+#### (Optional) If you use YOLO detector
+You'll need to compile the `darknet` project in `third_party`. Please refer to [darknet readme](https://github.com/AlexeyAB/darknet#how-to-compile-on-linux-using-cmake).
 
 #### (Optional) If you use CenterNet detector
 You'll need to replace the DCNv2 in `third_party/CenterNet/src/lib/models/networks` with the new version with support for PyTorch 1.0+:

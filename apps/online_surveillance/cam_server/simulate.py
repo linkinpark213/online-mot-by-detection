@@ -57,11 +57,12 @@ def simulate(tracker, args, **kwargs):
         last_frame_time = time.time()
 
         ret, frame = capture.read()
+        if not ret:
+            break
+
         if tuple(args.resolution) != (0, 0):
             assert len(tuple(args.resolution)) == 2, 'Expected 2 integers as input resolution'
             frame = cv2.resize(frame, tuple(args.resolution))
-        if not ret:
-            break
         tracker.tick(frame)
 
         image = mot.utils.snapshot_from_tracker(tracker, **kwargs)
@@ -106,6 +107,8 @@ if __name__ == '__main__':
             os.makedirs(save_log_dir)
         handler = logging.FileHandler(args.save_log, mode='w+')
         handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(levelname)s:%(name)s: %(asctime)s %(message)s')
+        handler.setFormatter(formatter)
         logger = logging.getLogger('MOT')
         logger.addHandler(handler)
 

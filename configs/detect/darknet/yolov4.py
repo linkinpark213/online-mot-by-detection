@@ -1,0 +1,5 @@
+type = 'YOLO'
+libPath = './third_party/darknet/libdarknet.so'
+configPath = './third_party/darknet/cfg/yolov4.cfg'
+weightPath = './models/detect/darknet/yolov4.weights'
+metaPath = './third_party/darknet/cfg/coco.data'

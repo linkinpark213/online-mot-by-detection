@@ -285,6 +285,10 @@ class TRTCenterNetDetector(Detector):
     def __init__(self, prototxt_path: str, model_path: str, engine_path: str, num_classes: int = 1,
                  max_per_image: int = 20, conf_threshold: float = 0.5, **kwargs):
         super().__init__()
+        cuda.init()
+        device = cuda.Device(0)  # enter your Gpu id here
+        self.ctx = device.make_context()
+
         self.model = _DetectionModel(
             deploy_file=prototxt_path,
             model_file=model_path,
@@ -314,3 +318,6 @@ class TRTCenterNetDetector(Detector):
         boxes = raw_output[1][np.where(raw_output[1][:, 4] > self.conf_threshold)]
 
         return [Detection(box[:4], box[4]) for box in boxes]
+
+    def destroy(self):
+        self.ctx.pop()

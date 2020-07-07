@@ -1,7 +1,7 @@
 tracker = dict(
     type='MultiThreadTracker',
     detector=dict(
-        include='./detect/trt_ctdet_coco_dlav0_1x.py',
+        include='../../../../configs/detect/darknet/yolov4-tiny.py',
         conf_threshold=0.8,
     ),
     detection_filters=[

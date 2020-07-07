@@ -10,3 +10,6 @@
 [submodule "third_party/DCNv2"]
 	path = third_party/DCNv2
 	url = https://github.com/CharlesShang/DCNv2
+[submodule "third_party/darknet"]
+	path = third_party/darknet
+	url = https://github.com/AlexeyAB/darknet

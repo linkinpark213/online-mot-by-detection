@@ -5,15 +5,11 @@ import logging
 import traceback
 import numpy as np
 from typing import List
-import pycuda.driver as cuda
 from threading import Thread, Lock
 
 from mot.utils import Timer, Config
 from mot.encode import build_encoder
 from mot.detect import build_detector
-from mot.associate import build_matcher
-from mot.predict import build_predictor
-from mot.filter import build_detection_filter
 from mot.tracker import Tracker, TRACKER_REGISTRY
 
 from .tracker import LocalTracker
@@ -29,10 +25,7 @@ class DetectorThread(Thread):
         self.running = True
 
     def run(self) -> None:
-        cuda.init()
-        device = cuda.Device(0)  # enter your Gpu id here
-        ctx = device.make_context()
-
+        detector = None
         try:
             if self.config is not None:
                 detector = build_detector(self.config)
@@ -40,10 +33,12 @@ class DetectorThread(Thread):
                     if self.lock.acquire(timeout=500):
                         self.tracker.latest_detections = detector.detect(self.tracker.frame)
                         self.next_lock.release()
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
+            self.running = False
         finally:
-            ctx.pop()
+            if hasattr(detector, 'destroy'):
+                detector.destroy()
 
 
 class EncoderThread(Thread):

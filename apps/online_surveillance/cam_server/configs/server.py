@@ -1,8 +1,8 @@
 tracker = dict(
     type='SingleThreadTracker',
     detector=dict(
-        include='../../../../configs/detect/centernet/ctdet_coco_dlav0_1x.py',
-        conf_threshold=0.9,
+        include='../../../../configs/detect/darknet/yolov4-tiny.py',
+        conf_threshold=0.8,
     ),
     detection_filters=[
         dict(
