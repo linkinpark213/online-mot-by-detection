@@ -42,35 +42,41 @@ def simulate(tracker, args, **kwargs):
     logging.getLogger('MOT').info('Writing tracked camera video to ' + str(args.save_video))
 
     start_time = time.mktime(time.strptime(args.start_time, '%Y%m%d-%H%M%S'))
-    logging.getLogger('MOT-Simulator').info('Waiting for starting time {}. {} seconds to go'.format(args.start_time,
-                                                                                                    start_time - time.time()))
+    if start_time > time.time():
+        logging.getLogger('MOT-Simulator').info('Waiting for starting time {}. ({} secs to go)'.format(args.start_time,
+                                                                                                       start_time - time.time()))
     while time.time() < start_time:
         pass
 
     logging.getLogger('MOT-Simulator').info('Running real-time single-camera tracking simulation...')
 
     last_frame_time = time.time()
-    while True:
-        # To avoid network congestion and image data accumulation
-        while time.time() - last_frame_time < 1 / args.fps:
-            pass
-        last_frame_time = time.time()
+    try:
+        while True:
+            # To avoid network congestion and image data accumulation
+            while time.time() - last_frame_time < 1 / args.fps:
+                pass
+            last_frame_time = time.time()
 
-        ret, frame = capture.read()
-        if not ret:
-            break
+            ret, frame = capture.read()
+            if not ret:
+                break
 
-        if tuple(args.resolution) != (0, 0):
-            assert len(tuple(args.resolution)) == 2, 'Expected 2 integers as input resolution'
-            frame = cv2.resize(frame, tuple(args.resolution))
-        tracker.tick(frame)
+            if tuple(args.resolution) != (0, 0):
+                assert len(tuple(args.resolution)) == 2, 'Expected 2 integers as input resolution'
+                frame = cv2.resize(frame, tuple(args.resolution))
+            tracker.tick(frame)
 
-        image = mot.utils.snapshot_from_tracker(tracker, **kwargs)
+            image = mot.utils.snapshot_from_tracker(tracker, **kwargs)
 
-        writer.write(tracker, frame, image)
+            writer.write(tracker, frame, image)
 
-    logging.getLogger('MOT').info('Capture ended. Terminating...')
-    tracker.terminate()
+        logging.getLogger('MOT').info('Capture ended. Terminating...')
+
+    except KeyboardInterrupt:
+        logging.getLogger('MOT').info('Keyboard interruption. Terminating...')
+    finally:
+        tracker.terminate()
 
 
 if __name__ == '__main__':
@@ -101,10 +107,11 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
     if args.save_log != '':
-        save_log_dir = os.path.dirname(args.save_log)
+        save_log_dir = os.path.abspath(os.path.dirname(args.save_log))
         if not os.path.isdir(save_log_dir):
-            logging.warning('Result saving path {} doens\'t exist. Creating...')
+            logging.warning('Result saving path {} doens\'t exist. Creating...'.format(save_log_dir))
             os.makedirs(save_log_dir)
+
         handler = logging.FileHandler(args.save_log, mode='w+')
         handler.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(levelname)s:%(name)s: %(asctime)s %(message)s')

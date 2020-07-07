@@ -50,7 +50,7 @@ def run_demo(tracker, args, **kwargs):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('tracker_config', default='configs/deepsort.py')
+    parser.add_argument('tracker_config', type=str, help='Path to MOT tracker config file.')
     parser.add_argument('--demo-path', default='0', required=False,
                         help='Path to the test video file or directory of test images. Leave it blank to use webcam.')
     parser.add_argument('--save-video', default='', required=False,

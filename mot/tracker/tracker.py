@@ -22,6 +22,7 @@ class TrackerState:
         self.max_id: int = 0
         self.tracklets_active: List[Tracklet] = []
         self.tracklets_finished: List[Tracklet] = []
+        self.latest_detections: List[Detection] = []
         self.frame_num: int = 0
         self.frame: Union[None, np.ndarray] = None
         self.timestamp: float = 0
@@ -57,6 +58,7 @@ class Tracker:
         self.tracklets_active = []
         self.tracklets_finished = []
         self.frame_num = 0
+        self.latest_detections = []
 
     @property
     def tracklets_active(self):
@@ -73,6 +75,14 @@ class Tracker:
     @tracklets_finished.setter
     def tracklets_finished(self, value):
         self.state.tracklets_finished = value
+
+    @property
+    def latest_detections(self):
+        return self.state.latest_detections
+
+    @latest_detections.setter
+    def latest_detections(self, value):
+        self.state.latest_detections = value
 
     @property
     def max_id(self):
@@ -123,19 +133,19 @@ class Tracker:
         self.predict(img)
 
         # Detection
-        detections = self.detect(img)
+        self.latest_detections = self.detect(img)
 
         # Encoding
-        features = self.encode(detections, img)
+        features = self.encode(self.latest_detections, img)
 
         # Data Association
         row_ind, col_ind = self.match(self.tracklets_active, features)
 
         # Tracklet Update
-        self.update(row_ind, col_ind, detections, features)
+        self.update(row_ind, col_ind, self.latest_detections, features)
 
         # Log status
-        self.log(frame_num=self.frame_num, dets=len(detections), matches=len(row_ind),
+        self.log(frame_num=self.frame_num, dets=len(self.latest_detections), matches=len(row_ind),
                  targets=len(self.tracklets_active))
 
     @Timer.timer('det')

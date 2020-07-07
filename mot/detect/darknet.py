@@ -96,7 +96,7 @@ class YOLO(Detector):
         dets = self.darknet.get_network_boxes(self.netMain, self.darknet_image.w, self.darknet_image.h,
                                               self.conf_threshold, self.conf_threshold, None, 0, pnum, letter_box)
         num = pnum[0]
-        if self.nms_threshold:
+        if self.nms_threshold != 0:
             self.darknet.do_nms_sort(dets, num, self.metaMain.classes, self.nms_threshold)
 
         detections = []
@@ -115,10 +115,4 @@ class YOLO(Detector):
 
         detections = sorted(detections, key=lambda x: -x.score)
         self.darknet.free_detections(dets, num)
-        print('Number of detections = ', len(detections))
-        for detection in detections:
-            print('Detection: Class ID = {}, Score = {}, W = {}, H = {}'.format(detection.class_id,
-                                                                                detection.score,
-                                                                                detection.box[2] - detection.box[0],
-                                                                                detection.box[3] - detection.box[1]))
         return detections

@@ -3,6 +3,7 @@ tracker = dict(
     detector=dict(
         include='../../../../configs/detect/darknet/yolov4-tiny.py',
         conf_threshold=0.8,
+        nms_threshold=0.5,
     ),
     detection_filters=[
         dict(
@@ -46,3 +47,4 @@ tracker = dict(
 )
 draw_frame_num = True
 draw_current_time = True
+draw_detections = True

@@ -67,6 +67,23 @@ _keypoint_connections = [
 __all__ = ['snapshot_from_tracker', 'snapshot_from_results', 'snapshot_from_detection']
 
 
+def _draw_detections(image: np.ndarray, detections: List):
+    """
+    Draw detection bounding boxes.
+
+    Args:
+        image: A 3D numpy array with shape (h, w, 3). The video frame.
+        detections: A list of Detection objects. All detected tracklets.
+
+    Returns:
+        A 3D numpy array with shape (h, w, 3). The video frame with boxes of detection boxes drawn.
+    """
+    for detection in detections:
+        box = detection.box
+        image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (0, 255, 0), thickness=1)
+    return image
+
+
 def _draw_targets(image: np.ndarray, tracklets: List, confirmed_only: bool = True, detected_only: bool = True,
                   draw_centers: bool = False, draw_predictions: bool = False, draw_trajectory: bool = True,
                   draw_masks: bool = True, draw_skeletons: bool = True) -> np.ndarray:
@@ -321,9 +338,9 @@ def _draw_association(image: np.ndarray, tracklets: List) -> np.ndarray:
 
 
 def snapshot_from_tracker(tracker, confirmed_only: bool = True, detected_only: bool = True, draw_centers: bool = False,
-                          draw_predictions: bool = False, draw_masks: bool = False, draw_skeletons: bool = False,
-                          draw_association: bool = False, draw_frame_num: bool = True, draw_current_time: bool = False,
-                          **kwargs) -> np.ndarray:
+                          draw_detections: bool = False, draw_predictions: bool = False, draw_masks: bool = False,
+                          draw_skeletons: bool = False, draw_association: bool = False, draw_frame_num: bool = True,
+                          draw_current_time: bool = False, **kwargs) -> np.ndarray:
     """
     Visualize a frame with boxes (and skeletons) of all tracked targets.
 
@@ -332,6 +349,7 @@ def snapshot_from_tracker(tracker, confirmed_only: bool = True, detected_only: b
         confirmed_only: A boolean value. Set to True to only visualize targets that are confirmed.
         detected_only: A boolean value. Set to True to only disable visualizing targets that are only predicted.
         draw_centers: A boolean value. Set to True to visualize center points of targets.
+        draw_detections: A boolean value. Set to True to visualize detection boxes.
         draw_predictions: A boolean value. Set to True to visualize predictions of targets too, if it's available.
         draw_masks: A boolean value. Set to True to visualize target masks, if it's available.
         draw_skeletons: A boolean value. Set to True to visualize target body keypoints, if it's available.
@@ -342,7 +360,12 @@ def snapshot_from_tracker(tracker, confirmed_only: bool = True, detected_only: b
     Returns:
         A 3D numpy array with shape (h, w, 3). The video frame with all targets and frame number drawn.
     """
-    image = _draw_targets(tracker.frame, tracker.tracklets_active,
+    image = tracker.frame
+    # Draw detection boxes first so matched boxes will be covered by target box.
+    if draw_detections:
+        image = _draw_detections(image, tracker.latest_detections)
+
+    image = _draw_targets(image, tracker.tracklets_active,
                           confirmed_only=confirmed_only, detected_only=detected_only, draw_centers=draw_centers,
                           draw_predictions=draw_predictions, draw_masks=draw_masks, draw_skeletons=draw_skeletons)
     if draw_frame_num:

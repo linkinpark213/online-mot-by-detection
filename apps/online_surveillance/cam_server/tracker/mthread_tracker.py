@@ -10,7 +10,7 @@ from threading import Thread, Lock
 from mot.utils import Timer, Config
 from mot.encode import build_encoder
 from mot.detect import build_detector
-from mot.tracker import Tracker, TRACKER_REGISTRY
+from mot.tracker import Tracker, TRACKER_REGISTRY, TrackerState
 
 from .tracker import LocalTracker
 
@@ -30,7 +30,7 @@ class DetectorThread(Thread):
             if self.config is not None:
                 detector = build_detector(self.config)
                 while self.running:
-                    if self.lock.acquire(timeout=500):
+                    if self.lock.acquire(timeout=1):
                         self.tracker.latest_detections = detector.detect(self.tracker.frame)
                         self.next_lock.release()
         except Exception:
@@ -53,7 +53,7 @@ class EncoderThread(Thread):
     def run(self) -> None:
         encoder = build_encoder(self.config)
         while self.running:
-            if self.lock.acquire(timeout=500):
+            if self.lock.acquire(timeout=1):
                 features = encoder(self.tracker.latest_detections, self.tracker.frame)
                 for i, feature in enumerate(features):
                     self.tracker.latest_features[i][encoder.name] = feature
@@ -72,24 +72,32 @@ class GlobalIDListenerThread(Thread):
         self.subscribe_socket = context.socket(zmq.SUB)
         self.subscribe_socket.connect('tcp://' + central_address)
         self.subscribe_socket.setsockopt_string(zmq.SUBSCRIBE, np.unicode(''))
+        self.queue = []
 
     def run(self) -> None:
         while self.running:
             try:
                 data = self.subscribe_socket.recv_string(flags=zmq.NOBLOCK)
                 data = list(map(lambda x: int(float(x)), data.strip().split(' ')))
+                logging.getLogger('MOT').debug('Received data: {} from central server'.format(data))
                 if data[0] == self.identifier:
-                    logging.getLogger('MOT').info('Received data: {} from central server'.format(data))
-                    _, localID, globalID = data
-                    self.lock.acquire()
-                    for tracklet in self.tracker.tracklets_active:
-                        logging.getLogger('MOT').info('Local target #{} is identified as global ID {}'.format(localID,
-                                                                                                              globalID))
-                        if tracklet.id == localID:
-                            tracklet.globalID = globalID
+                    # Save to queue for possible later processing (if lock can't be acquired)
+                    self.queue.append(data)
+
+                if self.lock.acquire(timeout=1):
+                    while len(self.queue) > 0:
+                        _, localID, globalID = self.queue.pop(0)
+                        for tracklet in self.tracker.tracklets_active:
+                            logging.getLogger('MOT').info(
+                                'Local target #{} is identified as global ID {}'.format(localID, globalID))
+                            if tracklet.id == localID:
+                                tracklet.globalID = globalID
                     self.lock.release()
             except zmq.ZMQError:
-                pass
+                time.sleep(0.1)
+            except Exception as e:
+                self.running = False
+                raise e
 
 
 @TRACKER_REGISTRY.register()
@@ -114,7 +122,7 @@ class MultiThreadTracker(LocalTracker):
                                 range(len(encoders))]
         self.listener_thread = GlobalIDListenerThread(self, self.tracklets_lock, central_address, self.identifier)
 
-        self.latest_detections = []
+        self.state: TrackerState = TrackerState()
         self.latest_features = []
 
         super(MultiThreadTracker, self).__init__(None, None, matcher, predictor, **kwargs)
@@ -144,7 +152,7 @@ class MultiThreadTracker(LocalTracker):
         self.detect_lock.release()
 
         # Filtering
-        self.filter_lock.acquire(timeout=1000)
+        self.filter_lock.acquire()
         for filter in self.detection_filters:
             self.latest_detections = filter(self.latest_detections)
         self.latest_features = [{} for i in range(len(self.latest_detections))]
@@ -170,6 +178,10 @@ class MultiThreadTracker(LocalTracker):
 
     def terminate(self) -> None:
         super().terminate()
+        self.logger.info('Setting all threads to "not running"')
+        self._stop_all()
+
+    def _stop_all(self) -> None:
         self.detector_thread.running = False
         for thread in self.encoder_threads:
             thread.running = False

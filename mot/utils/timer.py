@@ -43,11 +43,13 @@ class Timer:
 
     @staticmethod
     def logstr():
-        log = 'Time spent: | '
+        log = 'Time spent: '
         # Total time spent
         if 'all' in Timer.times.keys():
             total_time = Timer.times['all']
             log += '{:.2f}ms ({:.2f} fps) | '.format(total_time, 1000 / total_time)
+        else:
+            log += '| '
 
         # Time spent on each step
         for k, v in Timer.times.items():
