@@ -1,0 +1,1 @@
+from .trt_openreid import TRTOpenReIDEncoder
