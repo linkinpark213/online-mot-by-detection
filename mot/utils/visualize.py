@@ -120,7 +120,7 @@ def _draw_targets(image: np.ndarray, tracklets: List, confirmed_only: bool = Tru
     return image
 
 
-def _draw_frame_num(image: np.ndarray, frame_num: int, inverse_color: bool = True) -> np.ndarray:
+def _draw_frame_num(image: np.ndarray, frame_num: int, inverse_color: bool = False) -> np.ndarray:
     """
     Draw the frame number at the top-left corner of the frame.
 
@@ -144,7 +144,7 @@ def _draw_frame_num(image: np.ndarray, frame_num: int, inverse_color: bool = Tru
     return image
 
 
-def _draw_current_time(image: np.ndarray, inverse_color: bool = True) -> np.ndarray:
+def _draw_current_time(image: np.ndarray, inverse_color: bool = False) -> np.ndarray:
     """
     Draw the local time at the top-left corner of the frame.
 
@@ -164,7 +164,7 @@ def _draw_current_time(image: np.ndarray, inverse_color: bool = True) -> np.ndar
         colors = (0.5 + (255 - colors) / 255.).astype(np.int) * 255
         image[inds] = np.stack([colors, colors, colors], axis=1)
     else:
-        cv2.putText(image, current_time, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), thickness=1)
+        cv2.putText(image, current_time, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), thickness=2)
     return image
 
 
@@ -183,23 +183,26 @@ def _draw_target_box(image: np.ndarray, box: Union[List[float], np.ndarray], id:
     Returns:
         A 3D numpy array with shape (h, w, 3). The video frame with a new target box drawn.
     """
+    box_color = _colors[int(id) % _colors.__len__()]
+    text_color = (255, 255, 255) if sum(box_color) < 500 else (0, 0, 0)
+
     image = cv2.rectangle(image, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])),
-                          _colors[int(id) % _colors.__len__()], thickness=3)
+                          box_color, thickness=3)
     id_string = '{:d}'.format(int(id))
     id_size, baseline = cv2.getTextSize(id_string, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
     image = cv2.rectangle(image, (int(box[0]), int(box[1])),
                           (int(box[0] + id_size[0] + 4), int(box[1] + id_size[1]) + 10),
-                          _colors[int(id) % _colors.__len__()], thickness=-1)
+                          box_color, thickness=-1)
     image = cv2.putText(image, id_string, (int(box[0] + 2), int(box[1] + id_size[1] + 4)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), thickness=2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, text_color, thickness=2)
     if globalID >= 0:
         id_string = '{:d}'.format(globalID)
         id_size, baseline = cv2.getTextSize(id_string, cv2.FONT_HERSHEY_SIMPLEX, 0.6, 2)
         image = cv2.rectangle(image, (int(box[2] - id_size[0] - 4), int(box[3] - id_size[1] - 10)),
                               (int(box[2]), int(box[3])),
-                              _colors[int(id) % _colors.__len__()], thickness=-1)
+                              box_color, thickness=-1)
         image = cv2.putText(image, id_string, (int(box[2] - id_size[0] - 2), int(box[3] - 4)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), thickness=2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, text_color, thickness=2)
 
     if draw_center:
         image = cv2.circle(image, (int((box[0] + box[2]) / 2), int((box[1] + box[3]) / 2)), radius=10,

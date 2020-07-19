@@ -30,17 +30,21 @@ def parse_args(parser):
         args.save_video = 'videos/' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S') + '.mp4'
     if args.start_time == 0:
         args.start_time = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
+    if tuple(args.resolution) != (0, 0):
+        assert len(tuple(args.resolution)) == 2, 'Expected 2 integers as input resolution'
     return args
 
 
 def simulate(tracker, args, **kwargs):
     capture = mot.utils.get_capture(args.capture)
+    capture = mot.utils.RealTimeCaptureWrapper(capture, original_fps=args.original_fps)
 
-    writer = SCTOutputWriter(args, tracker.identifier)
+    writer = SCTOutputWriter(args, tracker.identifier, fps=args.original_fps)
 
     logging.getLogger('MOT').info('Writing tracking results to ' + str(args.save_result))
     logging.getLogger('MOT').info('Writing tracked camera video to ' + str(args.save_video))
 
+    # Wait until synchronized start time
     start_time = time.mktime(time.strptime(args.start_time, '%Y%m%d-%H%M%S'))
     if start_time > time.time():
         logging.getLogger('MOT-Simulator').info('Waiting for starting time {}. ({} secs to go)'.format(args.start_time,
@@ -48,22 +52,16 @@ def simulate(tracker, args, **kwargs):
     while time.time() < start_time:
         pass
 
+    # Start pipeline
     logging.getLogger('MOT-Simulator').info('Running real-time single-camera tracking simulation...')
 
-    last_frame_time = time.time()
     try:
         while True:
-            # To avoid network congestion and image data accumulation
-            while time.time() - last_frame_time < 1 / args.fps:
-                pass
-            last_frame_time = time.time()
-
             ret, frame = capture.read()
             if not ret:
                 break
 
             if tuple(args.resolution) != (0, 0):
-                assert len(tuple(args.resolution)) == 2, 'Expected 2 integers as input resolution'
                 frame = cv2.resize(frame, tuple(args.resolution))
             tracker.tick(frame)
 
@@ -76,20 +74,20 @@ def simulate(tracker, args, **kwargs):
     except KeyboardInterrupt:
         logging.getLogger('MOT').info('Keyboard interruption. Terminating...')
     finally:
+        writer.close()
+        capture.release()
         tracker.terminate()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('tracker_config', help='Path to tracker config file.')
-    parser.add_argument('--capture', type=str, required=True, help='Video capture for real-time tracking simulation.')
-    parser.add_argument('--fps', type=int, required=False, default=5, help='Frames per second.')
-    # parser.add_argument('--img-w', type=int, required=False, default=0, help='Expected width of input frames.')
-    # parser.add_argument('--img-h', type=int, required=False, default=0, help='Expected height of input frames.')
+    parser.add_argument('--capture', type=str, required=True,
+                        help='Image/Video capture path for real-time tracking simulation.')
+    parser.add_argument('--original-fps', type=int, required=False, default=60,
+                        help='Frames per second of the image/video capture stream.')
     parser.add_argument('--resolution', type=int, nargs='+', required=False, default=(0, 0),
                         help='Expected resolution in (W, H)')
-    parser.add_argument('--prev-start-time', type=str, required=True,
-                        help='Tracking start time for previous video capture. Format: YYYYmmDD-HHMMSS')
     parser.add_argument('--start-time', type=str, required=False, default=0,
                         help='Tracking start time for simulation. Format: YYYYmmDD-HHMMSS')
     parser.add_argument('--footage-port', type=int, default=5555, required=False,
@@ -104,7 +102,8 @@ if __name__ == '__main__':
                         help='Path to save the logs. Leave it blank to disable.')
     args = parse_args(parser)
 
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(levelname)s:%(name)s: %(asctime)s %(message)s')
 
     if args.save_log != '':
         save_log_dir = os.path.abspath(os.path.dirname(args.save_log))

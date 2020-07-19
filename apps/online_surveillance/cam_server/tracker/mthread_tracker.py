@@ -33,12 +33,14 @@ class DetectorThread(Thread):
                     if self.lock.acquire(timeout=1):
                         self.tracker.latest_detections = detector.detect(self.tracker.frame)
                         self.next_lock.release()
-        except Exception:
+        except Exception as e:
             traceback.print_exc()
             self.running = False
+            raise e
         finally:
             if hasattr(detector, 'destroy'):
                 detector.destroy()
+            logging.getLogger('MOT').info('Detector thread terminated.')
 
 
 class EncoderThread(Thread):
@@ -58,6 +60,7 @@ class EncoderThread(Thread):
                 for i, feature in enumerate(features):
                     self.tracker.latest_features[i][encoder.name] = feature
                 self.next_lock.release()
+        logging.getLogger('MOT').info('Encoder thread terminated.')
 
 
 class GlobalIDListenerThread(Thread):
@@ -98,6 +101,8 @@ class GlobalIDListenerThread(Thread):
             except Exception as e:
                 self.running = False
                 raise e
+
+        logging.getLogger('MOT').info('ID listener thread terminated.')
 
 
 @TRACKER_REGISTRY.register()

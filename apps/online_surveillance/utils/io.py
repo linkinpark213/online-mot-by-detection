@@ -6,12 +6,14 @@ from .format import *
 
 
 class SCTOutputWriter:
-    def __init__(self, args, identifier):
+    def __init__(self, args, identifier, fps):
         self.args = args
         self.identifier = identifier
+        self.fps = fps
         self.video_writer = None
         self.raw_video_writer = None
         self.result_writer = mot.utils.get_result_writer(args.save_result)
+        self.result_writer.write('#{}'.format(args.start_time))
 
         # Streaming port
         context = zmq.Context()
@@ -25,10 +27,14 @@ class SCTOutputWriter:
         # Save to video if necessary. Video size may change because of extra contents visualized.
         if tracker.frame_num == 1:
             self.video_writer = mot.utils.get_video_writer(self.args.save_video, annotated_image.shape[1],
-                                                           annotated_image.shape[0])
+                                                           annotated_image.shape[0], self.fps)
+            self.video_writer = mot.utils.RealTimeVideoWriterWrapper(self.video_writer, self.fps)
+
             self.raw_video_writer = mot.utils.get_video_writer(str(self.args.save_video)[:-4] + '_raw.mp4',
                                                                raw_frame.shape[1],
-                                                               raw_frame.shape[0])
+                                                               raw_frame.shape[0],
+                                                               self.fps)
+            self.raw_video_writer = mot.utils.RealTimeVideoWriterWrapper(self.raw_video_writer, self.fps)
 
         self.video_writer.write(annotated_image)
         self.raw_video_writer.write(raw_frame)
@@ -42,14 +48,7 @@ class SCTOutputWriter:
         # Send tracker state to tracker port.
         self.tracker_socket.send(snapshot_to_base64(tracker, self.identifier))
 
-
-class MCTOutputWriter:
-    def __init__(self, args):
-        self.args = args
-        self.single_cam_trackers = args.single_cam_trackers
-        self.tracker_port = args.tracker_port
-        self.result_writer = mot.utils.get_result_writer(args.save_result)
-
-    def write(self, matches):
-        # TODO: Write to sockets and matches
-        pass
+    def close(self):
+        self.video_writer.release()
+        self.raw_video_writer.release()
+        self.result_writer.close()

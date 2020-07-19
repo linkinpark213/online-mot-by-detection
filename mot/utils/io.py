@@ -6,7 +6,8 @@ import threading
 import numpy as np
 from abc import abstractmethod, ABCMeta
 
-__all__ = ['Capture', 'get_capture', 'get_result_writer', 'get_video_writer', 'RealTimeWrapper']
+__all__ = ['Capture', 'get_capture', 'RealTimeCaptureWrapper',
+           'Writer', 'get_video_writer', 'get_result_writer', 'RealTimeVideoWriterWrapper']
 
 
 class Capture(metaclass=ABCMeta):
@@ -101,7 +102,7 @@ class _RealTimeCaptureThread(threading.Thread):
                 self.lock.release()
 
 
-class RealTimeWrapper(Capture):
+class RealTimeCaptureWrapper(Capture):
     def __init__(self, capture, original_fps: int):
         self.ret = False
         self.frame = None
@@ -111,12 +112,16 @@ class RealTimeWrapper(Capture):
         self.ret, self.frame = self.capture.read()
         self.started = False
 
+    def __del__(self):
+        self.release()
+
     def read(self):
         if not self.started:
             self.capture_thread.start()
             self.started = True
 
         if not self.lock.acquire(timeout=1):
+            self.release()
             return False, None
         ret, frame = self.ret, None if not self.ret else self.frame.copy()
         self.lock.release()
@@ -129,10 +134,55 @@ class RealTimeWrapper(Capture):
         self.capture.skip(n)
 
     def release(self):
-        self.capture_thread.running = False
+        if self.capture_thread.running:
+            self.capture_thread.running = False
 
 
-class DummyWriter():
+class Writer(metaclass=ABCMeta):
+    @abstractmethod
+    def write(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def close(self):
+        pass
+
+    @abstractmethod
+    def release(self):
+        pass
+
+
+class VideoWriter(Writer):
+    def __init__(self, writer: cv2.VideoWriter):
+        super().__init__()
+        self.writer = writer
+
+    def write(self, img):
+        self.writer.write(img)
+
+    def release(self):
+        self.writer.release()
+
+    def close(self):
+        self.writer.release()
+
+
+class TextWriter(Writer):
+    def __init__(self, writer):
+        super().__init__()
+        self.writer = writer
+
+    def write(self, text):
+        self.writer.write(text)
+
+    def release(self):
+        self.writer.close()
+
+    def close(self):
+        self.writer.close()
+
+
+class DummyWriter(Writer):
     def write(self, *args, **kwargs):
         pass
 
@@ -141,6 +191,74 @@ class DummyWriter():
 
     def release(self):
         pass
+
+
+class _RealTimeVideoWriterThread(threading.Thread):
+    def __init__(self, wrapper, writer, fps: int, lock: threading.Lock, start_time: float = 0):
+        super().__init__()
+        self.wrapper = wrapper
+        self.writer = writer
+        self.fps = fps
+        self.lock = lock
+        self.wait_time = 1. / fps
+        self.start_time = start_time if start_time > 0 else time.time()
+        self.running = True
+        self.n = 0
+
+    def run(self) -> None:
+        while self.running:
+            current_time = time.time()
+            if current_time >= self.start_time + self.wait_time * self.n:
+                # To fake a real-time frame rate, the expected frame number should be calculated every time
+                expected_n = int((current_time - self.start_time) / self.wait_time)
+                if expected_n > self.n + 1:
+                    logging.getLogger('MOT').debug(
+                        'Repeating {} frame(s) as compensation'.format(expected_n - self.n - 1, expected_n))
+                    if self.lock.acquire(timeout=1):
+                        for i in range(expected_n - self.n):
+                            self.writer.write(self.wrapper.frame)
+                        self.lock.release()
+                        self.n = expected_n
+                    else:
+                        continue
+                else:
+                    if self.lock.acquire(timeout=1):
+                        self.writer.write(self.wrapper.frame)
+                        self.lock.release()
+                        self.n += 1
+
+
+class RealTimeVideoWriterWrapper(Writer):
+    def __init__(self, writer: cv2.VideoWriter, fps: int, start_time: float = 0):
+        super().__init__()
+        self.frame = None
+        self.lock = threading.Lock()
+        self.writer = writer
+        self.writer_thread = _RealTimeVideoWriterThread(self, writer, fps, self.lock, start_time)
+        self.started = False
+
+    def write(self, image) -> bool:
+        if image is not None:
+            if not self.lock.acquire(timeout=1):
+                return False
+            self.frame = image
+            self.lock.release()
+
+            if not self.started:
+                self.writer_thread.start()
+                self.started = True
+            return True
+        return False
+
+    def close(self):
+        self.release()
+
+    def release(self):
+        if self.writer_thread.running:
+            self.writer_thread.running = False
+        self.lock.acquire()
+        self.writer.release()
+        self.lock.release()
 
 
 def get_capture(demo_path: str) -> Capture:
@@ -159,23 +277,25 @@ def get_capture(demo_path: str) -> Capture:
             raise AssertionError('Parameter "demo_path" is not a file or directory.')
 
 
-def get_video_writer(save_video_path, width, height, fps: int = 30):
+def get_video_writer(save_video_path, width, height, fps: int = 30) -> Writer:
     if save_video_path != '':
         save_video_dir = os.path.dirname(os.path.abspath(save_video_path))
         if not os.path.isdir(save_video_dir):
             logging.getLogger('MOT').warning('Video saving path {} doens\'t exist. Creating...')
             os.makedirs(save_video_dir)
-        return cv2.VideoWriter(save_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (int(width), int(height)))
+        return VideoWriter(
+            cv2.VideoWriter(save_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (int(width), int(height)))
+        )
     else:
         return DummyWriter()
 
 
-def get_result_writer(save_result_path):
+def get_result_writer(save_result_path) -> Writer:
     if save_result_path != '':
         save_result_dir = os.path.dirname(os.path.abspath(save_result_path))
         if not os.path.isdir(save_result_dir):
             logging.getLogger('MOT').warning('Result saving path {} doens\'t exist. Creating...')
             os.makedirs(save_result_dir)
-        return open(save_result_path, 'w+')
+        return TextWriter(open(save_result_path, 'w+'))
     else:
         return DummyWriter()

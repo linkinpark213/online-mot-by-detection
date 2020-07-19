@@ -78,7 +78,8 @@ if __name__ == '__main__':
                         help='Path to save the logs. Leave it blank to disable.')
     args = parse_args(parser)
 
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO,
+                        format='%(levelname)s:%(name)s: %(asctime)s %(message)s')
 
     if args.save_log != '':
         save_log_dir = os.path.dirname(args.save_log)
