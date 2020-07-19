@@ -23,7 +23,7 @@ tracker = dict(
     ],
     encoders=[
         dict(
-            include='./encode/openreid.py'
+            include='./encode/openreid_r50.py'
         ),
         dict(
             include='./encode/patch.py'

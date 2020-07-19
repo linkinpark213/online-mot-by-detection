@@ -38,7 +38,8 @@ class Identity:
             clusterIDs = hierarchical_cluster(all_tracklet_features, self.max_cluster_distance, criterion='distance')
 
             logging.getLogger('MTMCT').info(
-                'Shrinking Identity #{}\'s {} features into {}'.format(self.globalID, len(all_tracklet_features),
+                'Shrinking Identity #{}\'s {} features into {}'.format(self.globalID,
+                                                                       len(all_tracklet_features),
                                                                        len(np.unique(clusterIDs))))
 
             features = []

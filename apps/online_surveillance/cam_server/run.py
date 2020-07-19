@@ -1,3 +1,4 @@
+import os
 import cv2
 import time
 import logging
@@ -7,9 +8,15 @@ import argparse
 import mot.utils
 from mot.tracker import build_tracker
 
-from encode import TRTOpenReIDEncoder
-from detect import TRTCenterNetDetector
-from tracker import MultiThreadTracker
+from importlib import util as imputil
+
+if imputil.find_spec('tensorrt') and imputil.find_spec('torch2trt'):
+    from encode import TRTOpenReIDEncoder
+    from detect import TRTCenterNetDetector
+else:
+    logging.warning('TensorRT and torch2trt not found. TensorRT models unavailable.')
+
+from tracker import MultiThreadTracker, SingleThreadTracker
 from apps.online_surveillance.utils.io import SCTOutputWriter
 
 
@@ -39,6 +46,7 @@ def run(tracker, args, **kwargs):
 
         ret, frame = capture.read()
         if not ret:
+            logging.getLogger('MOT').info('Capture ended. Terminating...')
             break
         tracker.tick(frame)
 
@@ -66,9 +74,23 @@ if __name__ == '__main__':
                         help='Path to the output video file. Leave it blank to disable.')
     parser.add_argument('--save-result', default='', required=False,
                         help='Path to the output tracking result file. Leave it blank to disable.')
+    parser.add_argument('--save-log', default='', required=False,
+                        help='Path to save the logs. Leave it blank to disable.')
     args = parse_args(parser)
 
     logging.basicConfig(level=logging.INFO)
+
+    if args.save_log != '':
+        save_log_dir = os.path.dirname(args.save_log)
+        if not os.path.isdir(save_log_dir):
+            logging.warning('Result saving path {} doens\'t exist. Creating...')
+            os.makedirs(save_log_dir)
+        handler = logging.FileHandler(args.save_log, mode='w+')
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(levelname)s:%(name)s: %(asctime)s %(message)s')
+        handler.setFormatter(formatter)
+        logger = logging.getLogger('MOT')
+        logger.addHandler(handler)
 
     cfg = mot.utils.cfg_from_file(args.tracker_config)
     kwargs = cfg.to_dict(ignore_keywords=True)

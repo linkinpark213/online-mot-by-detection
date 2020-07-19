@@ -1,4 +1,5 @@
 import os
+import sys
 import cv2
 import torch
 import logging
@@ -8,7 +9,8 @@ from torch.autograd import Variable
 from typing import List, Tuple, Union
 import torchvision.transforms as T
 
-from .DGNet.reIDmodel import ft_net, ft_netAB, ft_net_dense, PCB, PCB_test
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '../../third_party', 'DGNet'))
+from reIDmodel import ft_net, ft_netAB, ft_net_dense, PCB, PCB_test
 
 from mot.structures import Detection
 from .encode import Encoder, ENCODER_REGISTRY

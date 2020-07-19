@@ -15,8 +15,13 @@ class Tracklet:
         self.n_feature_samples = n_feature_samples
         self.created_time = time.time()
         self.last_active_time = time.time()
+        self.last_sample_time = 0
 
     def sample_features(self):
+        if self.last_sample_time == self.last_active_time:
+            # Not updated since last sampling
+            return np.array(self.features)
+
         features = np.array(self.features)
         if len(features) > self.n_feature_samples:
             clusterIDs = hierarchical_cluster(np.array(features), self.n_feature_samples,
@@ -34,6 +39,7 @@ class Tracklet:
                                                                                                       len(
                                                                                                           tracklet_features)))
             self.features = tracklet_features
+            self.last_sample_time = self.last_active_time
         return np.array(self.features)
 
     def add_feature(self, feature):

@@ -1,6 +1,15 @@
-[submodule "mot/encode/DGNet"]
-	path = mot/encode/DGNet
+[submodule "third_party/DGNet"]
+	path = third_party/DGNet
 	url = https://github.com/NVlabs/DG-Net
-[submodule "mot/encode/OpenReID"]
-	path = mot/encode/OpenReID
+[submodule "third_party/OpenReID"]
+	path = third_party/OpenReID
 	url = https://github.com/hou-yz/open-reid-tracking
+[submodule "third_party/CenterNet"]
+	path = third_party/CenterNet
+	url = https://github.com/xingyizhou/CenterNet
+[submodule "third_party/DCNv2"]
+	path = third_party/DCNv2
+	url = https://github.com/CharlesShang/DCNv2
+[submodule "third_party/darknet"]
+	path = third_party/darknet
+	url = https://github.com/AlexeyAB/darknet

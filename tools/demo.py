@@ -1,3 +1,4 @@
+import os
 import cv2
 import logging
 import argparse
@@ -49,7 +50,7 @@ def run_demo(tracker, args, **kwargs):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('tracker_config', default='configs/deepsort.py')
+    parser.add_argument('tracker_config', type=str, help='Path to MOT tracker config file.')
     parser.add_argument('--demo-path', default='0', required=False,
                         help='Path to the test video file or directory of test images. Leave it blank to use webcam.')
     parser.add_argument('--save-video', default='', required=False,
@@ -76,7 +77,12 @@ if __name__ == '__main__':
         logger.setLevel(logging.INFO)
 
     if args.save_log != '':
+        save_log_dir = os.path.dirname(args.save_log)
+        if not os.path.isdir(save_log_dir):
+            logging.warning('Result saving path {} doens\'t exist. Creating...')
+            os.makedirs(save_log_dir)
         handler = logging.FileHandler(args.save_log, mode='w+')
+        handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
 
     cfg = mot.utils.cfg_from_file(args.tracker_config)

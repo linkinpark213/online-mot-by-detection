@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('img2_path', type=str, help='Path to image 2')
     args = parser.parse_args()
 
-    encoder_cfg = cfg_from_file('/home/linkinpark213/Source/online-mot-by-detection/configs/encode/openreid.py')
+    encoder_cfg = cfg_from_file('/home/linkinpark213/Source/online-mot-by-detection/configs/encode/openreid_r50.py')
     print('Building encoder...')
     encoder = build_encoder(encoder_cfg)
 
