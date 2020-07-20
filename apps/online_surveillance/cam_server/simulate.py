@@ -36,8 +36,11 @@ def parse_args(parser):
 
 
 def simulate(tracker, args, **kwargs):
+    start_time = time.mktime(time.strptime(args.start_time, '%Y%m%d-%H%M%S'))
+
     capture = mot.utils.get_capture(args.capture)
-    capture = mot.utils.RealTimeCaptureWrapper(capture, original_fps=args.original_fps)
+    capture = mot.utils.RealTimeCaptureWrapper(capture, original_fps=args.original_fps,
+                                               start_time=start_time)
 
     writer = SCTOutputWriter(args, tracker.identifier, fps=args.original_fps)
 
@@ -45,7 +48,6 @@ def simulate(tracker, args, **kwargs):
     logging.getLogger('MOT').info('Writing tracked camera video to ' + str(args.save_video))
 
     # Wait until synchronized start time
-    start_time = time.mktime(time.strptime(args.start_time, '%Y%m%d-%H%M%S'))
     if start_time > time.time():
         logging.getLogger('MOT-Simulator').info('Waiting for starting time {}. ({} secs to go)'.format(args.start_time,
                                                                                                        start_time - time.time()))

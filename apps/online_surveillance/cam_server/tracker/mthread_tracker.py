@@ -99,6 +99,7 @@ class GlobalIDListenerThread(Thread):
             except zmq.ZMQError:
                 time.sleep(0.1)
             except Exception as e:
+                self.subscribe_socket.close()
                 self.running = False
                 raise e
 
@@ -111,19 +112,20 @@ class MultiThreadTracker(LocalTracker):
                  central_address: str, **kwargs):
         self.detect_lock = Lock()
         self.filter_lock = Lock()
-        self.encode_lock = Lock()
+        self.encode_locks = [Lock() for _ in encoders]
         self.tracklets_lock = Lock()
         self.after_locks = [Lock() for _ in encoders]
         self.detect_lock.acquire()
         self.filter_lock.acquire()
-        self.encode_lock.acquire()
-        self.identifier = random.randint(0, 1000000)
-
+        for lock in self.encode_locks:
+            lock.acquire()
         for lock in self.after_locks:
             lock.acquire()
 
+        self.identifier = random.randint(0, 1000000)
+
         self.detector_thread = DetectorThread(detector, self, self.detect_lock, self.filter_lock)
-        self.encoder_threads = [EncoderThread(encoders[i], self, self.encode_lock, self.after_locks[i]) for i in
+        self.encoder_threads = [EncoderThread(encoders[i], self, self.encode_locks[i], self.after_locks[i]) for i in
                                 range(len(encoders))]
         self.listener_thread = GlobalIDListenerThread(self, self.tracklets_lock, central_address, self.identifier)
 
@@ -161,7 +163,9 @@ class MultiThreadTracker(LocalTracker):
         for filter in self.detection_filters:
             self.latest_detections = filter(self.latest_detections)
         self.latest_features = [{} for i in range(len(self.latest_detections))]
-        self.encode_lock.release()
+
+        for lock in self.encode_locks:
+            lock.release()
 
         # Wait for detection and encoding to finish
         for lock in self.after_locks:

@@ -33,7 +33,7 @@ def run(mtracker, args, **kwargs):
                 mtracker.tick()
                 for camID, localID, globalID, distance in mtracker.matches:
                     writer.write('{:d} {:d} {:d} {:.3f}\n'.format(camID, localID, globalID, distance))
-                for camID, localID in mtracker.unmatched_tracklets:
+                for camID, localID, globalID in mtracker.unmatched_tracklets:
                     writer.write('{:d} {:d} {:d} 1\n'.format(camID, localID, globalID))
                 mtracker.last_update_time = time.time()
                 mtracker.log()

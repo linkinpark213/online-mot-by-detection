@@ -76,7 +76,7 @@ class _RealTimeCaptureThread(threading.Thread):
         self.original_fps = original_fps
         self.lock = lock
         self.wait_time = 1. / self.original_fps
-        self.start_time = start_time if start_time > 0 else time.time()
+        self.start_time = max(start_time, time.time())
         self.running = True
         self.n = 0
 
@@ -101,14 +101,16 @@ class _RealTimeCaptureThread(threading.Thread):
                 self.wrapper.frame = frame
                 self.lock.release()
 
+        logging.getLogger('MOT').info('Capture thread terminated.')
+
 
 class RealTimeCaptureWrapper(Capture):
-    def __init__(self, capture, original_fps: int):
+    def __init__(self, capture, original_fps: int, start_time: float = 0):
         self.ret = False
         self.frame = None
         self.capture = capture
         self.lock = threading.Lock()
-        self.capture_thread = _RealTimeCaptureThread(self, capture, original_fps, self.lock, time.time())
+        self.capture_thread = _RealTimeCaptureThread(self, capture, original_fps, self.lock, start_time)
         self.ret, self.frame = self.capture.read()
         self.started = False
 
@@ -226,6 +228,8 @@ class _RealTimeVideoWriterThread(threading.Thread):
                         self.writer.write(self.wrapper.frame)
                         self.lock.release()
                         self.n += 1
+
+        logging.getLogger('MOT').info('Writer thread terminated.')
 
 
 class RealTimeVideoWriterWrapper(Writer):

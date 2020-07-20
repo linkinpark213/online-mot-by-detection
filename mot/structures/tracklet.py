@@ -12,7 +12,7 @@ class Tracklet:
         # Tracklet ID number, usually starts from 1. Shouldn't be modified during online tracking.
         self.id: int = id
         # Tracklet global ID number in multi-camera tracking.
-        self.globalID = globalID
+        self.globalID: int = globalID
         # Box coordinate of the last target position with (left, top, right, bottom).
         self.last_detection: Detection = detection
         # An array storing past features. Only keeping `max_history` frames.
@@ -77,7 +77,8 @@ class Tracklet:
         all_features = np.stack([feature['openreid'] for (i, feature) in self.feature_history], axis=0)
         all_features = np.vstack(
             (self.sample_features, all_features)) if self.sample_features is not None else all_features
-        clusterIDs = hierarchical_cluster(all_features, t=self.n_feature_samples, linkage_method='average', criterion='maxclust')
+        clusterIDs = hierarchical_cluster(all_features, t=self.n_feature_samples, linkage_method='average',
+                                          criterion='maxclust')
         sample_features = []
         for clusterID in np.unique(clusterIDs):
             inds = np.where(clusterIDs == clusterID)[0]

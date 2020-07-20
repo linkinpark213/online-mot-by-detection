@@ -132,7 +132,7 @@ class NetworkMCTracker:
         # Matches, a list of (camID, localID, globalID, distance) tuples
         self.matches: List[Tuple[int, int, int, float]] = []
         # Unmatched tracklets, a list of (camID, localID) tuples
-        self.unmatched_tracklets: List[Tuple[int, int]] = []
+        self.unmatched_tracklets: List[Tuple[int, int, int]] = []
 
         for i, stracker in enumerate(self.single_cam_trackers):
             listener_thread = ListenerThread(i, stracker, self.data_locks[i], self.tracklet_dicts[i])
@@ -158,18 +158,24 @@ class NetworkMCTracker:
                         self.matches.append((camID, localID, globalID, distance))
                     elif len(tracklet.sample_features()) >= self.min_query:
                         # A tracklet too short is not "unmatched" but "not matched"
-                        self.unmatched_tracklets.append((camID, localID))
+                        self.unmatched_tracklets.append((camID, localID, -1))
             self.data_locks[camID].release()
 
         self.update_identity_pool(self.matches, self.unmatched_tracklets)
         self.update_gallery()
 
     @Timer.timer('idpool_upd')
-    def update_identity_pool(self, matches: List[Tuple[int, int, int, float]], unmatched: List[Tuple[int, int]]):
+    def update_identity_pool(self, matches: List[Tuple[int, int, int, float]], unmatched: List[Tuple[int, int, int]]):
+        # Add matched tracklets to identities
         for camID, localID, globalID, distance in matches:
             self._update_identity(self.identity_pool[globalID], self.tracklet_dicts[camID][localID])
-        for camID, localID in unmatched:
-            self._initiate_identity(self.tracklet_dicts[camID][localID])
+
+        n_unmatched = len(unmatched)
+        for i in range(n_unmatched):
+            camID, localID, _ = unmatched.pop(0)
+            globalID = self._initiate_identity(self.tracklet_dicts[camID][localID])
+            unmatched.append((camID, localID, globalID))
+
         self._clear_inactive_identities()
 
     @Timer.timer('gfpool_upd')
@@ -206,6 +212,7 @@ class NetworkMCTracker:
                                                                                     self.single_cam_trackers[
                                                                                         tracklet.camID][
                                                                                         'tracker_port']))
+        return self.max_id
 
     @Timer.avg_timer('query')
     def query(self, tracklet: Tracklet) -> Tuple[int, float]:

@@ -1,3 +1,5 @@
+import os
+import cv2
 import zmq
 
 import mot.utils
@@ -10,10 +12,17 @@ class SCTOutputWriter:
         self.args = args
         self.identifier = identifier
         self.fps = fps
+
+        # Both tracked video writer and raw video writer
         self.video_writer = None
         self.raw_video_writer = None
+
+        # Single-cam tracking result writer
         self.result_writer = mot.utils.get_result_writer(args.save_result)
         self.result_writer.write('#{}'.format(args.start_time))
+
+        if not os.path.exists('images'):
+            os.mkdir('images')
 
         # Streaming port
         context = zmq.Context()
@@ -25,7 +34,7 @@ class SCTOutputWriter:
 
     def write(self, tracker, raw_frame, annotated_image):
         # Save to video if necessary. Video size may change because of extra contents visualized.
-        if tracker.frame_num == 1:
+        if self.video_writer is None or self.raw_video_writer is None:
             self.video_writer = mot.utils.get_video_writer(self.args.save_video, annotated_image.shape[1],
                                                            annotated_image.shape[0], self.fps)
             self.video_writer = mot.utils.RealTimeVideoWriterWrapper(self.video_writer, self.fps)
@@ -41,6 +50,12 @@ class SCTOutputWriter:
 
         # Save to result file if necessary.
         self.result_writer.write(snapshot_to_mot(tracker))
+
+        # Save image samples of currently active identities
+        for tracklet in tracker.tracklets_active:
+            if tracklet.is_detected() and tracklet.globalID != 1:
+                image = tracklet.feature['patch']
+                cv2.imwrite('images/l{}_g{}.jpg'.format(tracklet.id, tracklet.globalID), image)
 
         # Send to streaming port.
         self.footage_socket.send(image_to_base64(annotated_image))

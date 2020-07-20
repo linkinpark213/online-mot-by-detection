@@ -2,7 +2,7 @@ tracker = dict(
     type='MultiThreadTracker',
     detector=dict(
         include='../../../../configs/detect/darknet/yolov4-tiny.py',
-        conf_threshold=0.8,
+        conf_threshold=0.7,
         nms_threshold=0.5,
     ),
     detection_filters=[
@@ -23,6 +23,9 @@ tracker = dict(
         dict(
             include='./encode/trt_openreid_r50.py'
         ),
+        dict(
+            include='../../../../configs/encode/patch.py'
+        ),
     ],
     matcher=dict(
         type='GreedyMatcher',
@@ -40,7 +43,7 @@ tracker = dict(
     ),
     predictor=None,
     max_ttl=120,
-    min_time_lived=5,
+    min_time_lived=3,
     keep_finished_tracks=False,
     central_address='163.221.68.100:5558',
 )
