@@ -25,17 +25,23 @@ def load_config(f):
 
 def run(mtracker, args, **kwargs):
     writer = mot.utils.get_result_writer(args.save_result)
+    last_update_time = time.time()
 
     while mtracker.running:
         try:
             # Update identity pool and gallery with a frequency.
-            if time.time() - mtracker.last_update_time > mtracker.gallery_update_freq:
+            if time.time() - last_update_time > mtracker.gallery_update_freq:
+                last_update_time = time.time()
+                
                 mtracker.tick()
+
+                # Write to result file: <camID> <localID> <globalID> <distance>
+                # Distance = 1 in cases of new identity initialization
                 for camID, localID, globalID, distance in mtracker.matches:
                     writer.write('{:d} {:d} {:d} {:.3f}\n'.format(camID, localID, globalID, distance))
                 for camID, localID, globalID in mtracker.unmatched_tracklets:
-                    writer.write('{:d} {:d} {:d} 1\n'.format(camID, localID, globalID))
-                mtracker.last_update_time = time.time()
+                    writer.write('{:d} {:d} {:d} 0\n'.format(camID, localID, globalID))
+
                 mtracker.log()
 
         except:

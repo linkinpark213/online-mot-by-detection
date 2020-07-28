@@ -1,6 +1,7 @@
 import os
 import cv2
 import zmq
+import shutil
 
 import mot.utils
 
@@ -19,10 +20,15 @@ class SCTOutputWriter:
 
         # Single-cam tracking result writer
         self.result_writer = mot.utils.get_result_writer(args.save_result)
-        self.result_writer.write('#{}'.format(args.start_time))
+        self.result_writer.write('#{}\n'.format(args.start_time))
 
-        if not os.path.exists('images'):
-            os.mkdir('images')
+        patches_path = os.path.abspath('patches')
+        if os.path.isdir('patches'):
+            print('Image patch directory `{}` exists. Deleting...'.format(patches_path))
+            shutil.rmtree('patches')
+
+        print('Creating image patch directory `{}`'.format(patches_path))
+        os.mkdir('patches')
 
         # Streaming port
         context = zmq.Context()
@@ -32,7 +38,7 @@ class SCTOutputWriter:
         self.tracker_socket = context.socket(zmq.PUB)
         self.tracker_socket.bind('tcp://*:' + str(args.tracker_port))
 
-    def write(self, tracker, raw_frame, annotated_image):
+    def write(self, tracker, current_time, raw_frame, annotated_image):
         # Save to video if necessary. Video size may change because of extra contents visualized.
         if self.video_writer is None or self.raw_video_writer is None:
             self.video_writer = mot.utils.get_video_writer(self.args.save_video, annotated_image.shape[1],
@@ -49,13 +55,13 @@ class SCTOutputWriter:
         self.raw_video_writer.write(raw_frame)
 
         # Save to result file if necessary.
-        self.result_writer.write(snapshot_to_mot(tracker))
+        self.result_writer.write(snapshot_to_mot(tracker, current_time))
 
         # Save image samples of currently active identities
         for tracklet in tracker.tracklets_active:
-            if tracklet.is_detected() and tracklet.globalID != 1:
+            if tracklet.is_detected():
                 image = tracklet.feature['patch']
-                cv2.imwrite('images/l{}_g{}.jpg'.format(tracklet.id, tracklet.globalID), image)
+                cv2.imwrite('patches/g{}_l{}.jpg'.format(tracklet.globalID, tracklet.id), image)
 
         # Send to streaming port.
         self.footage_socket.send(image_to_base64(annotated_image))

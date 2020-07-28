@@ -32,12 +32,12 @@ class Tracklet:
                 feature = np.average(features[inds], axis=0)
                 tracklet_features.append(feature)
 
-            logging.getLogger('MTMCT').debug('Shrinking target c{}-t{}\'s {} features into {}'.format(self.camID,
-                                                                                                      self.localID,
-                                                                                                      len(
-                                                                                                          self.features),
-                                                                                                      len(
-                                                                                                          tracklet_features)))
+            logging.getLogger('MTMCT').debug('Clustering tracklet c{}-t{}\'s {} features into {}'.format(self.camID,
+                                                                                                        self.localID,
+                                                                                                        len(
+                                                                                                            self.features),
+                                                                                                        len(
+                                                                                                            tracklet_features)))
             self.features = tracklet_features
             self.last_sample_time = self.last_active_time
         return np.array(self.features)

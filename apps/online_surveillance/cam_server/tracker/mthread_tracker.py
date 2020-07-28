@@ -91,9 +91,9 @@ class GlobalIDListenerThread(Thread):
                     while len(self.queue) > 0:
                         _, localID, globalID = self.queue.pop(0)
                         for tracklet in self.tracker.tracklets_active:
-                            logging.getLogger('MOT').info(
-                                'Local target #{} is identified as global ID {}'.format(localID, globalID))
                             if tracklet.id == localID:
+                                logging.getLogger('MOT').info(
+                                    'Local target #{} is identified as global ID {}'.format(localID, globalID))
                                 tracklet.globalID = globalID
                     self.lock.release()
             except zmq.ZMQError:

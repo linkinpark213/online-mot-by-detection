@@ -42,7 +42,7 @@ def simulate(tracker, args, **kwargs):
     capture = mot.utils.RealTimeCaptureWrapper(capture, original_fps=args.original_fps,
                                                start_time=start_time)
 
-    writer = SCTOutputWriter(args, tracker.identifier, fps=args.original_fps)
+    writer = SCTOutputWriter(args, tracker.identifier, fps=10)
 
     logging.getLogger('MOT').info('Writing tracking results to ' + str(args.save_result))
     logging.getLogger('MOT').info('Writing tracked camera video to ' + str(args.save_video))
@@ -59,6 +59,7 @@ def simulate(tracker, args, **kwargs):
 
     try:
         while True:
+            current_time = time.time()
             ret, frame = capture.read()
             if not ret:
                 break
@@ -69,7 +70,7 @@ def simulate(tracker, args, **kwargs):
 
             image = mot.utils.snapshot_from_tracker(tracker, **kwargs)
 
-            writer.write(tracker, frame, image)
+            writer.write(tracker, current_time, frame, image)
 
         logging.getLogger('MOT').info('Capture ended. Terminating...')
 

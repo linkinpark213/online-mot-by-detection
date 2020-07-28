@@ -39,9 +39,9 @@ class SingleThreadTracker(LocalTracker):
                     logging.getLogger('MOT').info('Received data: {} from central server'.format(data))
                     _, localID, globalID = data
                     for tracklet in self.tracklets_active:
-                        logging.getLogger('MOT').info('Local target #{} is identified as global ID {}'.format(localID,
-                                                                                                              globalID))
                         if tracklet.id == localID:
+                            logging.getLogger('MOT').info(
+                                'Local target #{} is identified as global ID {}'.format(localID, globalID))
                             tracklet.globalID = globalID
         except zmq.ZMQError:
             pass

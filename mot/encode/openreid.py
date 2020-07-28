@@ -17,6 +17,8 @@ from reid.feature_extraction.cnn import extract_cnn_feature
 
 __all__ = ['OpenReIDEncoder']
 
+import time
+
 
 @ENCODER_REGISTRY.register()
 class OpenReIDEncoder(Encoder):
@@ -56,7 +58,14 @@ class OpenReIDEncoder(Encoder):
 
             im_batch = self._preprocess(all_crops)
             input_img = Variable(im_batch.cuda())
+
+            start_time = time.time()
             outputs = extract_cnn_feature(self.model, input_img)
+            end_time = time.time()
+
+            print('Encoder spent {}ms'.format(1000 * (end_time - start_time)))
+
+
             return outputs.detach().numpy()
         else:
             return []

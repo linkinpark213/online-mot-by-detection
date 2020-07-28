@@ -260,9 +260,9 @@ class RealTimeVideoWriterWrapper(Writer):
     def release(self):
         if self.writer_thread.running:
             self.writer_thread.running = False
-        self.lock.acquire()
+        if self.lock.acquire(timeout=1):
+            self.lock.release()
         self.writer.release()
-        self.lock.release()
 
 
 def get_capture(demo_path: str) -> Capture:

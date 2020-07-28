@@ -1,8 +1,9 @@
 tracker = dict(
     type='MultiThreadTracker',
     detector=dict(
+        # include='./detect/trt_ctdet_coco_dlav0_1x.py',
         include='../../../../configs/detect/darknet/yolov4-tiny.py',
-        conf_threshold=0.7,
+        conf_threshold=0.5,
         nms_threshold=0.5,
     ),
     detection_filters=[
@@ -42,10 +43,11 @@ tracker = dict(
         threshold=0.65,
     ),
     predictor=None,
-    max_ttl=120,
+    max_ttl=30,
     min_time_lived=3,
     keep_finished_tracks=False,
     central_address='163.221.68.100:5558',
+    max_feature_history = 60
 )
 draw_frame_num = True
 draw_current_time = True

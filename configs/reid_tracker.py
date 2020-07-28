@@ -1,11 +1,10 @@
 tracker = dict(
     type='TrackingByDetection',
     detector=dict(
-        include='./detect/centernet/ctdet_coco_dlav0_1x.py',
-        # include='./detect/detectron2/bdd100k_faster_rcnn_x_101_32x8d_fpn_2x_crop.py',
+        # include='./detect/centernet/ctdet_coco_dlav0_1x.py',
+        include='./detect/detectron2/bdd100k_faster_rcnn_x_101_32x8d_fpn_2x_crop.py',
         # include='./detect/mmdetection/faster_rcnn_x101_64x4d_fpn_1x_coco.py',
-        conf_threshold=0.9,
-        hw_ratio_threshold=2,
+        conf_threshold=0.5,
     ),
     detection_filters=[
         dict(
@@ -14,7 +13,7 @@ tracker = dict(
         ),
         dict(
             type='SizeFilter',
-            filtering=lambda w, h: w > 64 and h > 128
+            filtering=lambda w, h: w > 48 and h > 96
         ),
         dict(
             type='WHRatioFilter',
@@ -45,7 +44,7 @@ tracker = dict(
     ),
     predictor=None,
     max_ttl=120,
-    min_time_lived=10,
+    min_time_lived=1,
     keep_finished_tracks=True,
     max_feature_history = 120
 )
